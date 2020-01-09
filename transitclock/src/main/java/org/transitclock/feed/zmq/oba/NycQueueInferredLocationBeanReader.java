@@ -34,8 +34,8 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
     private int avlReportProcessedCount = 0;
     private static final int COUNT_INTERVAL = 10000;
 
-    public static StringConfigValue zeromqAvlFilter =
-            new StringConfigValue("transitclock.avl.zeromqAllowedRoutesFilter",
+    public static StringConfigValue zeromqRouteFilter =
+            new StringConfigValue("transitclock.avl.zeromq.allowedRoutes",
                     "*",
                     "List of acceptable routes for incoming avl data. Defaults to * which allows all.");
 
@@ -49,7 +49,7 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
 
     private void initializeRouteFilter(){
         try {
-            String[] routesToFilter = zeromqAvlFilter.getValue().split("(;|,| +)");
+            String[] routesToFilter = zeromqRouteFilter.getValue().split("(;|,| +)");
             for(String routeToFilter: routesToFilter){
                 routeFilterList.add(routeToFilter.toUpperCase());
             }
