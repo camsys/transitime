@@ -85,6 +85,10 @@ public class ZeroMQAvlModule extends PollUrlAvlModule {
                 // Convert to an AvlReport
                 AvlReport avlReport = ZmqQueueReaderFactory.getInstance().getAvlReport(zeromqTopic.getValue(), contents);
 
+                if(avlReport == null){
+                    return;
+                }
+
                 // Process the individual AVL Report
                 processAvlReport(avlReport);
 
