@@ -75,6 +75,7 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
         }
 
         AvlReport avlReport = convertInferredLocationBeanToAvlReport(inferredLocationBean);
+        avlReportProcessedCount++;
 
         return avlReport;
 
@@ -150,15 +151,16 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
     private void logCounts(String topic){
         if (processedCount > COUNT_INTERVAL) {
             long timeInterval = (new Date().getTime() - markTimestamp.getTime());
+            int timeIntervalSec = (int)(timeInterval/1000);
 
             logger.info("{} input queue: processed {} messages in {} seconds. ({}) records/second",
-                    topic, COUNT_INTERVAL, timeInterval/1000, 1000.0 * processedCount/timeInterval);
+                    topic, COUNT_INTERVAL, timeIntervalSec, (int)(1000.0 * processedCount/timeInterval));
 
             logger.info("{} input queue: processed {} accepted messages in {} seconds. ({}) records/second",
-                    topic, acceptableProcessedCount, timeInterval/1000, 1000.0 * acceptableProcessedCount/timeInterval);
+                    topic, acceptableProcessedCount, timeIntervalSec, (int)(1000.0 * acceptableProcessedCount/timeInterval));
 
             logger.info("processed {} avl report records in {} seconds. ({}) records/second",
-                    avlReportProcessedCount, timeInterval/1000, 1000.0 * avlReportProcessedCount/timeInterval);
+                    avlReportProcessedCount, timeIntervalSec, (int)(1000.0 * avlReportProcessedCount/timeInterval));
 
 
             markTimestamp = new Date();
