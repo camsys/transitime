@@ -137,13 +137,13 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
                 Float.NaN // passengerFullness
         );
 
-        if(inferredLocationBean.getInferredTripId() != null){
-            avlReport.setAssignment(inferredLocationBean.getInferredTripId(),
-                    AvlReport.AssignmentType.TRIP_ID);
-        } else if(inferredLocationBean.getInferredBlockId() != null) {
-            avlReport.setAssignment(inferredLocationBean.getInferredBlockId(), AvlReport.AssignmentType.BLOCK_ID);
+        if(inferredLocationBean.getInferredBlockId() != null) {
+            avlReport.setAssignment(AgencyAndId.convertFromString(inferredLocationBean.getInferredBlockId()).getId(), AvlReport.AssignmentType.BLOCK_ID);
         } else if(inferredLocationBean.getInferredRouteId() != null){
-            avlReport.setAssignment(inferredLocationBean.getInferredRouteId(), AvlReport.AssignmentType.ROUTE_ID);
+            avlReport.setAssignment(AgencyAndId.convertFromString(inferredLocationBean.getInferredRouteId()).getId(), AvlReport.AssignmentType.ROUTE_ID);
+        }  else if(inferredLocationBean.getInferredTripId() != null){
+            avlReport.setAssignment(AgencyAndId.convertFromString(inferredLocationBean.getInferredTripId()).getId(),
+                    AvlReport.AssignmentType.TRIP_ID);
         }
         return avlReport;
     }
