@@ -18,9 +18,7 @@
 package org.transitclock.utils;
 
 import java.text.DecimalFormat;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Simple string utilities such as for formating double to desired number of
@@ -243,6 +241,29 @@ public class StringUtils {
 	 */
 	public static void sortIds(List<String> ids) {
 		Collections.sort(ids);
+	}
+
+	public static Set<String> parseSeparatedValues(String values, boolean makeAllValuesUpperCase){
+		try {
+			Set<String> valuesList = new HashSet<>();
+			String[] splitValues = values.split("(;|,| +)");
+
+			for (String value : splitValues) {
+				if (makeAllValuesUpperCase) {
+					valuesList.add(value.toUpperCase());
+				} else {
+					valuesList.add(value);
+				}
+			}
+
+			return valuesList;
+		}catch (Exception e){
+			return Collections.emptySet();
+		}
+	}
+
+	public static Set<String> parseSeparatedValues(String values){
+		return parseSeparatedValues(values, true);
 	}
 
 }

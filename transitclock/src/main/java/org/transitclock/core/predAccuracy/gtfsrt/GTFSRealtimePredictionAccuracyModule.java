@@ -35,6 +35,7 @@ import org.transitclock.core.predAccuracy.PredAccuracyPrediction;
 import org.transitclock.core.predAccuracy.PredictionAccuracyModule;
 import org.transitclock.db.structs.*;
 import org.transitclock.gtfs.DbConfig;
+import org.transitclock.utils.RouteFilterUtils;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -42,7 +43,6 @@ import java.net.URL;
 import java.time.Instant;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.Calendar;
 
@@ -84,6 +84,8 @@ public class GTFSRealtimePredictionAccuracyModule extends PredictionAccuracyModu
   // if stopIds needs optional parsing/translation
   private GTFSRealtimeTranslator translator = null;
 
+  private Set<String> routeFilterSet = new HashSet<>();
+
 	/**
 	 * @return the gtfstripupdateurl
 	 */
@@ -98,6 +100,7 @@ public class GTFSRealtimePredictionAccuracyModule extends PredictionAccuracyModu
 	 */
 	public GTFSRealtimePredictionAccuracyModule(String agencyId) {
 		super(agencyId);
+		routeFilterSet = RouteFilterUtils.getFilteredRoutes();
 	}
 
 	/**
@@ -193,6 +196,20 @@ public class GTFSRealtimePredictionAccuracyModule extends PredictionAccuracyModu
 
 				if (tripDescriptor != null) {
 					String tripId = getTripId(dbConfig, tripDescriptor);
+
+								if(tripDescriptor.hasRouteId()){
+									String routeId = tripDescriptor.getRouteId();
+									try {
+										if (!RouteFilterUtils.hasValidRoute(routeFilterSet, tripDescriptor.getRouteId())) {
+											logger.debug("Entity with route {} not allowed", routeId);
+											continue;
+										}
+									} catch(Exception e){
+										logger.error("Error filtering route {} for Enity {} with tripId {}", routeId, tripDescriptor.getTripId(), e);
+										continue;
+									}
+								}
+
 					logger.debug("Trip Descriptor: {}", tripDescriptor);
 					gtfsTrip = dbConfig.getTrip(tripId);
 

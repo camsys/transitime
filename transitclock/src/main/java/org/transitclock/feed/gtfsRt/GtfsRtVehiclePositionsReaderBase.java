@@ -27,6 +27,7 @@ import org.transitclock.config.StringConfigValue;
 import org.transitclock.configData.AvlConfig;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.db.structs.AvlReport.AssignmentType;
+import org.transitclock.utils.RouteFilterUtils;
 import org.transitclock.utils.IntervalTimer;
 import org.transitclock.utils.MathUtils;
 
@@ -34,6 +35,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.util.Set;
 
 /**
  * Reads in GTFS-realtime Vehicle Positions file and converts them into List of
@@ -66,10 +68,14 @@ public abstract class GtfsRtVehiclePositionsReaderBase {
 	private static final Logger logger = LoggerFactory
 			.getLogger(GtfsRtVehiclePositionsReaderBase.class);
 
+	private Set<String> routeFilterSet;
+
+
 	/********************** Member Functions **************************/
 
 	public GtfsRtVehiclePositionsReaderBase(String urlString) {
 		this.urlString = urlString;
+		routeFilterSet = RouteFilterUtils.getFilteredRoutes();
 	}
 	
 	/**
@@ -134,7 +140,7 @@ public abstract class GtfsRtVehiclePositionsReaderBase {
 		int counter = 0;
 		for (FeedEntity entity : message.getEntityList()) {
 			// If no vehicles in the entity then nothing to process 
-			if (!entity.hasVehicle())
+			if(!entity.hasVehicle())
 				continue;
 			
 			// Get the object describing the vehicle
@@ -208,11 +214,27 @@ public abstract class GtfsRtVehiclePositionsReaderBase {
 			if (vehicle.hasTrip()) {
 				TripDescriptor tripDescriptor = vehicle.getTrip();
 
-				if (tripDescriptor.hasTripId()) {
+				boolean hasTripId = tripDescriptor.hasTripId();
+				boolean hasRouteId = tripDescriptor.hasRouteId();
+
+				if(hasRouteId){
+					String routeId = tripDescriptor.getRouteId();
+					try {
+						if (!RouteFilterUtils.hasValidRoute(routeFilterSet, tripDescriptor.getRouteId())) {
+							logger.debug("Entity with route {} not allowed", routeId);
+							continue;
+						}
+					} catch(Exception e){
+						logger.error("Error filtering route {} for Enity {} with tripId {}", routeId, tripDescriptor.getTripId(), e);
+						continue;
+					}
+				}
+
+				if (hasTripId) {
 					avlReport.setAssignment(tripDescriptor.getTripId(),
 							AssignmentType.TRIP_ID);
 				}
-				else if (tripDescriptor.hasRouteId()) {
+				else if (hasRouteId) {
 					avlReport.setAssignment(tripDescriptor.getRouteId(),
 							AssignmentType.ROUTE_ID);
 				}
@@ -231,7 +253,24 @@ public abstract class GtfsRtVehiclePositionsReaderBase {
 				"GTFS-realtime feed in {} msec",
 				counter, timer.elapsedMsec());
 	}
-	
+
+	private boolean hasValidRoute(String routeId){
+		if(routeId == null || routeFilterSet.isEmpty() || (routeFilterSet.size() > 0 && routeFilterSet.contains("*")))
+			return true;
+		try {
+			String route = routeId.toUpperCase();
+			if (routeFilterSet.contains(route)) {
+				return true;
+			} else {
+				logger.debug("Entity with route {} not allowed", route);
+				return false;
+			}
+		} catch (Exception e){
+			logger.error("Error processing Enity {} with route {}", routeId, e);
+			return false;
+		}
+	}
+
 
 	private String getVehicleLabel(VehiclePosition vehicle) {
 		

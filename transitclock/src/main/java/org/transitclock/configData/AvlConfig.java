@@ -236,4 +236,13 @@ public class AvlConfig {
 			new IntegerConfigValue("transitclock.avl.tzCorrection",
 					null,
 					"Attempt to correct for a Time Zone issue by subtracting this value in seconds");
+
+
+	public static String avlAllowedRoutes() {
+		return avlAllowedRoutes.getValue();
+	}
+	public static StringConfigValue avlAllowedRoutes =
+			new StringConfigValue("transitclock.avl.allowedRoutes",
+					"*",
+					"List of acceptable routes for incoming avl data. Defaults to * which allows all.");
 }
