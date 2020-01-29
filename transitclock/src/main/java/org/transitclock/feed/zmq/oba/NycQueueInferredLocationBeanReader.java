@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.avl.ZeroMQAvlModule;
+import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.feed.zmq.ZmqQueueBeanReader;
 import org.transitclock.utils.MathUtils;
@@ -33,6 +34,11 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
     private int avlReportProcessedCount = 0;
     private static final int COUNT_INTERVAL = 10000;
     private static final float MILES_TO_METERS_PER_SEC = 0.44704f;
+
+    public static BooleanConfigValue preferTripAssignment =
+            new BooleanConfigValue("transitclock.avl.zeromq.preferTripAssignment",
+                    true,
+                    "Prefer trip assignment over block assignment");
 
     private Set<String> routeFilterSet;
 
@@ -116,15 +122,49 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
                 Float.NaN // passengerFullness
         );
 
-        if(inferredLocationBean.getInferredBlockId() != null) {
-            avlReport.setAssignment(AgencyAndId.convertFromString(inferredLocationBean.getInferredBlockId()).getId(), AvlReport.AssignmentType.BLOCK_ID);
-        } else if(inferredLocationBean.getInferredRouteId() != null){
-            avlReport.setAssignment(AgencyAndId.convertFromString(inferredLocationBean.getInferredRouteId()).getId(), AvlReport.AssignmentType.ROUTE_ID);
-        }  else if(inferredLocationBean.getInferredTripId() != null){
-            avlReport.setAssignment(AgencyAndId.convertFromString(inferredLocationBean.getInferredTripId()).getId(),
-                    AvlReport.AssignmentType.TRIP_ID);
+       addAssignmentByPrecedence(avlReport, inferredLocationBean);
+
+       return avlReport;
+    }
+
+    private void addAssignmentByPrecedence(AvlReport avlReport, NycQueuedInferredLocationBean inferredLocationBean){
+        if(preferTripAssignment.getValue()){
+            if(!addTripAssignment(avlReport, inferredLocationBean.getInferredTripId())){
+                if(!addBlockAssignment(avlReport, inferredLocationBean.getInferredBlockId())){
+                    addRouteAssignment(avlReport, inferredLocationBean.getInferredRouteId());
+                }
+            }
+        } else{
+            if(!addBlockAssignment(avlReport, inferredLocationBean.getInferredBlockId())){
+                if(!addTripAssignment(avlReport, inferredLocationBean.getInferredTripId())){
+                    addRouteAssignment(avlReport, inferredLocationBean.getInferredRouteId());
+                }
+            }
         }
-        return avlReport;
+    }
+
+    private boolean addBlockAssignment(AvlReport avlReport, String blockId){
+        return addAssignmentToAvlReport(avlReport, blockId, AvlReport.AssignmentType.BLOCK_ID);
+    }
+
+    private boolean addTripAssignment(AvlReport avlReport, String tripId){
+        return addAssignmentToAvlReport(avlReport, tripId, AvlReport.AssignmentType.TRIP_ID);
+    }
+
+    private boolean addRouteAssignment(AvlReport avlReport, String routeId){
+        return addAssignmentToAvlReport(avlReport, routeId, AvlReport.AssignmentType.ROUTE_ID);
+    }
+
+    private boolean addAssignmentToAvlReport(AvlReport avlReport, String assignmentId, AvlReport.AssignmentType assignmentType){
+        try {
+            if(assignmentId != null){
+                avlReport.setAssignment(AgencyAndId.convertFromString(assignmentId).getId(), assignmentType);
+                return true;
+            }
+        } catch (Exception e){
+            logger.error("Unable to set assignment for Assignment Type {} with id {}",assignmentType.name(),assignmentId, e);
+        }
+        return false;
     }
 
     private void logCounts(String topic){
