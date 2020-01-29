@@ -32,6 +32,7 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
     private int acceptableProcessedCount = 0;
     private int avlReportProcessedCount = 0;
     private static final int COUNT_INTERVAL = 10000;
+    private static final float MILES_TO_METERS_PER_SEC = 0.44704f;
 
     private Set<String> routeFilterSet;
 
@@ -95,7 +96,7 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
         long gpsTime = inferredLocationBean.getRecordTimestamp();
         Double lat = inferredLocationBean.getInferredLatitude();
         Double lon = inferredLocationBean.getInferredLongitude();
-        float speed = Float.NaN;
+        float speed = inferredLocationBean.getSpeed() * MILES_TO_METERS_PER_SEC;
         float heading = (float) inferredLocationBean.getBearing();
 
         // AvlReport is expecting time in ms while the proto provides it in
