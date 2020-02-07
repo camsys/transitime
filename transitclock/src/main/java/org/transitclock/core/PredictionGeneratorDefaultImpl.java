@@ -139,7 +139,12 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 					"When holding on to historical predictions for future stops, how long " +
 							"to keep message before expiring. Value in minutes.");
 
-	private static final Logger logger = 
+	private static BooleanConfigValue enableBiasAdjuster =
+			new BooleanConfigValue("transitclock.core.enableBiasAdjuster",
+					false,
+					"Enable a bias adjuster that uses an exponential formula to skew the prediction values.");
+
+	private static final Logger logger =
 			LoggerFactory.getLogger(PredictionGeneratorDefaultImpl.class);
 
 	/********************** Member Functions **************************/
@@ -187,7 +192,7 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 		String stopId = path.getStopId();
 		int gtfsStopSeq = path.getGtfsStopSeq();
 		
-		if(BiasAdjusterFactory.getInstance()!=null)
+		if(enableBiasAdjuster.getValue() && BiasAdjusterFactory.getInstance()!=null)
 		{
 			BiasAdjuster adjuster = BiasAdjusterFactory.getInstance();
 			predictionTime=avlReport.getTime()+adjuster.adjustPrediction(predictionTime-avlReport.getTime());			
@@ -216,7 +221,7 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 			// Generate a departure time
 			PredictionResult expectedStopTime = getStopTimeForPath(indices, avlReport, vehicleState);
 			lastDwell = expectedStopTime.getAlgorithm();
-						int expectedStopTimeMsec = 
+						int expectedStopTimeMsec =
 								(int) expectedStopTime.getPrediction();
 			// If at a wait stop then need to handle specially...
 			if (indices.isWaitStop()) {
@@ -332,7 +337,7 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 
 				} else {
 					getMonitoring().sumMetric("PredictionGenerationStop");
-					// Use the expected departure times, possibly adjusted for 
+					// Use the expected departure times, possibly adjusted for
 					// stop wait times
 					return new IpcPrediction(avlReport, stopId, indices.getStopPathIndex(), gtfsStopSeq,
 							trip, expectedDepartureTime, expectedDepartureTime,
@@ -343,7 +348,7 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 				}
 			} else {
 				getMonitoring().sumMetric("PredictionGenerationStop");
-				// Create and return the departure prediction for this 
+				// Create and return the departure prediction for this
 				// non-wait-stop stop
 				return new IpcPrediction(avlReport, stopId, indices.getStopPathIndex(), gtfsStopSeq, trip,
 						predictionTime + expectedStopTimeMsec, 
@@ -352,7 +357,7 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 						ArrivalOrDeparture.DEPARTURE, scheduleDeviation, freqStartTime,
 						tripCounter,vehicleState.isCanceled(), lastTravelTime, lastDwell);
 			}
-		}			
+		}
 	}
 
 	private Algorithm getAlgorithm(Indices indices) {
@@ -410,7 +415,7 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 		long predictionTime = avlTime + expectedTravelTimeFromMatchToEndOfStopPath(avlReport, match);
 		Algorithm lastTravelTime = getAlgorithm(indices);
 		Algorithm lastDwell = lastTravelTime;
-		
+
 		// Determine if vehicle is so late that predictions for subsequent 
 		// trips should be marked as uncertain given that another vehicle
 		// might substitute in for that block.
@@ -587,7 +592,7 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 			// Add in travel time for the next path to get to predicted 
 			// arrival time of this stop
 			if (!lastStopOfNonSchedBasedTrip && isCircuitRoute) {
-				PredictionResult pr = getTravelTimeForPath(indices, avlReport, vehicleState); 
+				PredictionResult pr = getTravelTimeForPath(indices, avlReport, vehicleState);
 				predictionTime += pr.getPrediction();
 				lastTravelTime = pr.getAlgorithm();
 			}					
