@@ -37,7 +37,7 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
 
     public static BooleanConfigValue preferTripAssignment =
             new BooleanConfigValue("transitclock.avl.zeromq.preferTripAssignment",
-                    true,
+                    false,
                     "Prefer trip assignment over block assignment");
 
     private Set<String> routeFilterSet;
