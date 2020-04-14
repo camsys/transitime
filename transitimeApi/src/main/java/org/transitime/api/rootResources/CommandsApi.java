@@ -38,7 +38,7 @@ import javax.ws.rs.core.Response;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.transitime.api.data.ApiCommandAck;
+import org.transitime.api.data.gtfs.ApiCommandAck;
 import org.transitime.api.utils.StandardParameters;
 import org.transitime.api.utils.WebUtils;
 import org.transitime.db.GenericQuery;

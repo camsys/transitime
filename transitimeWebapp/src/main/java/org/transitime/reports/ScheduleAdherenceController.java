@@ -115,8 +115,8 @@ public class ScheduleAdherenceController {
 		int early = 0;
 		int late = 0;
 		int ontime = 0;
-		Double earlyLimit = (usePredictionLimits.getValue() ? earlyLimitParam : scheduleEarlySeconds.getValue());
-		Double lateLimit = (usePredictionLimits.getValue() ? lateLimitParam : scheduleLateSeconds.getValue());
+		Double earlyLimit = (usePredictionLimits.getValue() ? earlyLimitParam : new Integer(scheduleEarlySeconds.getValue()).doubleValue());
+		Double lateLimit = (usePredictionLimits.getValue() ? lateLimitParam : new Integer(scheduleLateSeconds.getValue()).doubleValue());
 		List<Object> results = routeScheduleAdherence(startDate, numDays, startTime, endTime, routeIds, false, null);
 
 		for (Object o : results) {

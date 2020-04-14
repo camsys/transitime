@@ -30,6 +30,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.transitime.api.data.gtfs.EnhancedFeedMessage;
 import org.transitime.api.utils.StandardParameters;
 import org.transitime.config.IntegerConfigValue;
 import org.transitime.api.gtfsRealtime.GtfsRtTripFeed;
@@ -51,26 +52,25 @@ public class GtfsRealtimeApi {
 
 	private static IntegerConfigValue gtfsRtCacheSeconds =
 			new IntegerConfigValue(
-					"transitime.api.gtfsRtCacheSeconds", 
+					"transitime.api.gtfsRtCacheSeconds",
 					DEFAULT_MAX_GTFS_RT_CACHE_SECS,
 					"How long to cache GTFS Realtime");
 
-	
+
 	/********************** Member Functions **************************/
 
 	/**
 	 * For getting GTFS-realtime Vehicle Positions data for all vehicles.
-	 * 
+	 *
 	 * @param stdParameters
-	 * @param format
-	 *            if set to "human" then will output GTFS-rt data in human
-	 *            readable format. Otherwise will output data in binary format.
+	 * @param format        if set to "human" then will output GTFS-rt data in human
+	 *                      readable format. Otherwise will output data in binary format.
 	 * @return
 	 * @throws WebApplicationException
 	 */
 	@Path("/command/gtfs-rt/vehiclePositions")
 	@GET
-	@Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_OCTET_STREAM })
+	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_OCTET_STREAM})
 	public Response getGtfsRealtimeVehiclePositionsFeed(
 			final @BeanParam StandardParameters stdParameters,
 			@QueryParam(value = "format") String format)
@@ -124,19 +124,28 @@ public class GtfsRealtimeApi {
 		return Response.ok(stream).type(mediaType).build();
 	}
 
+	@Path("/command/gtfs-rt/vehiclePositions.json")
+	@GET
+	@Produces({MediaType.APPLICATION_JSON})
+	public Response getGtfsRealtimeEnhancedVehiclePositionsFeed(
+			final @BeanParam StandardParameters stdParameters,
+			@QueryParam(value = "format") String format)
+			throws WebApplicationException {
+		return Response.ok().build();
+	}
+
 	/**
 	 * For getting GTFS-realtime Vehicle Positions data for all vehicles.
-	 * 
+	 *
 	 * @param stdParameters
-	 * @param format
-	 *            if set to "human" then will output GTFS-rt data in human
-	 *            readable format. Otherwise will output data in binary format.
+	 * @param format        if set to "human" then will output GTFS-rt data in human
+	 *                      readable format. Otherwise will output data in binary format.
 	 * @return
 	 * @throws WebApplicationException
 	 */
 	@Path("/command/gtfs-rt/tripUpdates")
 	@GET
-	@Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_OCTET_STREAM })
+	@Produces({MediaType.TEXT_PLAIN, MediaType.APPLICATION_OCTET_STREAM})
 	public Response getGtfsRealtimeTripFeed(
 			final @BeanParam StandardParameters stdParameters,
 			@QueryParam(value = "format") String format)
@@ -190,4 +199,30 @@ public class GtfsRealtimeApi {
 		return Response.ok(stream).type(mediaType).build();
 	}
 
+	@Path("/command/gtfs-rt/tripUpdates.json")
+	@GET
+	@Produces({MediaType.APPLICATION_JSON})
+	public Response getGtfsRealtimeEnhancedTripFeed(
+			final @BeanParam StandardParameters stdParameters,
+			@QueryParam(value = "format") String format)
+			throws WebApplicationException {
+
+		EnhancedFeedMessage message =
+				GtfsRtTripFeed.getPossiblyCachedEnhancedMessage(
+						stdParameters.getAgencyId(),
+						gtfsRtCacheSeconds.getValue());
+
+		Response.ResponseBuilder responseBuilder = Response.ok(message);
+
+		// Since this is a truly open API intended to be used by
+		// other web pages allow cross-origin requests.
+		responseBuilder.header("Access-Control-Allow-Origin", "*");
+
+		// Specify media type of XML or JSON
+		responseBuilder.type(MediaType.APPLICATION_JSON_TYPE);
+
+		// Return the response
+		return responseBuilder.build();
+
+	}
 }

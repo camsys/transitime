@@ -32,10 +32,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.transitime.api.data.ApiAgencies;
-import org.transitime.api.data.ApiAgency;
-import org.transitime.api.data.ApiNearbyPredictionsForAgencies;
-import org.transitime.api.data.ApiPredictions;
+import org.transitime.api.data.gtfs.ApiAgencies;
+import org.transitime.api.data.gtfs.ApiAgency;
+import org.transitime.api.data.gtfs.ApiNearbyPredictionsForAgencies;
+import org.transitime.api.data.gtfs.ApiPredictions;
 import org.transitime.api.predsByLoc.PredsByLoc;
 import org.transitime.api.utils.StandardParameters;
 import org.transitime.api.utils.WebUtils;

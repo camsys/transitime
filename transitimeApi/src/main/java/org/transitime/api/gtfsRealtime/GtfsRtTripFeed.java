@@ -29,6 +29,13 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitime.api.data.gtfs.EnhancedFeedMessage;
+import org.transitime.api.data.gtfs.EnhancedOperator;
+import org.transitime.api.data.gtfs.EnhancedStopTimeEvent;
+import org.transitime.api.data.gtfs.EnhancedStopTimeUpdate;
+import org.transitime.api.data.gtfs.EnhancedTrip;
+import org.transitime.api.data.gtfs.EnhancedTripUpdate;
+import org.transitime.api.data.gtfs.EnhancedVehicle;
 import org.transitime.api.utils.AgencyTimezoneCache;
 import org.transitime.config.IntegerConfigValue;
 import org.transitime.ipc.clients.PredictionsInterfaceFactory;
@@ -181,7 +188,53 @@ public class GtfsRtTripFeed {
 		// Return the results
 		return tripUpdate.build();
 	}
-	
+
+	private EnhancedFeedMessage createEnhancedMessage(Map<String, List<IpcPrediction>> predsByTripMap) {
+		EnhancedFeedMessage efm = new EnhancedFeedMessage();
+		// For each trip...
+		for (List<IpcPrediction> predsForTrip : predsByTripMap.values()) {
+			if (predsForTrip != null) {
+				EnhancedTripUpdate tu = createEnhancedTripUpdate(predsForTrip);
+				efm.getEntities().add(tu);
+			}
+		}
+
+		return efm;
+	}
+
+	private EnhancedTripUpdate createEnhancedTripUpdate(List<IpcPrediction> predsForTrip) {
+		EnhancedTripUpdate tu = new EnhancedTripUpdate();
+
+		// trip
+		EnhancedTrip t = new EnhancedTrip();
+		t.setTripId(predsForTrip.get(0).getTripId());
+		logger.info("adding trip " + t.getTripId());
+		tu.setTrip(t);
+		// vehicle
+		EnhancedVehicle v = new EnhancedVehicle();
+		v.setVehicleId(predsForTrip.get(0).getVehicleId());
+		tu.setVehicle(v);
+		EnhancedOperator o = new EnhancedOperator();
+		o.setId(predsForTrip.get(0).getBlockId());
+		o.setName(predsForTrip.get(0).getTripPatternId());
+		v.setOperator(o);
+
+		// stop time update
+		for (IpcPrediction p : predsForTrip) {
+			EnhancedStopTimeUpdate update = new EnhancedStopTimeUpdate();
+			update.setStopId(p.getStopId());
+			update.setStopSequence(p.getGtfsStopSeq());
+			EnhancedStopTimeEvent e = new EnhancedStopTimeEvent();
+			update.setArrival(e);
+			update.setDeparture(e);
+			e.setTime(p.getPredictionTime());
+			tu.getStopTimeUpdates().add(update);
+		}
+
+
+		return tu;
+	}
+
 	/**
 	 * Creates a GTFS-realtime message for the predictions by trip passed in.
 	 * 
@@ -276,6 +329,19 @@ public class GtfsRtTripFeed {
 		return createMessage(predsByTrip);
 	}
 
+	public EnhancedFeedMessage createEnhancedMessage() {
+		// Get prediction data from server
+		IntervalTimer timer = new IntervalTimer();
+		Map<String, List<IpcPrediction>> predsByTrip = getPredictionsPerTrip();
+		logger.info("Getting predictions via RMI for " +
+						"GtfsRtTripFeed.createMessage() took {} msec",
+				timer.elapsedMsec());
+
+		// Use prediction data to create GTFS-RT message and return it.
+		return createEnhancedMessage(predsByTrip);
+
+	}
+
 	// For getPossiblyCachedMessage()
 	private static final DataCache tripFeedDataCache = new DataCache();
 	
@@ -305,6 +371,13 @@ public class GtfsRtTripFeed {
 	    
 	    return feedMessage;
 	}
+
+	public static EnhancedFeedMessage getPossiblyCachedEnhancedMessage(String agencyId, int cacheTime) {
+		GtfsRtTripFeed feed = new GtfsRtTripFeed(agencyId);
+		EnhancedFeedMessage efm = feed.createEnhancedMessage();
+		return efm;
+	}
+
 
 	public static class GtfsStopSequenceComparator implements Comparator {
 

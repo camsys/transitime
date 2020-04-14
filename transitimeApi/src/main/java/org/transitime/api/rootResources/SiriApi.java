@@ -31,8 +31,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.transitime.api.data.siri.SiriStopMonitoring;
-import org.transitime.api.data.siri.SiriVehiclesMonitoring;
+import org.transitime.api.data.gtfs.siri.SiriStopMonitoring;
+import org.transitime.api.data.gtfs.siri.SiriVehiclesMonitoring;
 import org.transitime.api.utils.StandardParameters;
 import org.transitime.api.utils.WebUtils;
 import org.transitime.ipc.data.IpcVehicleComplete;

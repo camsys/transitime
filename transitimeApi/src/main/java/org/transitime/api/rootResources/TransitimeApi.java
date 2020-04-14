@@ -35,36 +35,36 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.transitime.api.data.ApiActiveBlocks;
-import org.transitime.api.data.ApiActiveBlocksRoutes;
-import org.transitime.api.data.ApiAdherenceSummary;
-import org.transitime.api.data.ApiAgencies;
-import org.transitime.api.data.ApiAgency;
-import org.transitime.api.data.ApiArrivalDepartures;
-import org.transitime.api.data.ApiBlock;
-import org.transitime.api.data.ApiBlocks;
-import org.transitime.api.data.ApiBlocksTerse;
-import org.transitime.api.data.ApiCacheDetails;
-import org.transitime.api.data.ApiCalendars;
-import org.transitime.api.data.ApiDirections;
-import org.transitime.api.data.ApiHistoricalAverage;
-import org.transitime.api.data.ApiHistoricalAverageCacheKeys;
-import org.transitime.api.data.ApiIds;
-import org.transitime.api.data.ApiKalmanErrorCacheKeys;
-import org.transitime.api.data.ApiPredictions;
-import org.transitime.api.data.ApiPredictionsForStopPath;
-import org.transitime.api.data.ApiRmiServerStatus;
-import org.transitime.api.data.ApiRoutes;
-import org.transitime.api.data.ApiRoutesDetails;
-import org.transitime.api.data.ApiSchedulesHorizStops;
-import org.transitime.api.data.ApiSchedulesVertStops;
-import org.transitime.api.data.ApiServerStatus;
-import org.transitime.api.data.ApiTrip;
-import org.transitime.api.data.ApiTripPatterns;
-import org.transitime.api.data.ApiTripWithTravelTimes;
-import org.transitime.api.data.ApiVehicleConfigs;
-import org.transitime.api.data.ApiVehicles;
-import org.transitime.api.data.ApiVehiclesDetails;
+import org.transitime.api.data.gtfs.ApiActiveBlocks;
+import org.transitime.api.data.gtfs.ApiActiveBlocksRoutes;
+import org.transitime.api.data.gtfs.ApiAdherenceSummary;
+import org.transitime.api.data.gtfs.ApiAgencies;
+import org.transitime.api.data.gtfs.ApiAgency;
+import org.transitime.api.data.gtfs.ApiArrivalDepartures;
+import org.transitime.api.data.gtfs.ApiBlock;
+import org.transitime.api.data.gtfs.ApiBlocks;
+import org.transitime.api.data.gtfs.ApiBlocksTerse;
+import org.transitime.api.data.gtfs.ApiCacheDetails;
+import org.transitime.api.data.gtfs.ApiCalendars;
+import org.transitime.api.data.gtfs.ApiDirections;
+import org.transitime.api.data.gtfs.ApiHistoricalAverage;
+import org.transitime.api.data.gtfs.ApiHistoricalAverageCacheKeys;
+import org.transitime.api.data.gtfs.ApiIds;
+import org.transitime.api.data.gtfs.ApiKalmanErrorCacheKeys;
+import org.transitime.api.data.gtfs.ApiPredictions;
+import org.transitime.api.data.gtfs.ApiPredictionsForStopPath;
+import org.transitime.api.data.gtfs.ApiRmiServerStatus;
+import org.transitime.api.data.gtfs.ApiRoutes;
+import org.transitime.api.data.gtfs.ApiRoutesDetails;
+import org.transitime.api.data.gtfs.ApiSchedulesHorizStops;
+import org.transitime.api.data.gtfs.ApiSchedulesVertStops;
+import org.transitime.api.data.gtfs.ApiServerStatus;
+import org.transitime.api.data.gtfs.ApiTrip;
+import org.transitime.api.data.gtfs.ApiTripPatterns;
+import org.transitime.api.data.gtfs.ApiTripWithTravelTimes;
+import org.transitime.api.data.gtfs.ApiVehicleConfigs;
+import org.transitime.api.data.gtfs.ApiVehicles;
+import org.transitime.api.data.gtfs.ApiVehiclesDetails;
 import org.transitime.api.predsByLoc.PredsByLoc;
 import org.transitime.api.utils.StandardParameters;
 import org.transitime.api.utils.WebUtils;
@@ -186,7 +186,60 @@ public class TransitimeApi {
 			throw WebUtils.badRequestException(e);
 		}
 	}
+	@Path("/command/vehicles.json")
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON })
+	public Response getEnhancedVehicles(@BeanParam StandardParameters stdParameters,
+								@QueryParam(value = "v") List<String> vehicleIds,
+								@QueryParam(value = "r") List<String> routesIdOrShortNames, @QueryParam(value = "s") String stopId,
+								@QueryParam(value = "numPreds") @DefaultValue("2") int numberPredictions) throws WebApplicationException {
+		// Make sure request is valid
+		stdParameters.validate();
 
+		try {
+			// Get Vehicle data from server
+			VehiclesInterface inter = stdParameters.getVehiclesInterface();
+
+			Collection<IpcVehicle> vehicles;
+			if (!routesIdOrShortNames.isEmpty() && !routesIdOrShortNames.get(0).trim().isEmpty()) {
+				vehicles = inter.getForRoute(routesIdOrShortNames);
+			} else if (!vehicleIds.isEmpty() && !vehicleIds.get(0).trim().isEmpty()) {
+				vehicles = inter.get(vehicleIds);
+			} else {
+				vehicles = inter.get();
+			}
+
+			// If the vehicles doesn't exist then throw exception such that
+			// Bad Request with an appropriate message is returned.
+			if (vehicles == null)
+				throw WebUtils.badRequestException("Invalid specifier for " + "vehicles");
+
+			// To determine how vehicles should be drawn in UI. If stop
+			// specified
+			// when getting vehicle info then only the vehicles being predicted
+			// for, should be highlighted. The others should be dimmed.
+			Map<String, UiMode> uiTypesForVehicles = determineUiModesForVehicles(vehicles, stdParameters,
+					routesIdOrShortNames, stopId, numberPredictions);
+
+			ApiVehiclesDetails apiVehicles = new ApiVehiclesDetails(vehicles, stdParameters.getAgencyId(),
+					uiTypesForVehicles);
+
+			Response.ResponseBuilder responseBuilder = Response.ok(apiVehicles);
+
+			// Since this is a truly open API intended to be used by
+			// other web pages allow cross-origin requests.
+			responseBuilder.header("Access-Control-Allow-Origin", "*");
+
+			// Specify media type of XML or JSON
+			responseBuilder.type(MediaType.APPLICATION_JSON_TYPE);
+
+			// Return the response
+			return responseBuilder.build();
+		} catch (Exception e) {
+			// If problem getting data then return a Bad Request
+			throw WebUtils.badRequestException(e);
+		}
+	}
 	/**
 	 * Handles the vehicleIds command. Returns list of vehicle IDs.
 	 * 
