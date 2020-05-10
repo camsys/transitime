@@ -84,7 +84,12 @@ public class VehiclesServer extends AbstractServer
 			singleton = new VehiclesServer(agencyId);
 			singleton.vehicleDataCache = vehicleManager;
 		}
-		
+
+		if (singleton.getAgencyId() == null) {
+			logger.error("Tried calling VehiclesServer.start() but agency not configured");
+			return null;
+		}
+
 		if (!singleton.getAgencyId().equals(agencyId)) {
 			logger.error("Tried calling VehiclesServer.start() for " +
 					"agencyId={} but the singleton was created for agencyId={}", 

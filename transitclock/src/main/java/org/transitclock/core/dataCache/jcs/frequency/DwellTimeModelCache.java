@@ -47,7 +47,7 @@ public class DwellTimeModelCache implements org.transitclock.core.dataCache.Dwel
 		
 		time=FrequencyBasedHistoricalAverageCache.round(time, FrequencyBasedHistoricalAverageCache.getCacheIncrementsForFrequencyService());
 		
-		StopPathCacheKey key=new StopPathCacheKey(event.getTripId(), event.getStopPathIndex(), false, new Long(time));		
+		StopPathCacheKey key=new StopPathCacheKey(event.getTripId(), event.getStopPathIndex(), false, new Integer(time));
 						
 		TransitClockRLS rls = null;
 		if(cache.get(key)!=null)

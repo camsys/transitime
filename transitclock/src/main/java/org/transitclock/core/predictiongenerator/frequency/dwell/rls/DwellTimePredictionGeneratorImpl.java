@@ -47,7 +47,7 @@ public class DwellTimePredictionGeneratorImpl extends KalmanPredictionGeneratorI
 					
 					time=FrequencyBasedHistoricalAverageCache.round(time, FrequencyBasedHistoricalAverageCache.getCacheIncrementsForFrequencyService());
 															
-					StopPathCacheKey cacheKey=new StopPathCacheKey(indices.getTrip().getId(), indices.getStopPathIndex(),  false, new Long(time));
+					StopPathCacheKey cacheKey=new StopPathCacheKey(indices.getTrip().getId(), indices.getStopPathIndex(),  false, new Integer(time));
 					
 					result = DwellTimeModelCacheFactory.getInstance().predictDwellTime(cacheKey, headway);
 					

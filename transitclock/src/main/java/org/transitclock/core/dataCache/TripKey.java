@@ -1,5 +1,6 @@
 package org.transitclock.core.dataCache;
 
+import java.util.Calendar;
 import java.util.Date;
 /**
  * @author Sean Og Crudden
@@ -9,10 +10,10 @@ public class TripKey implements java.io.Serializable {
 	/**
 	 * Needs to be serializable to add to cache
 	 */
-	private static final long serialVersionUID = 5029823633051153715L;
+	private static final long serialVersionUID = 5029823633051153716L;
 	private String tripId;
 	
-	private Date tripStartDate;
+	private int dayOfYear;
 	private Integer startTime;
 
 	
@@ -27,7 +28,7 @@ public class TripKey implements java.io.Serializable {
 	 * @return the tripStartDate
 	 */
 	public Date getTripStartDate() {
-		return tripStartDate;
+		return toDate(dayOfYear);
 	}
 	/**
 	 * @return the startTime
@@ -40,7 +41,7 @@ public class TripKey implements java.io.Serializable {
 		super();
 		this.tripId = tripId;	
 		
-		this.tripStartDate = tripStartDate;
+		this.dayOfYear = getDayOfYear(tripStartDate);
 		this.startTime = startTime;
 	}
 
@@ -50,7 +51,7 @@ public class TripKey implements java.io.Serializable {
 		int result = 1;
 		result = prime * result + ((startTime == null) ? 0 : startTime.hashCode());
 		result = prime * result + ((tripId == null) ? 0 : tripId.hashCode());
-		result = prime * result + ((tripStartDate == null) ? 0 : tripStartDate.hashCode());
+		result = prime * result + dayOfYear;
 		return result;
 	}
 
@@ -73,17 +74,15 @@ public class TripKey implements java.io.Serializable {
 				return false;
 		} else if (!tripId.equals(other.tripId))
 			return false;
-		if (tripStartDate == null) {
-			if (other.tripStartDate != null)
-				return false;
-		} else if (!tripStartDate.equals(other.tripStartDate))
+		if (dayOfYear != other.dayOfYear) {
 			return false;
+		}
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "TripKey [tripId=" + tripId + ", tripStartDate=" + tripStartDate + ", startTime=" + startTime + "]";
+		return "TripKey [tripId=" + tripId + ", dayOfYear=" + dayOfYear + ", startTime=" + startTime + "]";
 	}
 
 	public void setStartTime(Integer time) {
@@ -92,7 +91,16 @@ public class TripKey implements java.io.Serializable {
 		
 	}
 
+	private int getDayOfYear(Date epochDate) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(epochDate.getTime());
+		return calendar.get(Calendar.DAY_OF_YEAR);
+	}
 
-
+	private Date toDate(int dayOfYear) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.DAY_OF_YEAR, dayOfYear);
+		return calendar.getTime();
+	}
 
 }

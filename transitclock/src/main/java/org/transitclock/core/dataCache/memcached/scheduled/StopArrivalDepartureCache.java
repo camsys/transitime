@@ -2,10 +2,11 @@ package org.transitclock.core.dataCache.memcached.scheduled;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -32,7 +33,7 @@ public class StopArrivalDepartureCache extends StopArrivalDepartureCacheInterfac
 
 	MemcachedClient memcachedClient = null;
 	Integer expiryDuration=Time.SEC_PER_DAY;
-	private static String keystub = "STOPAD_";
+	private static String keystub = "S_";
 
 	private static final Logger logger = LoggerFactory.getLogger(StopArrivalDepartureCache.class);
 
@@ -100,8 +101,14 @@ public class StopArrivalDepartureCache extends StopArrivalDepartureCacheInterfac
 		date.set(Calendar.MILLISECOND, 0);
 		key.setDate(date.getTime());
 
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
-		return keystub + key.getStopid() + "_" + formatter.format(key.getDate());
+
+		return keystub + key.getStopid() + "_" + dayOfYear(key.getDate());
+	}
+
+	private int dayOfYear(Date epochDate) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(epochDate.getTime());
+		return calendar.get(Calendar.DAY_OF_YEAR);
 	}
 
 }

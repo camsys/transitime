@@ -25,6 +25,7 @@ import org.transitclock.config.StringConfigValue;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.feed.gtfsRt.GtfsRtVehiclePositionsReader;
 import org.transitclock.modules.Module;
+import org.transitclock.utils.Profiler;
 
 import java.util.Collection;
 
@@ -83,6 +84,7 @@ public class GtfsRealtimeModule extends PollUrlAvlModule {
 	  
 	  for (String urlStr : urls) {
   	  try {
+		  Profiler processTime = new Profiler("processTime", 1000);
     	  logger.info("reading {}", urlStr);
     		List<AvlReport> avlReports = GtfsRtVehiclePositionsReader
     				.getAvlReports(urlStr);
@@ -90,7 +92,8 @@ public class GtfsRealtimeModule extends PollUrlAvlModule {
     		for (AvlReport avlReport : avlReports) {
     			processAvlReport(avlReport);
     		}
-    		logger.info("processed {} reports for feed {}", avlReports.size(), urlStr);
+    		processTime.end();
+    		logger.info("processed {} reports for feed {} in {}", avlReports.size(), urlStr, processTime.getPrettyPrintTime());
   	  } catch (Exception any) {
   	    logger.error("issues processing feed {}:{}", urlStr, any, any);
   	  }

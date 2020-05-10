@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.feed.gtfsRt.GtfsRtTripUpdatesReader;
 import org.transitclock.modules.Module;
 import org.transitclock.trip.PollUrlTripModule;
+import org.transitclock.utils.Profiler;
 
 /**
  * For reading in feed of GTFS-realtime AVL data. Is used for both realtime
@@ -58,8 +59,10 @@ public class GtfsRealtimeTripUpdatesModule extends PollUrlTripModule {
     @Override
     protected void getAndProcessData(String url) {
         logger.info("reading  {}", url);
+        Profiler processPerf = new Profiler("process", 1000);
         reader.process(url);
-        logger.info("read complete");
+        processPerf.end();
+        logger.info("read complete in {}", processPerf.getPrettyPrintTime());
         logger.info("processed feed {}", url);
     }
 

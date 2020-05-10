@@ -10,9 +10,9 @@ import java.util.Date;
 public class StopArrivalDepartureCacheKey implements Serializable {
 	
 	
-	private static final long serialVersionUID = 2466653739981305005L;
+	private static final long serialVersionUID = 2466653739981305006L;
 	private String stopid;
-	private Date date;
+	private int dayOfYear;
 	public StopArrivalDepartureCacheKey(String stopid, Date date) {
 		super();
 		setDate(date);
@@ -23,24 +23,16 @@ public class StopArrivalDepartureCacheKey implements Serializable {
 	}
 
 	public Date getDate() {
-		return date;
+		return toDate(dayOfYear);
 	}
 	public void setDate(Date date) {
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(date);
-
-		calendar.set(Calendar.HOUR_OF_DAY, 0);
-		calendar.set(Calendar.MINUTE, 0);
-		calendar.set(Calendar.SECOND, 0);
-		calendar.set(Calendar.MILLISECOND, 0);
-		
-		this.date = calendar.getTime();				
+		this.dayOfYear = getDayOfYear(date);
 	}
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((date == null) ? 0 : date.hashCode());
+		result = prime * result + dayOfYear;
 		result = prime * result + ((stopid == null) ? 0 : stopid.hashCode());
 		return result;
 	}
@@ -53,10 +45,7 @@ public class StopArrivalDepartureCacheKey implements Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		StopArrivalDepartureCacheKey other = (StopArrivalDepartureCacheKey) obj;
-		if (date == null) {
-			if (other.date != null)
-				return false;
-		} else if (!date.equals(other.date))
+		if (((StopArrivalDepartureCacheKey) obj).dayOfYear != dayOfYear)
 			return false;
 		if (stopid == null) {
 			if (other.stopid != null)
@@ -67,7 +56,19 @@ public class StopArrivalDepartureCacheKey implements Serializable {
 	}
 	@Override
 	public String toString() {
-		return "StopArrivalDepartureCacheKey [stopid=" + stopid + ", date=" + date + "]";
+		return "StopArrivalDepartureCacheKey [stopid=" + stopid + ", dayOfYear=" + dayOfYear + "]";
 	}
-	
+
+	private int getDayOfYear(Date epochDate) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(epochDate.getTime());
+		return calendar.get(Calendar.DAY_OF_YEAR);
+	}
+
+	private Date toDate(int dayOfYear) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.DAY_OF_YEAR, dayOfYear);
+		return calendar.getTime();
+	}
+
 }

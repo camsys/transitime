@@ -9,6 +9,7 @@
 	<name>transitclockCore</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<swagger-annotations-version>1.5.8</swagger-annotations-version>
 	</properties>
 	<repositories>
 		<!-- Needed to fix problem with one-jar not working with AWS SDK. Was getting
@@ -39,6 +40,15 @@
 			<artifactId>transitclockTraccarClient</artifactId>
 			<version>2.0.0-cs-SNAPSHOT</version>
 		</dependency>
+		<!-- this is already a transitive dependency but this
+		     explicit requirement makes it easier for IDEs
+		-->
+		<dependency>
+			<groupId>io.swagger</groupId>
+			<artifactId>swagger-annotations</artifactId>
+			<version>${swagger-annotations-version}</version>
+		</dependency>
+
 		<dependency>
 			<groupId>com.esri.geometry</groupId>
 			<artifactId>esri-geometry-api</artifactId>

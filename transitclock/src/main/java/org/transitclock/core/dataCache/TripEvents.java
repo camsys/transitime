@@ -4,23 +4,42 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.transitclock.core.dataCache.memcached.scheduled.TinyArrivalDeparture;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
 public class TripEvents implements Serializable {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -510989387398784934L;
+	private static final long serialVersionUID = -510989387398784935L;
 	
 	
-	public List <IpcArrivalDeparture> events = null;
+	public List <TinyArrivalDeparture> events = null;
 
 	public List<IpcArrivalDeparture> getEvents() {
-		return events;
+		return toIPC(events);
+	}
+
+	private List<IpcArrivalDeparture> toIPC(List<TinyArrivalDeparture> events) {
+		return null;
 	}
 
 	public void setEvents(List<IpcArrivalDeparture> events) {
-		this.events = events;
-		Collections.sort(this.events, new IpcArrivalDepartureComparator());
+		this.events = tiny(events);
+		Collections.sort(this.events, new TinyArrivalDepartureComparator());
+	}
+
+	private List<TinyArrivalDeparture> tiny(List<IpcArrivalDeparture> events) {
+		List<TinyArrivalDeparture> tinyList = new ArrayList<>();
+		for (IpcArrivalDeparture iad : events) {
+			TinyArrivalDeparture tad = toTiny(iad);
+			tinyList.add(tad);
+		}
+		return tinyList;
+	}
+
+	private TinyArrivalDeparture toTiny(IpcArrivalDeparture iad) {
+		TinyArrivalDeparture tad = new TinyArrivalDeparture();
+		return tad;
 	}
 
 	@Override
@@ -54,18 +73,18 @@ public class TripEvents implements Serializable {
 
 	public TripEvents(List<IpcArrivalDeparture> events) {
 		super();
-		this.events = events;
-		Collections.sort(this.events, new IpcArrivalDepartureComparator());
+		this.events = tiny(events);
+		Collections.sort(this.events, new TinyArrivalDepartureComparator());
 	}
 	
 	public void addEvent(IpcArrivalDeparture event)
 	{
 		if(this.events==null)
 		{
-			events=new ArrayList<IpcArrivalDeparture>();
+			events=new ArrayList<TinyArrivalDeparture>();
 		}
-		events.add(event);
-		Collections.sort(this.events, new IpcArrivalDepartureComparator());
+		events.add(toTiny(event));
+		Collections.sort(this.events, new TinyArrivalDepartureComparator());
 	}
 
 }

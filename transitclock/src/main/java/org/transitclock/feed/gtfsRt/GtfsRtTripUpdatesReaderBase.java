@@ -37,10 +37,11 @@ public abstract class GtfsRtTripUpdatesReaderBase {
      * for each AvlReport.
      */
     public synchronized void process(String urlString) {
+        IntervalTimer timer = null;
         try {
             logger.info("Getting GTFS-realtime AVL data from URL={} ...",
                     urlString);
-            IntervalTimer timer = new IntervalTimer();
+            timer = new IntervalTimer();
 
             URI uri = new URI(urlString);
             URL url = uri.toURL();
@@ -72,7 +73,10 @@ public abstract class GtfsRtTripUpdatesReaderBase {
             logger.error("Exception when reading GTFS-realtime data from " +
                             "URL {}",
                     urlString, e);
+        } finally {
+            logger.info("Exiting GTFS-realtime processing took {} msec", timer.elapsedMsec());
         }
+
     }
 
 

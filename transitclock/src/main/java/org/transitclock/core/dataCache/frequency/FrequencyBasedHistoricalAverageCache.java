@@ -62,7 +62,7 @@ public class FrequencyBasedHistoricalAverageCache {
 	}
 	
 	
-	private final ConcurrentHashMap<StopPathKey, TreeMap<Long, HistoricalAverage>> m = new ConcurrentHashMap<StopPathKey,TreeMap<Long, HistoricalAverage>>();
+	private final ConcurrentHashMap<StopPathKey, TreeMap<Integer, HistoricalAverage>> m = new ConcurrentHashMap<StopPathKey,TreeMap<Integer, HistoricalAverage>>();
 		
 	/**
 	 * Gets the singleton instance of this class.
@@ -82,11 +82,11 @@ public class FrequencyBasedHistoricalAverageCache {
 		String totalsString=new String();
 		for(StopPathKey key:m.keySet())
 		{
-			TreeMap<Long, HistoricalAverage> values=new TreeMap<Long, HistoricalAverage>();
+			TreeMap<Integer, HistoricalAverage> values=new TreeMap<Integer, HistoricalAverage>();
 			
-			TreeMap<Long, HistoricalAverage> map = m.get(key);
-			Set<Long> times = map.keySet();
-			for(Long time:times)
+			TreeMap<Integer, HistoricalAverage> map = m.get(key);
+			Set<Integer> times = map.keySet();
+			for(Integer time:times)
 			{
 				values.put(time, map.get(time));
 				
@@ -100,13 +100,13 @@ public class FrequencyBasedHistoricalAverageCache {
 	synchronized public HistoricalAverage getAverage(StopPathCacheKey key) {
 		
 		logger.debug("Looking for average for : {} in FrequencyBasedHistoricalAverageCache cache.", key);
-		TreeMap<Long, HistoricalAverage> result = m.get(new StopPathKey(key));
+		TreeMap<Integer, HistoricalAverage> result = m.get(new StopPathKey(key));
 		if(result!=null)
 		{
 			logger.debug("Found average buckets for {}. ", key);
 			if(key.getStartTime()!=null)
 			{
-				SortedMap<Long, HistoricalAverage> subresult = result.subMap(key.getStartTime(), key.getStartTime()+getCacheIncrementsForFrequencyService());
+				SortedMap<Integer, HistoricalAverage> subresult = result.subMap(key.getStartTime(), key.getStartTime()+getCacheIncrementsForFrequencyService());
 				
 				if(subresult.size()==1)
 				{
@@ -123,11 +123,11 @@ public class FrequencyBasedHistoricalAverageCache {
 	}
 	synchronized private void putAverage(StopPathCacheKey key, HistoricalAverage average) {
 					
-		TreeMap<Long, HistoricalAverage> result = m.get(new StopPathKey(key));
+		TreeMap<Integer, HistoricalAverage> result = m.get(new StopPathKey(key));
 					
 		if(result==null)
 		{			
-			m.put(new StopPathKey(key), new TreeMap<Long, HistoricalAverage> ());			
+			m.put(new StopPathKey(key), new TreeMap<Integer, HistoricalAverage> ());
 		}
 		//logger.debug("Putting: {} for start time: {} in FrequencyBasedHistoricalAverageCache with value : {}",new StopPathKey(key), key.getStartTime(), average);
 		m.get(new StopPathKey(key)).put(key.getStartTime(), average);													
@@ -151,7 +151,7 @@ public class FrequencyBasedHistoricalAverageCache {
 			{		
 				if(trip.isNoSchedule())
 				{							
-					StopPathCacheKey historicalAverageCacheKey=new StopPathCacheKey(trip.getId(), pathDuration.getArrival().getStopPathIndex(), true,new Long(time));
+					StopPathCacheKey historicalAverageCacheKey=new StopPathCacheKey(trip.getId(), pathDuration.getArrival().getStopPathIndex(), true,new Integer(time));
 					
 					HistoricalAverage average = FrequencyBasedHistoricalAverageCache.getInstance().getAverage(historicalAverageCacheKey);
 					
@@ -168,7 +168,7 @@ public class FrequencyBasedHistoricalAverageCache {
 			DwellTimeResult stopDuration=getLastStopDuration(new IpcArrivalDeparture(arrivalDeparture), trip);
 			if(stopDuration!=null && stopDuration.getDuration() > minDwellTimeFilterValue.getValue() && stopDuration.getDuration() < maxDwellTimeFilterValue.getValue())
 			{
-				StopPathCacheKey historicalAverageCacheKey=new StopPathCacheKey(trip.getId(), stopDuration.getDeparture().getStopPathIndex(), false, new Long(time));
+				StopPathCacheKey historicalAverageCacheKey=new StopPathCacheKey(trip.getId(), stopDuration.getDeparture().getStopPathIndex(), false, new Integer(time));
 				
 				HistoricalAverage average = FrequencyBasedHistoricalAverageCache.getInstance().getAverage(historicalAverageCacheKey);
 				
