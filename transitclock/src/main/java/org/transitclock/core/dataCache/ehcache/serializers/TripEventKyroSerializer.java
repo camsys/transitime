@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import org.ehcache.spi.serialization.Serializer;
 import org.ehcache.spi.serialization.SerializerException;
 import org.transitclock.core.dataCache.TripEvents;
-import org.transitclock.ipc.data.IpcArrivalDeparture;
+import org.transitclock.core.dataCache.memcached.scheduled.TinyArrivalDeparture;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.ByteBufferInputStream;
@@ -19,11 +19,11 @@ public class TripEventKyroSerializer implements Serializer<TripEvents> {
 
 	  public TripEventKyroSerializer(ClassLoader loader) {
 	    //no-op
-		kryo.register(IpcArrivalDeparture.class);
+		kryo.register(TinyArrivalDeparture.class);
 		
-		FieldSerializer<IpcArrivalDeparture> serializer = new FieldSerializer<IpcArrivalDeparture>(kryo, IpcArrivalDeparture.class);
+		FieldSerializer<TinyArrivalDeparture> serializer = new FieldSerializer<TinyArrivalDeparture>(kryo, TinyArrivalDeparture.class);
 		serializer.setCopyTransient(false);		
-		kryo.register(IpcArrivalDeparture.class, serializer);		 
+		kryo.register(TinyArrivalDeparture.class, serializer);
 	  }
 
 	  @Override
