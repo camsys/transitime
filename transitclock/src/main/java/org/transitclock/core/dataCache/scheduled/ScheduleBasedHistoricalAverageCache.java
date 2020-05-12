@@ -17,6 +17,7 @@ import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
+import org.transitclock.utils.Profiler;
 
 import java.util.Calendar;
 import java.util.Collections;
@@ -78,23 +79,29 @@ public class ScheduleBasedHistoricalAverageCache {
 		if(trip!=null && !trip.isNoSchedule())
 		{					
 			logger.debug("Putting :"+arrivalDeparture.toString() + " in HistoricalAverageCache cache.");
-			
+
+			Profiler getLastTravelTimeDetails = new Profiler("getLastTravelTimeDetails", 30);
 			TravelTimeDetails travelTimeDetails=getLastTravelTimeDetails(new IpcArrivalDeparture(arrivalDeparture), trip);
+			getLastTravelTimeDetails.end();
 			
 			if(travelTimeDetails!=null&&travelTimeDetails.sanityCheck())
 			{			
 				if(!trip.isNoSchedule())
 				{
 					StopPathCacheKey historicalAverageCacheKey=new StopPathCacheKey(trip.getId(), arrivalDeparture.getStopPathIndex(), true);
-					
+
+					Profiler lastAverage = new Profiler("travel lastAverage", 30);
 					HistoricalAverage average = ScheduleBasedHistoricalAverageCache.getInstance().getAverage(historicalAverageCacheKey);
+					lastAverage.end();
 					
 					if(average==null)				
 						average=new HistoricalAverage();
 					logger.trace("Updating historical averege for : {} with {}",historicalAverageCacheKey, travelTimeDetails);
 					average.update(travelTimeDetails.getTravelTime());
-					
+
+					Profiler putAverage = new Profiler("dwell putAverage", 30);
 					ScheduleBasedHistoricalAverageCache.getInstance().putAverage(historicalAverageCacheKey, average);
+					putAverage.end();
 				}
 			}		
 			
@@ -102,16 +109,20 @@ public class ScheduleBasedHistoricalAverageCache {
 			if(dwellTimeDetails!=null&&dwellTimeDetails.sanityCheck())
 			{
 				StopPathCacheKey historicalAverageCacheKey=new StopPathCacheKey(trip.getId(), arrivalDeparture.getStopPathIndex(), false);
-				
+
+				Profiler lastAverage = new Profiler("dwell lastAverage", 30);
 				HistoricalAverage average = ScheduleBasedHistoricalAverageCache.getInstance().getAverage(historicalAverageCacheKey);
+				lastAverage.end();
 				
 				if(average==null)				
 					average=new HistoricalAverage();
 				
 				logger.trace("Updating historical averege for : {} with {}",historicalAverageCacheKey, dwellTimeDetails );
 				average.update(dwellTimeDetails.getDwellTime());
-			
+
+				Profiler putAverage = new Profiler("dwell putAverage", 30);
 				ScheduleBasedHistoricalAverageCache.getInstance().putAverage(historicalAverageCacheKey, average);
+				putAverage.end();
 			}
 		}
 	}
@@ -170,7 +181,9 @@ public class ScheduleBasedHistoricalAverageCache {
 			if(counter % 1000 == 0){
 				logger.info("{} out of {} ScheduleBased Historical Records for period {} to {} ({}%)", counter, results.size(), startDate, endDate, (int)((counter * 100.0f) / results.size()));
 			}
+			Profiler putArrivalDeparture = new Profiler("putArrivalDeparture", 50);
 			ScheduleBasedHistoricalAverageCache.getInstance().putArrivalDeparture(result);
+			putArrivalDeparture.end();
 			counter++;
 		}		
 	}

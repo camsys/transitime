@@ -17,10 +17,10 @@
 
 package org.transitclock.core.predictiongenerator;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.transitclock.applications.Core;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.core.Indices;
+import org.transitclock.core.ServiceUtils;
 import org.transitclock.core.TravelTimeDetails;
 import org.transitclock.core.VehicleState;
 import org.transitclock.core.dataCache.*;
@@ -31,6 +31,7 @@ import org.transitclock.db.structs.Block;
 import org.transitclock.db.structs.PredictionEvent;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
+import org.transitclock.utils.Time;
 
 import java.util.*;
 
@@ -42,6 +43,10 @@ public class HistoricalPredictionLibrary {
 	private static final IntegerConfigValue closestVehicleStopsAhead = new IntegerConfigValue(
 			"transitclock.prediction.closestvehiclestopsahead", new Integer(2),
 			"Num stops ahead a vehicle must be to be considers in the closest vehicle calculation");
+
+	private static ServiceUtils serviceUtils = null;
+	private static CacheDuration cacheDuration = null;
+
 
 	public static TravelTimeDetails getLastVehicleTravelTime(VehicleState currentVehicleState, Indices indices) throws Exception {
 
@@ -66,7 +71,7 @@ public class HistoricalPredictionLibrary {
 				for (IpcArrivalDeparture currentArrivalDeparture : currentStopList) {
 
 					if(currentArrivalDeparture.isDeparture()
-							&& !currentArrivalDeparture.getVehicleId().equals(currentVehicleState.getVehicleId())
+							&& (currentArrivalDeparture.getVehicleId() != null && !currentArrivalDeparture.getVehicleId().equals(currentVehicleState.getVehicleId()))
 							&& (currentVehicleState.getTrip().getDirectionId()==null || currentVehicleState.getTrip().getDirectionId().equals(currentArrivalDeparture.getDirectionId())))
 					{
 						IpcArrivalDeparture found;
@@ -212,21 +217,21 @@ public class HistoricalPredictionLibrary {
 		return null;
 	}
 
-    public static List<TravelTimeDetails> lastDaysTimes(TripDataHistoryCacheInterface cache, String tripId,String direction, int stopPathIndex, Date startDate,
-														Integer startTime, int num_days_look_back, int num_days) {
+    public static List<TravelTimeDetails> lastDaysTimes(TripDataHistoryCacheInterface cache, String serviceId,
+														String tripId,String direction, int stopPathIndex, Date startDate,
+														Integer startTime, int numDaysLookBack, int numDays) {
 
 		List<TravelTimeDetails> times = new ArrayList<TravelTimeDetails>();
 		List<IpcArrivalDeparture> results = null;
 		int num_found = 0;
-		/*
-		 * TODO This could be smarter about the dates it looks at by looking at
-		 * which services use this trip and only 1ook on day service is
-		 * running
-		 */
-		for (int i = 0; i < num_days_look_back && num_found < num_days; i++) {
+		int delta = 0;
+		ServiceUtils.ServiceType serviceType = getServiceUtils().getServiceType(serviceId);
+		int serviceTypeNumDaysLookBack = getCacheDuration().getExpiryForServiceType(serviceType);
 
-			Date nearestDay = DateUtils.truncate(DateUtils.addDays(startDate, (i + 1) * -1), Calendar.DAY_OF_MONTH);
+		while (delta < serviceTypeNumDaysLookBack && num_found < numDays) {
 
+			Date nearestDay = getServiceUtils().getNthDayPerCalendar(serviceType, startDate, (delta+1)*-1);
+			delta = getDeltaDays(startDate, nearestDay) + 1;
 			TripKey tripKey = new TripKey(tripId, nearestDay, startTime);
 
 			results = cache.getTripHistory(tripKey);
@@ -259,6 +264,18 @@ public class HistoricalPredictionLibrary {
 		return times;
     }
 
+	private static CacheDuration getCacheDuration() {
+		if (cacheDuration == null)
+			cacheDuration = new CacheDuration();
+		return cacheDuration;
+	}
+
+	private static int getDeltaDays(Date startDate, Date endDate) {
+		long delta = endDate.getTime() - startDate.getTime();
+		return new Double(delta / Time.MS_PER_YEAR).intValue();
+	}
+
+
 	private static IpcArrivalDeparture getArrival(int stopPathIndex, List<IpcArrivalDeparture> results)
 	{
 		for(IpcArrivalDeparture result:results)
@@ -280,4 +297,9 @@ public class HistoricalPredictionLibrary {
 		return iterable == null ? Collections.<T> emptyList() : iterable;
 	}
 
+	private static ServiceUtils getServiceUtils() {
+		if (serviceUtils == null)
+			serviceUtils = new ServiceUtils(Core.getInstance().getDbConfig());
+		return serviceUtils;
+	}
 }

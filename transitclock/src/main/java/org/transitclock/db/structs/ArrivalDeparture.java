@@ -227,6 +227,18 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 		{
 			Trip trip = block.getTrip(tripIndex);
 			StopPath stopPath = trip.getStopPath(stopPathIndex);
+			if (stopPath == null) {
+				// bad data
+				logger.error("invalid index {} into trip {}", stopPathIndex, tripIndex);
+				this.stopPathLength=0;
+				this.gtfsStopSeq=0;
+				this.scheduledTime=null;
+				this.tripId="";
+				this.stopId="";
+				this.serviceId = "";
+				this.stopOrder=0;
+				return;
+			}
 			String stopId = stopPath.getStopId();
 			// Determine and store stop order
 			this.stopOrder =

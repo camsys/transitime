@@ -4,21 +4,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.transitclock.core.dataCache.memcached.scheduled.TinyArrivalDeparture;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
 public class StopEvents implements Serializable {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 7968075904267156083L;
-	public List <IpcArrivalDeparture> events;
+	public List <TinyArrivalDeparture> events;
 
 	public List<IpcArrivalDeparture> getEvents() {
-		return events;
+		return EventHelper.asIpcList(events);
 	}
 
 	public void setEvents(List<IpcArrivalDeparture> events) {
-		this.events = events;
-		Collections.sort(this.events, new IpcArrivalDepartureComparator());
+		this.events = EventHelper.asTinyList(events);
+		Collections.sort(this.events, new TinyArrivalDepartureComparator());
 	}
 
 	@Override
@@ -52,9 +53,9 @@ public class StopEvents implements Serializable {
 
 	public StopEvents(List<IpcArrivalDeparture> events) {
 		super();
-		this.events = events;
+		this.events = EventHelper.asTinyList(events);
 		
-		Collections.sort(this.events, new IpcArrivalDepartureComparator());
+		Collections.sort(this.events, new TinyArrivalDepartureComparator());
 		
 	}
 	
@@ -62,10 +63,10 @@ public class StopEvents implements Serializable {
 	{
 		if(this.events==null)
 		{
-			events=new ArrayList<IpcArrivalDeparture>();
+			events=new ArrayList<TinyArrivalDeparture>();
 		}
-		events.add(event);
-		Collections.sort(this.events, new IpcArrivalDepartureComparator());		
+		events.add(EventHelper.asTiny(event));
+		Collections.sort(this.events, new TinyArrivalDepartureComparator());
 	}
 	
 }

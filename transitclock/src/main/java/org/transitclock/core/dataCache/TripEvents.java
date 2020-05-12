@@ -16,31 +16,15 @@ public class TripEvents implements Serializable {
 	public List <TinyArrivalDeparture> events = null;
 
 	public List<IpcArrivalDeparture> getEvents() {
-		return toIPC(events);
+		return EventHelper.asIpcList(events);
 	}
 
-	private List<IpcArrivalDeparture> toIPC(List<TinyArrivalDeparture> events) {
-		return null;
-	}
 
 	public void setEvents(List<IpcArrivalDeparture> events) {
-		this.events = tiny(events);
+		this.events = EventHelper.asTinyList(events);
 		Collections.sort(this.events, new TinyArrivalDepartureComparator());
 	}
 
-	private List<TinyArrivalDeparture> tiny(List<IpcArrivalDeparture> events) {
-		List<TinyArrivalDeparture> tinyList = new ArrayList<>();
-		for (IpcArrivalDeparture iad : events) {
-			TinyArrivalDeparture tad = toTiny(iad);
-			tinyList.add(tad);
-		}
-		return tinyList;
-	}
-
-	private TinyArrivalDeparture toTiny(IpcArrivalDeparture iad) {
-		TinyArrivalDeparture tad = new TinyArrivalDeparture();
-		return tad;
-	}
 
 	@Override
 	public int hashCode() {
@@ -73,7 +57,7 @@ public class TripEvents implements Serializable {
 
 	public TripEvents(List<IpcArrivalDeparture> events) {
 		super();
-		this.events = tiny(events);
+		this.events = EventHelper.asTinyList(events);
 		Collections.sort(this.events, new TinyArrivalDepartureComparator());
 	}
 	
@@ -83,7 +67,7 @@ public class TripEvents implements Serializable {
 		{
 			events=new ArrayList<TinyArrivalDeparture>();
 		}
-		events.add(toTiny(event));
+		events.add(EventHelper.asTiny(event));
 		Collections.sort(this.events, new TinyArrivalDepartureComparator());
 	}
 

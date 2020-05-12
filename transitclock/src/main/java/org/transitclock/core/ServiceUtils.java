@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
@@ -45,10 +46,35 @@ import org.transitclock.utils.Time;
  */
 public class ServiceUtils {
 
+	/*
+	* categorize the service in a few broad types.
+	 */
+	public enum ServiceType {
+		UNKNOWN (-1),
+		WEEKDAY (0),
+		WEEKEND (1),
+		SATURDAY (2),
+		SUNDAY (3);
+
+		public final static int WEEKDAY_VALUE = 0;
+		public final static int WEEKEND_VALUE = 1;
+		public final static int SATURDAY_VALUE = 2;
+		public final static int SUNDAY_VALUE = 3;
+		private int type;
+
+		ServiceType() { type = -1; }
+		ServiceType(int type) { this.type = type; }
+		public int valueOf() { return type; }
+	}
+
 	private final GregorianCalendar calendar;
 	
 	private final DbConfig dbConfig;
-	
+
+	private Map<String, Calendar> serviceIdToCalendarMap = new HashMap<>();
+	private Map<String, ServiceUtils.ServiceType> serviceIdToServiceTypeMap = new HashMap<>();
+
+
 	private static IntegerConfigValue minutesIntoMorningToIncludePreviousServiceIds =
 			new IntegerConfigValue(
 					"transitclock.service.minutesIntoMorningToIncludePreviousServiceIds",
@@ -67,8 +93,7 @@ public class ServiceUtils {
 	/**
 	 * ServiceUtils constructor. Creates reusable GregorianCalendar and sets the
 	 * timezone so that the calendar can be reused.
-	 * 
-	 * @param timezoneName See http://en.wikipedia.org/wiki/List_of_tz_zones
+	 *
 	 */
 	public ServiceUtils(DbConfig dbConfig) { 
 
@@ -184,6 +209,176 @@ public class ServiceUtils {
 		List<String> serviceIds = getServiceIdsForDayNoCache(serviceDate);
 		serviceIdsForDate.put(serviceDate, serviceIds);
 		return serviceIds;
+	}
+
+	public Date getNthDayPerCalendar(String serviceId, Date startDate, int n) {
+		ServiceType serviceType = getServiceType(serviceId);
+		return getNthDayPerCalendar(serviceType, startDate, n);
+	}
+
+	/**
+	 * get the Nth next appropriate day per calendar type.  Where next
+	 * can be forwards or backwards in time.
+	 * @param serviceType
+	 * @param startDate
+	 * @param n
+	 * @return
+	 */
+	public Date getNthDayPerCalendar(ServiceType serviceType, Date startDate, int n) {
+		switch (serviceType) {
+			case WEEKDAY:
+				return DateUtils.truncate(getNthWeekday(startDate, n), java.util.Calendar.DAY_OF_MONTH);
+			case WEEKEND:
+				return DateUtils.truncate(getNthWeekend(startDate, n), java.util.Calendar.DAY_OF_MONTH);
+			case SATURDAY:
+				return DateUtils.truncate(getNthSaturday(startDate, n), java.util.Calendar.DAY_OF_MONTH);
+			case SUNDAY:
+				return DateUtils.truncate(getNthSunday(startDate, n), java.util.Calendar.DAY_OF_MONTH);
+			default:
+				return DateUtils.truncate(getNthDay(startDate, n), java.util.Calendar.DAY_OF_MONTH);
+		}
+
+	}
+
+	private Date getNthDay(Date startDate, int n) {
+		java.util.Calendar c = java.util.Calendar.getInstance();
+		c.setTime(startDate);
+		c.roll(java.util.Calendar.DAY_OF_YEAR, n);
+		return c.getTime();
+	}
+
+	private Date getNthWeekday(Date startDate, int n) {
+		java.util.Calendar c = java.util.Calendar.getInstance();
+		c.setTime(startDate);
+		c.roll(java.util.Calendar.DAY_OF_YEAR, n);
+
+		while (!isWeekday(c)) {
+			if (n >= 0)
+				c.roll(java.util.Calendar.DAY_OF_YEAR, 1);
+			else
+				c.roll(java.util.Calendar.DAY_OF_YEAR, -1);
+		}
+		return c.getTime();
+	}
+
+	private boolean isWeekday(java.util.Calendar c) {
+		return java.util.Calendar.MONDAY == c.get(java.util.Calendar.DAY_OF_WEEK)
+				|| java.util.Calendar.TUESDAY == c.get(java.util.Calendar.DAY_OF_WEEK)
+				|| java.util.Calendar.WEDNESDAY == c.get(java.util.Calendar.DAY_OF_WEEK)
+				|| java.util.Calendar.THURSDAY == c.get(java.util.Calendar.DAY_OF_WEEK)
+				|| java.util.Calendar.FRIDAY == c.get(java.util.Calendar.DAY_OF_WEEK);
+	}
+
+	private Date getNthWeekend(Date startDate, int n) {
+		java.util.Calendar c = java.util.Calendar.getInstance();
+		c.setTime(startDate);
+		c.roll(java.util.Calendar.DAY_OF_YEAR, n);
+		while (isWeekday(c)) {
+			if (n >= 0)
+				c.roll(java.util.Calendar.DAY_OF_YEAR, 1);
+			else
+				c.roll(java.util.Calendar.DAY_OF_YEAR, -1);
+		}
+		return c.getTime();
+	}
+	private Date getNthSaturday(Date startDate, int n) {
+		java.util.Calendar c = java.util.Calendar.getInstance();
+		c.setTime(startDate);
+		c.roll(java.util.Calendar.DAY_OF_YEAR, n);
+		while (c.get(java.util.Calendar.DAY_OF_WEEK) != java.util.Calendar.SATURDAY) {
+			if (n >= 0)
+				c.roll(java.util.Calendar.DAY_OF_YEAR, 1);
+			else
+				c.roll(java.util.Calendar.DAY_OF_YEAR, -1);
+		}
+		return c.getTime();
+	}
+	private Date getNthSunday(Date startDate, int n) {
+		java.util.Calendar c = java.util.Calendar.getInstance();
+		c.setTime(startDate);
+		c.roll(java.util.Calendar.DAY_OF_YEAR, n);
+		while (c.get(java.util.Calendar.DAY_OF_WEEK) != java.util.Calendar.SUNDAY) {
+			if (n >= 0)
+				c.roll(java.util.Calendar.DAY_OF_YEAR, 1);
+			else
+				c.roll(java.util.Calendar.DAY_OF_YEAR, -1);
+		}
+		return c.getTime();
+
+	}
+
+	public ServiceType getServiceType(String serviceId) {
+		if (serviceIdToServiceTypeMap.containsKey(serviceId))
+			return serviceIdToServiceTypeMap.get(serviceId);
+
+		Calendar serviceCalendar = getCalendarForServiceId(serviceId);
+		if (serviceCalendar == null) return ServiceType.UNKNOWN;
+		if (serviceCalendar.getMonday()
+				&& serviceCalendar.getTuesday()
+				&& serviceCalendar.getWednesday()
+				&& serviceCalendar.getThursday()
+				&& serviceCalendar.getFriday()
+				&& !serviceCalendar.getSaturday()
+				&& !serviceCalendar.getSunday()) {
+			serviceIdToServiceTypeMap.put(serviceId, ServiceType.WEEKDAY);
+			return ServiceType.WEEKDAY;
+		}
+
+		if (!serviceCalendar.getMonday()
+				&& !serviceCalendar.getTuesday()
+				&& !serviceCalendar.getWednesday()
+				&& !serviceCalendar.getThursday()
+				&& !serviceCalendar.getFriday()
+				&& serviceCalendar.getSaturday()
+				&& serviceCalendar.getSunday()) {
+			serviceIdToServiceTypeMap.put(serviceId, ServiceType.WEEKEND);
+			return ServiceType.WEEKEND;
+		}
+
+		if (!serviceCalendar.getMonday()
+				&& !serviceCalendar.getTuesday()
+				&& !serviceCalendar.getWednesday()
+				&& !serviceCalendar.getThursday()
+				&& !serviceCalendar.getFriday()
+				&& serviceCalendar.getSaturday()
+				&& !serviceCalendar.getSunday()) {
+			serviceIdToServiceTypeMap.put(serviceId, ServiceType.SATURDAY);
+			return ServiceType.SATURDAY;
+		}
+
+		if (!serviceCalendar.getMonday()
+				&& !serviceCalendar.getTuesday()
+				&& !serviceCalendar.getWednesday()
+				&& !serviceCalendar.getThursday()
+				&& !serviceCalendar.getFriday()
+				&& !serviceCalendar.getSaturday()
+				&& serviceCalendar.getSunday()) {
+			serviceIdToServiceTypeMap.put(serviceId, ServiceType.SUNDAY);
+			return ServiceType.SUNDAY;
+		}
+
+		// cache the failure
+		serviceIdToServiceTypeMap.put(serviceId, ServiceType.UNKNOWN);
+		return ServiceType.UNKNOWN;
+	}
+
+	/**
+	 * Return the Calendar struct that represents the serviceId.
+	 * @param serviceId
+	 * @return
+	 */
+	public Calendar getCalendarForServiceId(String serviceId) {
+		if (serviceId == null) return null;
+		if (serviceIdToCalendarMap.containsKey(serviceId))
+			return serviceIdToCalendarMap.get(serviceId);
+
+		for (Calendar calendar : Core.getInstance().getDbConfig().getCalendars()) {
+			if (serviceId.equals(calendar.getServiceId())) {
+				serviceIdToCalendarMap.put(serviceId, calendar);
+				return calendar;
+			}
+		}
+		return null;
 	}
 
 	private Date getStartOfDay(Date epochTime) {

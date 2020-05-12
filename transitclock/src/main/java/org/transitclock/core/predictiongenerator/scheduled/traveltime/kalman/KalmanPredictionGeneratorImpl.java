@@ -43,7 +43,7 @@ public class KalmanPredictionGeneratorImpl extends PredictionGeneratorDefaultImp
 			"Max number of historical days trips to include in Kalman prediction calculation.");
 
 	private static final IntegerConfigValue maxKalmanDaysToSearch = new IntegerConfigValue(
-			"transitclock.prediction.data.kalman.maxdaystoseach", new Integer(21),
+			"transitclock.prediction.data.kalman.maxdaystoseach", new Integer(7),
 			"Max number of days to look back for data. This will also be effected by how old the data in the cache is.");
 
 	private static final DoubleConfigValue initialErrorValue = new DoubleConfigValue(
@@ -106,7 +106,7 @@ public class KalmanPredictionGeneratorImpl extends PredictionGeneratorDefaultImp
 				Date nearestDay = DateUtils.truncate(avlReport.getDate(), Calendar.DAY_OF_MONTH);
 
 				Profiler lastDaysTimesPerf = new Profiler("lastDaysTimes", 30);
-				List<TravelTimeDetails> lastDaysTimes = HistoricalPredictionLibrary.lastDaysTimes(tripCache, currentVehicleState.getTrip().getId(),currentVehicleState.getTrip().getDirectionId(),
+				List<TravelTimeDetails> lastDaysTimes = HistoricalPredictionLibrary.lastDaysTimes(tripCache, currentVehicleState.getTrip().getServiceId(), currentVehicleState.getTrip().getId(),currentVehicleState.getTrip().getDirectionId(),
 						indices.getStopPathIndex(), nearestDay, currentVehicleState.getTrip().getStartTime(),
 						maxKalmanDaysToSearch.getValue(), maxKalmanDays.getValue());
 				lastDaysTimesPerf.end();

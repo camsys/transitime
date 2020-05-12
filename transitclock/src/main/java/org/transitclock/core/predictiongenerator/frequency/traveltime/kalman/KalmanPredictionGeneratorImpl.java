@@ -48,7 +48,7 @@ public class KalmanPredictionGeneratorImpl extends HistoricalAveragePredictionGe
 			"Max number of historical days trips to include in Kalman prediction calculation.");
 
 	private static final IntegerConfigValue maxKalmanDaysToSearch = new IntegerConfigValue(
-			"transitclock.prediction.data.kalman.maxdaystoseach", new Integer(30),
+			"transitclock.prediction.data.kalman.maxdaystoseach", new Integer(7),
 			"Max number of days to look back for data. This will also be effected by how old the data in the cache is.");
 
 	private static final DoubleConfigValue initialErrorValue = new DoubleConfigValue(
@@ -111,7 +111,7 @@ public class KalmanPredictionGeneratorImpl extends HistoricalAveragePredictionGe
 				Date nearestDay = DateUtils.truncate(avlReport.getDate(), Calendar.DAY_OF_MONTH);
 
 				Profiler lastDaysTimesPerf = new Profiler("lastDaysTimes");
-				List<TravelTimeDetails> lastDaysTimes = HistoricalPredictionLibrary.lastDaysTimes(tripCache, currentVehicleState.getTrip().getId(),currentVehicleState.getTrip().getDirectionId(),
+				List<TravelTimeDetails> lastDaysTimes = HistoricalPredictionLibrary.lastDaysTimes(tripCache, currentVehicleState.getTrip().getServiceId(), currentVehicleState.getTrip().getId(),currentVehicleState.getTrip().getDirectionId(),
 						indices.getStopPathIndex(), nearestDay, time,
 						maxKalmanDaysToSearch.getValue(), maxKalmanDays.getValue());
 				lastDaysTimesPerf.end();
@@ -207,11 +207,16 @@ public class KalmanPredictionGeneratorImpl extends HistoricalAveragePredictionGe
 				}
 			}
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			logger.error("Exception generating kalman prediction {}", e.toString(), e);
 		} finally {
 			getTravelTimeForPath.end();
 		}
-		return alternatePrediction;
+		try {
+			return alternatePrediction;
+		} catch (NullPointerException npe) {
+			logger.error("invalid traveltime {} for vehicle {}", alternatePrediction, avlReport.getVehicleId(), npe);
+			return Long.MIN_VALUE;
+		}
 	}
 
 	@Override

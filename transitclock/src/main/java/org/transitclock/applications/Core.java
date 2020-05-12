@@ -42,6 +42,7 @@ import org.transitclock.gtfs.DbConfig;
 import org.transitclock.ipc.servers.*;
 import org.transitclock.modules.Module;
 import org.transitclock.monitoring.PidFile;
+import org.transitclock.utils.Profiler;
 import org.transitclock.utils.SettableSystemTime;
 import org.transitclock.utils.SystemCurrentTime;
 import org.transitclock.utils.SystemTime;
@@ -406,6 +407,7 @@ public class Core {
 	
 	static private void populateCaches() throws Exception
 	{
+		Profiler populateCaches = new Profiler("populateCaches", 60000);
 		Session session = HibernateUtils.getSession();
 		Date endDate=Calendar.getInstance().getTime();
 
@@ -466,7 +468,7 @@ public class Core {
 				endDate=startDate;
 			}
 		}		
-	
+		populateCaches.end();
 	}
 
 	private static String getDateAsString(LocalDateTime date){
