@@ -149,7 +149,7 @@ public class AvlReport implements Serializable {
 	private final String driverId;
 	
 	// Optional
-	@Column(length=10)
+	@Column(length=50)
 	private final String licensePlate;
 	
 	// Optional. Set to null if passenger count info is not available
