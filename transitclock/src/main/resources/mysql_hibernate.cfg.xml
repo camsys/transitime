@@ -10,7 +10,7 @@
  <session-factory>
    <!-- Specify where database being used -->
    <property name="hibernate.dialect">
-      org.hibernate.dialect.MySQLDialect
+      org.hibernate.dialect.MySQL55Dialect
    </property>
    <property name="hibernate.connection.driver_class">
       com.mysql.jdbc.Driver
@@ -83,6 +83,7 @@
         that when the classes change don't need to modify all
         of the hibernate config files. -->
    <!-- <mapping class="org.transitime.modules.structures.AVLReport"/>  -->
+     <property name="hibernate.dialect.storage_engine">innodb</property>
 
  </session-factory>
 </hibernate-configuration>

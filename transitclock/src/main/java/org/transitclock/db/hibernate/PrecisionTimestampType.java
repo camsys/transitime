@@ -25,6 +25,7 @@ import java.util.Date;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.TimestampType;
 import org.hibernate.usertype.UserType;
 
@@ -98,29 +99,19 @@ public class PrecisionTimestampType implements UserType {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.hibernate.usertype.UserType#isMutable()
-	 */
-	@Override
-	public boolean isMutable() {
-		return false;
-	}
-
-	/* (non-Javadoc)
 	 * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, java.lang.String[], org.hibernate.engine.spi.SessionImplementor, java.lang.Object)
 	 */
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names,
-			SessionImplementor session, Object owner)
-			throws HibernateException, SQLException {
+	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor sharedSessionContractImplementor, Object o) throws HibernateException, SQLException {
 		assert names.length == 1;
-		
+
 		Timestamp timestamp;
 		if (rs != null && !rs.wasNull()) {
-			timestamp = rs.getTimestamp(names[0]);	
+			timestamp = rs.getTimestamp(names[0]);
 		} else {
 			timestamp = new Timestamp(0);
 		}
-		
+
 		return timestamp;
 	}
 
@@ -128,12 +119,11 @@ public class PrecisionTimestampType implements UserType {
 	 * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, java.lang.Object, int, org.hibernate.engine.spi.SessionImplementor)
 	 */
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index,
-			SessionImplementor session) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor sharedSessionContractImplementor) throws HibernateException, SQLException {
 		if ( value != null ) {
 //			System.out.println("value.class=" + value.getClass().getName());
 //			System.out.println("value=" + value);
-			if (!(value instanceof Date)) 
+			if (!(value instanceof Date))
 				throw new HibernateException("Writing element " + value.getClass().getName() +
 						" but was expecting a java.util.Date");
 			Date d = (Date) value;
@@ -142,13 +132,22 @@ public class PrecisionTimestampType implements UserType {
 //			System.out.println("ts=" + ts);
 			// Tried using the following line for dealing with prepared statement
 			// but then could not log the parameter value when logging the sql.
-			// Therefore need to use TimestampType.INSTANCE.set(). 
-			//st.setTimestamp(index, new Timestamp(d.getTime())); 
-			TimestampType.INSTANCE.set(st, ts, index, session);
-        } else {
-        	TimestampType.INSTANCE.set(st, null, index, session);
-        }
+			// Therefore need to use TimestampType.INSTANCE.set().
+			//st.setTimestamp(index, new Timestamp(d.getTime()));
+			TimestampType.INSTANCE.set(st, ts, index, sharedSessionContractImplementor);
+		} else {
+			TimestampType.INSTANCE.set(st, null, index, sharedSessionContractImplementor);
+		}
 	}
+
+	/* (non-Javadoc)
+	 * @see org.hibernate.usertype.UserType#isMutable()
+	 */
+	@Override
+	public boolean isMutable() {
+		return false;
+	}
+
 
 	/* (non-Javadoc)
 	 * @see org.hibernate.usertype.UserType#replace(java.lang.Object, java.lang.Object, java.lang.Object)

@@ -16,6 +16,12 @@
  */
 package org.transitclock.applications;
 
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.dialect.MySQL55Dialect;
+import org.hibernate.tool.schema.TargetType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +36,7 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.sql.Types;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -68,10 +73,6 @@ import com.google.common.reflect.ClassPath;
  *
  */
 public class SchemaGenerator {
-	private final Configuration cfg;
-	private final String packageName;
-	private final String outputDirectory;
-	
 	private static final Logger logger =
 			LoggerFactory.getLogger(SchemaGenerator.class);
 	
@@ -84,7 +85,7 @@ public class SchemaGenerator {
 	 * the db object. Instead need to use this special ImprovedMySQLDialect
 	 * as the Dialect.
 	 */
-	public static class ImprovedMySQLDialect extends MySQLDialect {
+	public static class ImprovedMySQLDialect extends MySQL55Dialect {
 		public ImprovedMySQLDialect() {
 			super();
 			// Specify special SQL type for MySQL for timestamps so that get
@@ -95,17 +96,7 @@ public class SchemaGenerator {
 
 
 	@SuppressWarnings("unchecked")
-	public SchemaGenerator(String packageName, String outputDirectory) throws Exception {
-		this.cfg = new Configuration();
-		this.cfg.setProperty("hibernate.hbm2ddl.auto", "create");
-
-		for (Class<Object> clazz : getClasses(packageName)) {
-			this.cfg.addAnnotatedClass(clazz);
-		}
-		
-		this.packageName = packageName;
-		this.outputDirectory = outputDirectory;
-	}
+	public SchemaGenerator()  {}
 
 	/**
 	 * Gets rid of the unwanted drop table commands. These aren't needed because
@@ -204,14 +195,24 @@ public class SchemaGenerator {
 	/**
 	 * Method that actually creates the file.
 	 * 
-	 * @param dbDialect to use
+	 * @param dialect to use
 	 */
-	private void generate(Dialect dialect) {
-		cfg.setProperty("hibernate.dialect", dialect.getDialectClass());
+	private void generate(String packageName, String outputDirectory, Dialect dialect) throws Exception {
 
-		SchemaExport export = new SchemaExport(cfg);
-		export.setDelimiter(";");
-		
+		Map<String, String> settings = new HashMap<>();
+		settings.put("hibernate.dialect", dialect.getDialectClass());
+		settings.put("hibernate.hbm2ddl.auto", "create");
+
+		if(dialect.equals(Dialect.MYSQL)){
+			settings.put("hibernate.dialect.storage_engine", "innodb");
+		}
+
+		MetadataSources metadata = new MetadataSources(new StandardServiceRegistryBuilder().applySettings(settings).build());
+
+		for (Class clazz : getClasses(packageName)) {
+			metadata.addAnnotatedClass(clazz);
+		}
+
 		// Determine file name. Use "ddl_" plus dialect name such as mysql or
 		// oracle plus the package name with "_" replacing "." such as
 		// org_transitime_db_structs .
@@ -220,13 +221,17 @@ public class SchemaGenerator {
 		String outputFilename = (outputDirectory!=null?outputDirectory+"/" : "") + 
 				"ddl_" + dialect.name().toLowerCase() + 
 				"_" + packeNameSuffix + ".sql";
-		
+
+		SchemaExport export = new SchemaExport();
+		export.setDelimiter(";");
+		export.setFormat(true);
 		export.setOutputFile(outputFilename);
-		
+
 		// Export, but only to an SQL file. Don't actually modify the database
 		System.out.println("Writing file " + outputFilename);
-		export.execute(true, false, false, false);
-		
+
+		export.createOnly(EnumSet.of(TargetType.SCRIPT), metadata.buildMetadata());
+
 		// Get rid of unneeded SQL for dropping tables and keys and such
 		trimCruftFromFile(outputFilename);
 	}
@@ -320,15 +325,14 @@ public class SchemaGenerator {
 				// Note: need to use separate SchemaGenerator objects for each
 				// dialect because for some reason they otherwise interfere
 				// with each other.
-				SchemaGenerator gen =
-						new SchemaGenerator(packageName, outputDirectory);
-				gen.generate(Dialect.POSTGRES);
+				SchemaGenerator postgresGen = new SchemaGenerator();
+				postgresGen.generate(packageName, outputDirectory, Dialect.POSTGRES);
 
-				gen = new SchemaGenerator(packageName, outputDirectory);
-				gen.generate(Dialect.ORACLE);
+				SchemaGenerator oracleGen = new SchemaGenerator();
+				oracleGen.generate(packageName, outputDirectory, Dialect.ORACLE);
 
-				gen = new SchemaGenerator(packageName, outputDirectory);
-				gen.generate(Dialect.MYSQL);
+				SchemaGenerator mysqlGen = new SchemaGenerator();
+				mysqlGen.generate(packageName, outputDirectory, Dialect.MYSQL);
 			} else {
 				// Necessary command line options were not set
 				HelpFormatter formatter = new HelpFormatter();

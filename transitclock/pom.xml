@@ -68,7 +68,7 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>4.3.9.Final</version>
+			<version>5.3.17.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate.common</groupId>
@@ -78,7 +78,7 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-c3p0</artifactId>
-			<version>4.3.9.Final</version>
+			<version>5.3.17.Final</version>
 		</dependency>
 		<!-- hibernate-core loads in really old version of xml-apis so load in
                 newer version explicitly. Otherwise get problems with the Node class. -->

@@ -840,8 +840,8 @@ public final class Block implements Serializable {
 					// Get the current session associated with the trips.
 					// Can be null.
 					PersistentList persistentListTrips = (PersistentList) trips;
-					SessionImplementor session = 
-							persistentListTrips.getSession();
+					SessionImplementor session =
+							(SessionImplementor) persistentListTrips.getSession();
 
 					// If the session is different from the global
 					// session then need to attach the new session to the
@@ -906,7 +906,7 @@ public final class Block implements Serializable {
 					// a collection with two open sessions"
 					PersistentList persistentListTrips = (PersistentList) trips;
 					SessionImplementor sessionImpl =
-							persistentListTrips.getSession();
+							(SessionImplementor) persistentListTrips.getSession();
 					SessionImpl session = (SessionImpl) sessionImpl;
 					if (!session.isClosed()) {
 						try {

@@ -1023,8 +1023,8 @@ public class Trip implements Lifecycle, Serializable {
 	    // TODO this is an anti-pattern
 	    // instead find a way to manage sessions more consistently 
 	    PersistentList persistentListTimes = (PersistentList)scheduledTimesList;
-	    SessionImplementor session = 
-          persistentListTimes.getSession();
+	    SessionImplementor session =
+				(SessionImplementor) persistentListTimes.getSession();
 	    if (session == null) {
 	      Session globalLazyLoadSession = Core.getInstance().getDbConfig().getGlobalSession();
 	      globalLazyLoadSession.update(this);
