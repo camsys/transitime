@@ -26,6 +26,7 @@ import org.transitime.core.SpatialMatch;
 import org.transitime.core.TemporalDifference;
 import org.transitime.core.TemporalMatch;
 import org.transitime.core.VehicleState;
+import org.transitime.db.structs.OccupancyStatus;
 import org.transitime.db.structs.StopPath;
 import org.transitime.utils.Time;
 
@@ -53,9 +54,11 @@ public class IpcVehicleGtfsRealtime extends IpcVehicle {
 	private final Integer atOrNextGtfsStopSeq;
 	
 	// For GTFS-rt to disambiguate trips
-	private final long tripStartEpochTime; 
+	private final long tripStartEpochTime;
 
-	private static final long serialVersionUID = -6611046660260490100L;
+	private final IpcOccupancyStatus occupancyStatus;
+
+	private static final long serialVersionUID = -6611046660260490101L;
 
 	/********************** Member Functions **************************/
 
@@ -89,12 +92,19 @@ public class IpcVehicleGtfsRealtime extends IpcVehicle {
 			this.tripStartEpochTime =
 					Core.getInstance().getTime()
 							.getEpochTime(time, currentTime);
+			this.occupancyStatus = toIpcOccupancyStatus(vs.getAvlReport().getOccupancyStatus());
 		} else {
 			atStop = false;
 			atOrNextStopId = null;
 			atOrNextGtfsStopSeq = null;
 			tripStartEpochTime = 0;
+			occupancyStatus = null;
 		}
+	}
+
+	protected IpcOccupancyStatus toIpcOccupancyStatus(OccupancyStatus occupancyStatus) {
+		if (occupancyStatus == null) return null;
+		return IpcOccupancyStatus.toEnum(occupancyStatus.valueOf());
 	}
 
 	/**
@@ -108,7 +118,6 @@ public class IpcVehicleGtfsRealtime extends IpcVehicle {
 	 * @param routeShortName
 	 * @param routeName
 	 * @param tripId
-	 * @param tripStartDateStr
 	 * @param tripPatternId
 	 * @param directionId
 	 * @param headsign
@@ -121,7 +130,6 @@ public class IpcVehicleGtfsRealtime extends IpcVehicle {
 	 * @param nextStopId
 	 * @param nextStopName
 	 * @param vehicleType
-	 * @param atStopId
 	 * @param atOrNextStopId
 	 * @param atOrNextGtfsStopSeq
 	 */
@@ -135,7 +143,7 @@ public class IpcVehicleGtfsRealtime extends IpcVehicle {
 			String nextStopId, String nextStopName, String vehicleType,
 			long tripStartEpochTime, boolean atStop, String atOrNextStopId,
 			Integer atOrNextGtfsStopSeq, double predictedLatitude, 
-			double predictedLongitude) {
+			double predictedLongitude, IpcOccupancyStatus occupancyStatus) {
 		super(blockId, blockAssignmentMethod, avl, pathHeading, routeId,
 				routeShortName, routeName, tripId, tripPatternId, directionId, headsign,
 				predictable, schedBasedPred, realTimeSchdAdh, isDelayed,
@@ -145,6 +153,7 @@ public class IpcVehicleGtfsRealtime extends IpcVehicle {
 		this.atOrNextStopId = atOrNextStopId;
 		this.atOrNextGtfsStopSeq = atOrNextGtfsStopSeq;
 		this.tripStartEpochTime = tripStartEpochTime;
+		this.occupancyStatus = occupancyStatus;
 	}
 	
 	/*
@@ -156,7 +165,8 @@ public class IpcVehicleGtfsRealtime extends IpcVehicle {
 		protected boolean atStop;
 		protected String atOrNextStopId; 
 		protected Integer atOrNextGtfsStopSeq;
-		protected long tripStartEpochTime; 
+		protected long tripStartEpochTime;
+		protected IpcOccupancyStatus occupancyStatus;
 		
 		private static final short currentSerializationVersion = 0;
 		private static final long serialVersionUID = 5804716921925188073L;
@@ -167,6 +177,7 @@ public class IpcVehicleGtfsRealtime extends IpcVehicle {
 			this.atOrNextStopId = v.atOrNextStopId;
 			this.atOrNextGtfsStopSeq = v.atOrNextGtfsStopSeq;
 			this.tripStartEpochTime = v.tripStartEpochTime;
+			this.occupancyStatus = v.occupancyStatus;
 		}
 		
 		/*
@@ -187,6 +198,7 @@ public class IpcVehicleGtfsRealtime extends IpcVehicle {
 			stream.writeObject(atOrNextStopId);
 			stream.writeObject(atOrNextGtfsStopSeq);
 		    stream.writeLong(tripStartEpochTime);
+		    stream.writeObject(occupancyStatus);
 		}
 
 		/*
@@ -213,6 +225,7 @@ public class IpcVehicleGtfsRealtime extends IpcVehicle {
 			atOrNextStopId = (String) stream.readObject();
 			atOrNextGtfsStopSeq = (Integer) stream.readObject();
 			tripStartEpochTime = stream.readLong();
+			occupancyStatus = (IpcOccupancyStatus) stream.readObject();
 		}
 		
 		/*
@@ -228,7 +241,7 @@ public class IpcVehicleGtfsRealtime extends IpcVehicle {
 					schedBasedPred, realTimeSchdAdh, isDelayed, isLayover,
 					layoverDepartureTime, nextStopId, nextStopName,
 					vehicleType, tripStartEpochTime, atStop, atOrNextStopId,
-					atOrNextGtfsStopSeq, predictedLongitude, predictedLatitude);
+					atOrNextGtfsStopSeq, predictedLongitude, predictedLatitude,occupancyStatus);
 		}
 
 	} // End of class GtfsRealtimeVehicleSerializationProxy
@@ -265,6 +278,8 @@ public class IpcVehicleGtfsRealtime extends IpcVehicle {
 	public Integer getAtOrNextGtfsStopSeq() {
 		return atOrNextGtfsStopSeq;
 	}
+
+	public IpcOccupancyStatus getOccupancyStatus() { return occupancyStatus; }
 	
 	@Override
 	public String toString() {
@@ -294,7 +309,8 @@ public class IpcVehicleGtfsRealtime extends IpcVehicle {
 				+ ", atOrNextStopId=" + atOrNextStopId
 				+ ", atOrNextGtfsStopSeq=" + atOrNextGtfsStopSeq
 				+ ", tripStartEpochTime=" + tripStartEpochTime 
-				+ ", tripStartEpochTime=" + new Date(tripStartEpochTime) 
+				+ ", tripStartEpochTime=" + new Date(tripStartEpochTime)
+				+ ", occupancyStatus=" + occupancyStatus
 				+ "]";
 	}
 	

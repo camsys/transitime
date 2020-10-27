@@ -17,6 +17,7 @@
 
 package org.transitime.api.data;
 
+import org.transitime.ipc.data.IpcOccupancyStatus;
 import org.transitime.ipc.data.IpcPrediction;
 import org.transitime.utils.Time;
 
@@ -83,6 +84,9 @@ public class ApiPrediction {
 	@XmlAttribute(name = "passengerCount")
 	private String passengerCount;
 
+	@XmlAttribute(name = "occupancyStatus")
+	private IpcOccupancyStatus occupancyStatus;
+
   @XmlAttribute(name = "isDeparture")
   private String isDepartureDuplicate;  //same field different name
 
@@ -131,7 +135,9 @@ public class ApiPrediction {
 		// is not valid since will then be null
 		if (prediction.isPassengerCountValid())
 			passengerCount = String.valueOf(prediction.getPassengerCount());
-		
+
+		occupancyStatus = prediction.getOccupancyStatus();
+
 		// Only set if true so only output for rare case
 		if (prediction.isDelayed())
 			isDelayed = true;

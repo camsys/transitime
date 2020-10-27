@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitime.api.utils.AgencyTimezoneCache;
 import org.transitime.ipc.clients.VehiclesInterfaceFactory;
+import org.transitime.ipc.data.IpcOccupancyStatus;
 import org.transitime.ipc.data.IpcVehicleGtfsRealtime;
 import org.transitime.ipc.interfaces.VehiclesInterface;
 import org.transitime.utils.Time;
@@ -94,6 +95,10 @@ public class GtfsRtVehicleFeed {
 			vehiclePosition.setTrip(tripDescriptor);
 		}
 
+		if (vehicleData.getOccupancyStatus() != null) {
+			vehiclePosition.setOccupancyStatus(toOccupancyStatus(vehicleData.getOccupancyStatus()));
+		}
+
 		// Add the VehicleDescriptor information
 		VehicleDescriptor.Builder vehicleDescriptor =
 				VehicleDescriptor.newBuilder().setId(vehicleData.getId());
@@ -141,6 +146,11 @@ public class GtfsRtVehicleFeed {
 
 		// Return the results
 		return vehiclePosition.build();
+	}
+
+	private VehiclePosition.OccupancyStatus toOccupancyStatus(IpcOccupancyStatus occupancyStatus) {
+		if (occupancyStatus == null) return null;
+		return VehiclePosition.OccupancyStatus.valueOf(occupancyStatus.valueOf());
 	}
 
 	/**

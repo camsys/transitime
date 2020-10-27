@@ -50,8 +50,9 @@ public class IpcVehicleComplete extends IpcVehicleGtfsRealtime {
 	private final double distanceToNextStop;
 	private final double distanceOfNextStopFromTripStart;
 	private final double distanceAlongTrip;
+	private final IpcOccupancyStatus occupancyStatus;
 	
-	private static final long serialVersionUID = 8154105842499551461L;
+	private static final long serialVersionUID = 8154105842499551462L;
 
 	/********************** Member Functions **************************/
 
@@ -86,7 +87,8 @@ public class IpcVehicleComplete extends IpcVehicleGtfsRealtime {
 			}
 			this.distanceOfNextStopFromTripStart = sumOfStopPathLengths;
 			this.distanceAlongTrip = 
-					sumOfStopPathLengths - this.distanceToNextStop;			
+					sumOfStopPathLengths - this.distanceToNextStop;
+			this.occupancyStatus = toIpcOccupancyStatus(vs.getAvlReport().getOccupancyStatus());
 		} else {
 			// Vehicle not assigned to trip so null out parameters
 			this.originStopId = null;
@@ -94,6 +96,7 @@ public class IpcVehicleComplete extends IpcVehicleGtfsRealtime {
 			this.distanceToNextStop = Double.NaN;
 			this.distanceOfNextStopFromTripStart = Double.NaN;
 			this.distanceAlongTrip = Double.NaN;
+			this.occupancyStatus = null;
 		}
 	}
 	
@@ -119,7 +122,6 @@ public class IpcVehicleComplete extends IpcVehicleGtfsRealtime {
 	 * @param nextStopId
 	 * @param nextStopName
 	 * @param vehicleType
-	 * @param tripStartDateStr
 	 * @param atStop
 	 * @param atOrNextStopId
 	 * @param atOrNextGtfsStopSeq
@@ -141,19 +143,20 @@ public class IpcVehicleComplete extends IpcVehicleGtfsRealtime {
 			Integer atOrNextGtfsStopSeq, String originStopId,
 			String destinationId, double distanceToNextStop,
 			double distanceOfNextStopFromTripStart, double distanceAlongTrip,
-			double predictedLatitude, double predictedLongitude) {
+			double predictedLatitude, double predictedLongitude, IpcOccupancyStatus occupancyStatus) {
 		super(blockId, blockAssignmentMethod, avl, pathHeading, routeId,
 				routeShortName, routeName, tripId, tripPatternId, directionId, headsign,
 				predictable, schedBasedPred, realTimeSchdAdh, isDelayed,
 				isLayover, layoverDepartureTime, nextStopId, nextStopName,
 				vehicleType, tripStartEpochTime, atStop, atOrNextStopId,
-				atOrNextGtfsStopSeq, predictedLatitude, predictedLongitude);
+				atOrNextGtfsStopSeq, predictedLatitude, predictedLongitude, occupancyStatus);
 
 		this.originStopId = originStopId;
 		this.destinationId = destinationId;
 		this.distanceToNextStop = distanceToNextStop;
 		this.distanceOfNextStopFromTripStart = distanceOfNextStopFromTripStart;
 		this.distanceAlongTrip = distanceAlongTrip;
+		this.occupancyStatus = occupancyStatus;
 	}
 	
 	/*
@@ -168,6 +171,7 @@ public class IpcVehicleComplete extends IpcVehicleGtfsRealtime {
 		private double distanceToNextStop;
 		private double distanceOfNextStopFromTripStart;
 		private double distanceAlongTrip;
+		private IpcOccupancyStatus occupancyStatus;
 
 		private static final short currentSerializationVersion = 0;
 		
@@ -180,6 +184,7 @@ public class IpcVehicleComplete extends IpcVehicleGtfsRealtime {
 			this.distanceToNextStop = v.distanceToNextStop;
 			this.distanceOfNextStopFromTripStart = v.distanceOfNextStopFromTripStart;
 			this.distanceAlongTrip = v.distanceAlongTrip;
+			this.occupancyStatus = v.occupancyStatus;
 		}
 		
 		/*
@@ -201,6 +206,7 @@ public class IpcVehicleComplete extends IpcVehicleGtfsRealtime {
 		    stream.writeDouble(distanceToNextStop);
 		    stream.writeDouble(distanceOfNextStopFromTripStart);
 		    stream.writeDouble(distanceAlongTrip);
+		    stream.writeObject(occupancyStatus);
 		}
 
 		/*
@@ -228,6 +234,7 @@ public class IpcVehicleComplete extends IpcVehicleGtfsRealtime {
 			distanceToNextStop = stream.readDouble();
 			distanceOfNextStopFromTripStart = stream.readDouble();
 			distanceAlongTrip = stream.readDouble();
+			occupancyStatus = (IpcOccupancyStatus) stream.readObject();
 		}
 		
 		/*
@@ -245,7 +252,7 @@ public class IpcVehicleComplete extends IpcVehicleGtfsRealtime {
 					vehicleType, tripStartEpochTime, atStop, atOrNextStopId,
 					atOrNextGtfsStopSeq, originStopId, destinationId,
 					distanceToNextStop, distanceOfNextStopFromTripStart,
-					distanceAlongTrip, predictedLatitude, predictedLongitude);
+					distanceAlongTrip, predictedLatitude, predictedLongitude, occupancyStatus);
 		}
 
 	} // End of class SiriVehicleSerializationProxy
@@ -288,6 +295,8 @@ public class IpcVehicleComplete extends IpcVehicleGtfsRealtime {
 		return distanceAlongTrip;
 	}
 
+	public IpcOccupancyStatus getOccupancyStatus() { return occupancyStatus; }
+
 	@Override
 	public String toString() {
 		return "IpcExtVehicle [" 
@@ -324,7 +333,8 @@ public class IpcVehicleComplete extends IpcVehicleGtfsRealtime {
 				+ ", distanceOfNextStopFromTripStart=" 
 					+ Geo.distanceFormat(distanceOfNextStopFromTripStart)
 				+ ", distanceAlongTrip=" 
-					+ Geo.distanceFormat(distanceAlongTrip) 
+					+ Geo.distanceFormat(distanceAlongTrip)
+				+ ", occupancyStatus=" + occupancyStatus
 				+ "]";
 	}
 

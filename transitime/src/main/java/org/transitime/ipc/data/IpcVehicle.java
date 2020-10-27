@@ -74,7 +74,7 @@ public class IpcVehicle implements Serializable {
 	private final double predictedLatitude;
 	private final double predictedLongitude;
 	
-	private static final long serialVersionUID = -1744566765456572041L;
+	private static final long serialVersionUID = -1744566765456572042L;
 
 	/********************** Member Functions **************************/
 
@@ -555,7 +555,7 @@ public class IpcVehicle implements Serializable {
 		IpcAvl avl =
 				new IpcAvl("avlVehicleId", 10, 1.23f, 4.56f, 0.0f, 0.0f, null,
 						"block", AssignmentType.BLOCK_ID, "driver", "license",
-						0);
+						0, null);
 		IpcVehicle v =
 				new IpcVehicle("blockId",
 						BlockAssignmentMethod.AVL_FEED_BLOCK_ASSIGNMENT, avl,
