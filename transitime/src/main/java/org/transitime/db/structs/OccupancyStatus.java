@@ -67,6 +67,24 @@ public enum OccupancyStatus implements Serializable {
         _status = status;
     }
 
+    public static OccupancyStatus lenientParse(String occupancyString) {
+        OccupancyStatus status = null;
+        try {
+            status = OccupancyStatus.valueOf(occupancyString);
+        } catch (IllegalArgumentException iae) {
+            return mapFromExternalSystems(occupancyString);
+        }
+        return status;
+    }
+
+    private static OccupancyStatus mapFromExternalSystems(String occupancyString) {
+        if ("MANY SEATS".equals(occupancyString))
+            return OccupancyStatus.MANY_SEATS_AVAILABLE;
+        if ("FEW SEATS".equals(occupancyString))
+            return OccupancyStatus.FEW_SEATS_AVAILABLE;
+        throw new IllegalArgumentException(occupancyString + "not expected");
+    }
+
     public int valueOf() {
         return _status;
     }

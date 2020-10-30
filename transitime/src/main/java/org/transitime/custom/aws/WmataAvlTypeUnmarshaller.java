@@ -100,7 +100,7 @@ public class WmataAvlTypeUnmarshaller implements SqsMessageUnmarshaller {
     if (msgObj.has("crowdingStatus")) {
         String occupancyString = null;
         occupancyString = msgObj.getString("crowdingStatus");
-        occupancyStatus = OccupancyStatus.valueOf(occupancyString);
+        occupancyStatus = OccupancyStatus.lenientParse(occupancyString);
     }
 
     Long forwarderTimeReceived = null;
