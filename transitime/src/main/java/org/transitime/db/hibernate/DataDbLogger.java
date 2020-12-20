@@ -116,6 +116,9 @@ public class DataDbLogger {
 	
 	// So can access agencyId for logging messages
 	private String agencyId;
+
+	// keep track of primary key values to reduce database duplicate exceptions
+	private Map<String, String> vehicleToPrimayKeyMap = new HashMap<>();
 	
 	private static final Logger logger = 
 			LoggerFactory.getLogger(DataDbLogger.class);
@@ -189,7 +192,13 @@ public class DataDbLogger {
 	  return arrivalDepartureQueue.add(ad);
 	}
 	public boolean add(AvlReport ar) {
-	  return avlReportQueue.add(ar);
+		String hash = vehicleToPrimayKeyMap.get(ar.getVehicleId());
+		if (hash != null && hash.equals(hashAvl(ar))) {
+			// we already have this value, prevent sql exception
+			return false;
+		}
+		vehicleToPrimayKeyMap.put(ar.getVehicleId(), hash);
+		return avlReportQueue.add(ar);
 	}
 	public boolean add(VehicleConfig vc) {
 	  return vehicleConfigQueue.add(vc);
@@ -264,7 +273,11 @@ public class DataDbLogger {
 	public int queueSize() {
 	  return predictionQueue.queueSize();
 	}
-	
+
+	private String hashAvl(AvlReport ar) {
+		return String.valueOf(ar.getDate().getTime());
+	}
+
 	/**
 	 * Just for doing some testing
 	 * 
