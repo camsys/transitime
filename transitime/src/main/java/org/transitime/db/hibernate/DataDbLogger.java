@@ -286,8 +286,22 @@ public class DataDbLogger {
 	
 	// the predictionQueue is the largest queue, so report on it for now
 	public double queueLevel() {
-	  // TODO split this out into separate queues
-	  return predictionQueue.queueLevel();
+	  Double[] queueLevelsArray = {
+						arrivalDepartureQueue.queueLevel(),
+						avlReportQueue.queueLevel(),
+						vehicleConfigQueue.queueLevel(),
+						predictionQueue.queueLevel(),
+						matchQueue.queueLevel(),
+						predictionAccuracyQueue.queueLevel(),
+						monitoringEventQueue.queueLevel(),
+						vehicleEventQueue.queueLevel(),
+						vehicleStateQueue.queueLevel(),
+						genericQueue.queueLevel()
+		};
+
+	  List<Double> levels = Arrays.asList(queueLevelsArray);
+	  Collections.sort(levels);
+	  return levels.get(levels.size()-1);
 	}
 	
 	public int queueSize() {
@@ -307,7 +321,6 @@ public class DataDbLogger {
 		List<Integer> sizes = Arrays.asList(sizesArray);
 		Collections.sort(sizes);
 		return sizes.get(sizes.size()-1);
-
 	}
 
 	private String hashAvl(AvlReport ar) {
