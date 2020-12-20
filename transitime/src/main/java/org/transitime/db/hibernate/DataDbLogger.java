@@ -16,6 +16,8 @@
  */
 package org.transitime.db.hibernate;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -275,7 +277,9 @@ public class DataDbLogger {
 	}
 
 	private String hashAvl(AvlReport ar) {
-		return String.valueOf(ar.getDate().getTime());
+		DateFormat simple =
+						new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		return simple.format(ar.getDate());
 	}
 
 	/**
