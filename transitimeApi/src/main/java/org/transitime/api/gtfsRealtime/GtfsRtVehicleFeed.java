@@ -95,7 +95,8 @@ public class GtfsRtVehicleFeed {
 			vehiclePosition.setTrip(tripDescriptor);
 		}
 
-		if (vehicleData.getOccupancyStatus() != null) {
+		if (vehicleData.getOccupancyStatus() != null
+					&& toOccupancyStatus(vehicleData.getOccupancyStatus()) != null) {
 			vehiclePosition.setOccupancyStatus(toOccupancyStatus(vehicleData.getOccupancyStatus()));
 		}
 
