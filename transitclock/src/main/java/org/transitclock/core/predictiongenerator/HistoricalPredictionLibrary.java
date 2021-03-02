@@ -52,6 +52,9 @@ public class HistoricalPredictionLibrary {
 
 	public static TravelTimeDetails getLastVehicleTravelTime(VehicleState currentVehicleState, Indices indices) throws Exception {
 
+		// NOTE: direction is relative to index, not vehicleState!
+		// We may be on a future trip in a reverse direction!
+		String currentDirection = indices.getTrip().getDirectionId();
 		StopArrivalDepartureCacheKey nextStopKey = new StopArrivalDepartureCacheKey(
 				indices.getStopPath().getStopId(),
 				new Date(currentVehicleState.getMatch().getAvlTime()));
@@ -74,7 +77,7 @@ public class HistoricalPredictionLibrary {
 
 					if(currentArrivalDeparture.isDeparture()
 							&& !currentArrivalDeparture.getVehicleId().equals(currentVehicleState.getVehicleId())
-							&& (currentVehicleState.getTrip().getDirectionId()==null || currentVehicleState.getTrip().getDirectionId().equals(currentArrivalDeparture.getDirectionId())))
+							&& (currentDirection==null || currentDirection.equals(currentArrivalDeparture.getDirectionId())))
 					{
 						IpcArrivalDeparture found;
 						// for this departure find the next arrival
