@@ -12,7 +12,7 @@ String agencyId = request.getParameter("a");
 // Note that can specify multiple routes.
 String stopIds[] = request.getParameterValues("s");
 String routeIds[] = request.getParameterValues("r");
-String titleRoutes = "";
+String titleRoutes = request.getParameter("t");
 if (routeIds != null && !routeIds[0].isEmpty()) {
     titleRoutes += ", route ";
     if (routeIds.length > 1) 
