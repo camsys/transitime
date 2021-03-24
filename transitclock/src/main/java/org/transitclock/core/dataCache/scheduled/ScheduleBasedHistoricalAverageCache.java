@@ -78,7 +78,7 @@ public class ScheduleBasedHistoricalAverageCache {
 		{					
 			logger.debug("Putting :"+arrivalDeparture.toString() + " in HistoricalAverageCache cache.");
 			
-			TravelTimeDetails travelTimeDetails=getLastTravelTimeDetails(new IpcArrivalDeparture(arrivalDeparture), trip);
+			TravelTimeDetails travelTimeDetails=getLastTravelTimeDetails(IpcArrivalDepartureGenerator.getInstance().generate(arrivalDeparture, false), trip);
 			
 			if(travelTimeDetails!=null&&travelTimeDetails.sanityCheck())
 			{			
@@ -99,7 +99,7 @@ public class ScheduleBasedHistoricalAverageCache {
 				}
 			}		
 			
-			DwellTimeDetails dwellTimeDetails=getLastDwellTimeDetails(new IpcArrivalDeparture(arrivalDeparture), trip);
+			DwellTimeDetails dwellTimeDetails=getLastDwellTimeDetails(IpcArrivalDepartureGenerator.getInstance().generate(arrivalDeparture, false), trip);
 			if(dwellTimeDetails!=null&&dwellTimeDetails.sanityCheck())
 			{
 				StopPathCacheKey historicalAverageCacheKey=new StopPathCacheKey(trip.getId(), arrivalDeparture.getStopPathIndex(), false);
@@ -164,7 +164,7 @@ public class ScheduleBasedHistoricalAverageCache {
 	public void populateCacheFromDb(Session session, Date startDate, Date endDate) throws Exception 
 	{
 		Criteria criteria =session.createCriteria(ArrivalDeparture.class);
-		List<ArrivalDeparture> results = StopArrivalDepartureCacheInterface.createArrivalDeparturesCriteria(criteria, startDate, endDate);
+		List<ArrivalDeparture> results = StopArrivalDepartureCacheInterface.getLinkedArrivalDepartures(criteria, startDate, endDate);
 		Collections.sort(results, new ArrivalDepartureComparator());
 
 		int counter = 0;

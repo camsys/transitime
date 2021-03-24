@@ -1,8 +1,11 @@
 package org.transitclock.core.dataCache;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -22,6 +25,22 @@ import org.transitclock.utils.Time;
 
 public abstract class StopArrivalDepartureCacheInterface {
 
+	public IpcArrivalDeparture get(ArrivalDeparture arrivalDeparture) {
+		if (arrivalDeparture == null || arrivalDeparture.getStop() == null) return null;
+		Date keyDate = toMidnight(arrivalDeparture.getDate());
+		StopArrivalDepartureCacheKey key = new StopArrivalDepartureCacheKey(arrivalDeparture.getStop().getId(),
+						keyDate);
+		List<IpcArrivalDeparture> potentials = getStopHistory(key);
+		for (IpcArrivalDeparture potential : potentials) {
+			if (arrivalDeparture.getTime() == potential.getTime().getTime()
+					&& arrivalDeparture.getTripId().equals(potential.getTripId())
+					&& arrivalDeparture.getVehicleId().equals(potential.getVehicleId())) {
+				return potential;
+			}
+		}
+		return null;
+	}
+
 	abstract  public  List<IpcArrivalDeparture> getStopHistory(StopArrivalDepartureCacheKey key);
 
 	abstract  public StopArrivalDepartureCacheKey putArrivalDeparture(ArrivalDeparture arrivalDeparture);
@@ -31,11 +50,23 @@ public abstract class StopArrivalDepartureCacheInterface {
 	public void populateCacheFromDb(Session session, Date startDate, Date endDate) {
 		Criteria criteria = session.createCriteria(ArrivalDeparture.class);
 
-		List<ArrivalDeparture> results = createArrivalDeparturesCriteria(criteria, startDate, endDate);
+		List<ArrivalDeparture> results = getLinkedArrivalDepartures(criteria, startDate, endDate);
+		int counter = 0;
+
 		for (ArrivalDeparture result : results) {
-			this.putArrivalDeparture(result);
+			if(counter % 1000 == 0){
+				logger.info("{} out of {} Stop Arrival Departure Records for period {} to {} ({}%)", counter, results.size(), startDate, endDate, (int)((counter * 100.0f) / results.size()));
+			}
+
+			putArrivalDeparture(result);
 			//TODO might be better with its own populateCacheFromdb
-			DwellTimeModelCacheFactory.getInstance().addSample(result);
+			try
+			{
+				DwellTimeModelCacheFactory.getInstance().addSample(result);
+			} catch(Exception ex) {
+				logger.error("Exception populating dwell {}", ex, ex);
+			}
+			counter++;
 		}
 	}
 
@@ -102,15 +133,93 @@ public abstract class StopArrivalDepartureCacheInterface {
 		return ad.withUpdatedTime(new Date(lastTime));
 	}
 
-	public static List<ArrivalDeparture> createArrivalDeparturesCriteria(Criteria criteria, Date startDate, Date endDate) {
+	public static List<ArrivalDeparture> getLinkedArrivalDepartures(Criteria criteria, Date startDate, Date endDate) {
 		@SuppressWarnings("unchecked")
 		List<ArrivalDeparture> results = criteria.add(Restrictions.between("time", startDate, endDate))
 						.addOrder(Order.asc("tripId"))
 						.addOrder(Order.asc("stopPathIndex"))
 						.addOrder(Order.desc("isArrival"))
 						.list();
+		linkResults(results);
 		if (!StopArrivalDepartureCacheFactory.enableSmoothinng()) return results;
 		return smoothArrivalDepartures(results);
+	}
+
+	protected Date toMidnight(Date key) {
+		Calendar date = Calendar.getInstance();
+		date.setTime(key);
+
+		date.set(Calendar.HOUR_OF_DAY, 0);
+		date.set(Calendar.MINUTE, 0);
+		date.set(Calendar.SECOND, 0);
+		date.set(Calendar.MILLISECOND, 0);
+		return date.getTime();
+	}
+
+	static void linkResults(List<ArrivalDeparture> results) {
+		String currentTrip = null;
+		Integer currentStopPathIndex = null;
+		ArrivalDeparture last = null;
+		int invalidDepartures = 0;
+		int incongruentStopSequences = 0;
+		Set<String> seenTripIds = new HashSet<>();
+
+		for (ArrivalDeparture ad : results) {
+			if (currentTrip != null && currentTrip.equals(ad.getTripId())) {
+				if (currentStopPathIndex != null && currentStopPathIndex.equals(ad.getStopPathIndex())) {
+					// this should be A/D pair
+					if (last != null && last.isArrival() && ad.isDeparture()) {
+						ad.setPrevious(last);
+						last.setNext(ad);
+					} else {
+						logger.error("received unexpected arrival {} with previous departure {}", ad, last);
+						invalidDepartures++;
+					}
+				} else if (currentStopPathIndex != null && currentStopPathIndex.equals(ad.getStopPathIndex()-1)) {
+					if (last != null && last.isDeparture() && ad.isArrival()) {
+						ad.setPrevious(last);
+						last.setNext(ad);
+					}
+				} else {
+					incongruentStopSequences++;
+					logger.error("received unexpected stop sequence in A/D {} with previous {}", ad, last);
+				}
+			} else {
+				// we are on to next trip
+				if (seenTripIds.contains(ad.getTripId())) {
+					logger.error("received unexpected trip {}", ad.getTripId());
+				}
+			}
+			currentTrip = ad.getTripId();
+			currentStopPathIndex = ad.getStopPathIndex();
+			last = ad;
+
+		}
+
+		logger.info("{} invalid departures, {} incongruent stop sequences, out of {}", invalidDepartures, incongruentStopSequences, results.size());
+		verifyLinks(results);
+
+	}
+
+	private static void verifyLinks(List<ArrivalDeparture> results) {
+		// run through the linked list verifying integrity
+		ArrivalDeparture last = null;
+		Integer sequence = null;
+		String tripId = null;
+		for (ArrivalDeparture ad : results) {
+			if (last != null
+							&& (tripId != null && tripId.equals(ad.getTripId()))
+							&& !last.equals(ad.getPrevious())) {
+				logger.error("unexpected linkage {} with last {}", ad, last);
+			}
+			if (sequence != null
+							&& (tripId != null && tripId.equals(ad.getTripId()))
+							&& ((sequence > ad.getStopPathIndex())
+		              || (sequence < ad.getStopPathIndex() + 2))) {
+				logger.error("unexpected stop sequence {} with last {}", ad.getStopPathIndex(), sequence);
+			}
+			last = ad;
+		}
 	}
 
 	/**

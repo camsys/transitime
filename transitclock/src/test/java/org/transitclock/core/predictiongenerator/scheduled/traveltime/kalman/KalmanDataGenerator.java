@@ -16,6 +16,7 @@
  */
 package org.transitclock.core.predictiongenerator.scheduled.traveltime.kalman;
 
+import org.transitclock.applications.Core;
 import org.transitclock.core.Indices;
 import org.transitclock.core.SpatialMatch;
 import org.transitclock.core.TemporalDifference;
@@ -24,6 +25,7 @@ import org.transitclock.core.TravelTimeDetails;
 import org.transitclock.core.VehicleState;
 import org.transitclock.core.dataCache.KalmanError;
 import org.transitclock.db.structs.Arrival;
+import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.db.structs.Block;
 import org.transitclock.db.structs.Departure;
@@ -73,9 +75,23 @@ public class KalmanDataGenerator {
   private static final String TRIP_PATTERN_ID = "tp1";
   private static final int DEFAULT_TRAVEL_TIMES = 300;
   private Long avlTime = null;
+  private Block block = null;
+  private Trip trip = null;
+  private ArrayList<Trip> blockTrips = null;
+  private List<StopPath> stopPaths;
 
   public KalmanDataGenerator(long referenceTime) {
     avlTime = referenceTime;
+
+    /**
+     * time needs to be populated for ArrivalDeparture creation
+     */
+    if (!Core.isCoreApplication()) {
+      Core.createTestCore(AGENCY_ID);
+      if (Core.getInstance().getTime() == null) {
+        Core.getInstance().setTime(new Time(getTimeZone()));
+      }
+    }
   }
 
 
@@ -115,41 +131,47 @@ public class KalmanDataGenerator {
   }
 
   public Block getBlock() {
-    int configRev = CONFIG_REV;
-    String blockId = BLOCK_ID;
-    String serviceId = SERVICE_ID;
-    int startTime = 0;
-    int endTime = 1;
+    if (block == null) {
+      int configRev = CONFIG_REV;
+      String blockId = BLOCK_ID;
+      String serviceId = SERVICE_ID;
+      int startTime = 0;
+      int endTime = 1;
 
-    return new Block(configRev, blockId, serviceId,
-            startTime, endTime, getTrips());
+      block = new Block(configRev, blockId, serviceId,
+              startTime, endTime, getTrips());
+    }
+    return block;
   }
 
   public List<Trip> getTrips() {
-    List<Trip> trips = new ArrayList<>();
+    if (blockTrips == null) {
+      ArrayList<Trip> trips = new ArrayList<>();
 
-    Trip t = getTrip();
-    trips.add(t);
-    return trips;
+      Trip t = getTrip();
+      trips.add(t);
+      blockTrips = trips;
+    }
+    return blockTrips;
   }
 
   private Trip getTrip() {
-    Trip t = new Trip(CONFIG_REV, getGtfsTrip(), ROUTE_ID,
-            ROUTE_ID, TRIP_HEADSIGN,
-            new TitleFormatter("", false));
-    TripPattern pattern = getTripPattern(t);
-    Route route = getRoute(t);
-    t.setRoute(route);
-    t.setTripPattern(pattern);
-    t.setTravelTimes(getTravelTimes(t));
-    t.getStopPaths().add(getStopPaths().get(0));
-    ScheduleTime scheduleTime = new ScheduleTime(getScheduleTime(getArrivalTime().getTime()),
-            getScheduleTime(getDepartureTime().getTime()));
-    ArrayList<ScheduleTime> times = new ArrayList<>();
-    times.add(scheduleTime);
-    t.addScheduleTimes(times);
+    if (trip == null) {
+      Trip t = new Trip(CONFIG_REV, getGtfsTrip(), ROUTE_ID,
+              ROUTE_ID, TRIP_HEADSIGN,
+              new TitleFormatter("", false));
+      TripPattern pattern = getTripPattern(t);
+      Route route = getRoute(t);
+      t.setRoute(route);
+      t.setTripPattern(pattern);
+      t.setTravelTimes(getTravelTimes(t));
+      t.getStopPaths().add(getStopPaths().get(0));
 
-    return t;
+      addScheduleTime(t, getArrivalTime());
+
+      trip = t;
+    }
+    return trip;
   }
 
   private int getScheduleTime(long time) {
@@ -254,13 +276,16 @@ public class KalmanDataGenerator {
     return gd;
   }
 
-  public List<StopPath> getStopPaths() {
-    List<StopPath> paths = new ArrayList<>();
+  private StopPath addStopPath(String stopPathId, int stopPathIndex) {
+    return addStopPath(getStopPaths(), stopPathId, stopPathIndex);
+  }
+
+  private StopPath addStopPath(List<StopPath> paths, String stopPathId, int stopPathIndex) {
     StopPath path = new StopPath(
             CONFIG_REV,
-            PATH_ID,
+            stopPathId,
             STOP_ID,
-            1,
+            stopPathIndex,
             false,
             ROUTE_ID,
             false,
@@ -273,7 +298,16 @@ public class KalmanDataGenerator {
     path.setLocations(getLocations());
     path.onLoad(null, null);
     paths.add(path);
-    return paths;
+    return path;
+  }
+
+  public List<StopPath> getStopPaths() {
+    if (stopPaths == null) {
+      List<StopPath> paths = new ArrayList<>();
+      addStopPath(paths,"sp0", 0);
+      stopPaths = paths;
+    }
+    return stopPaths;
   }
 
   public ArrayList<Location> getLocations() {
@@ -329,6 +363,15 @@ public class KalmanDataGenerator {
   public Departure getDeparture(Date departureTime,
                                 Date avlTime,
                                 Block block) {
+    return getDeparture(departureTime, avlTime, block, KalmanDataGenerator.STOP_PATH_ID, 0);
+  }
+  public Departure getDeparture(Date departureTime,
+                                Date avlTime,
+                                Block block,
+                                String stopPathId,
+                                int stopPathIndex) {
+    addScheduleTime(departureTime);
+    addStopPath(stopPathId, stopPathIndex);
     Departure d = new Departure(
             KalmanDataGenerator.CONFIG_REV,
             KalmanDataGenerator.VEHICLE,
@@ -336,29 +379,95 @@ public class KalmanDataGenerator {
             avlTime,
             block,
             0,
-            0,
+            stopPathIndex,
             null,
             0l,
-            KalmanDataGenerator.STOP_PATH_ID);
+            stopPathId);
+
+
     return d;
   }
+
+
 
   public Arrival getArrival(Date arrivalTime,
                             Date avlTime,
                             Block block) {
+      return getArrival(arrivalTime, avlTime, block, KalmanDataGenerator.STOP_PATH_ID, 0);
+  }
+  public Arrival getArrival(Date arrivalTime,
+                            Date avlTime,
+                            Block block,
+                            String stopPathId,
+                            int stopPathIndex) {
+    addScheduleTime(arrivalTime);
+    addStopPath(stopPathId, stopPathIndex);
     Arrival a = new Arrival(KalmanDataGenerator.CONFIG_REV,
             KalmanDataGenerator.VEHICLE,
             arrivalTime,
             avlTime,
             block,
             0,
-            0,
+            stopPathIndex,
             null,
-            KalmanDataGenerator.STOP_PATH_ID);
+            stopPathId);
+
     return a;
+  }
+
+
+  private void addScheduleTime(Date arrivalDepartureTime) {
+    addScheduleTime(getTrip(), arrivalDepartureTime);
+  }
+    private void addScheduleTime(Trip t, Date arrivalDepartureTime) {
+    ScheduleTime scheduleTime = new ScheduleTime(getScheduleTime(arrivalDepartureTime.getTime()),
+            getScheduleTime(arrivalDepartureTime.getTime()));
+    ArrayList<ScheduleTime> times = new ArrayList<>();
+    times.add(scheduleTime);
+    t.addScheduleTimes(times);
+    int i = stopPaths.size();
+    String stopPathId = "sp" + i;
+    t.getStopPaths().add(addStopPath(stopPathId, i));
   }
 
   public KalmanError getErrorValue(Indices indices) {
     return new KalmanError(72.40);
+  }
+
+  public ArrivalDeparture getLinkedArrivalDepartures(long startTime) {
+    ArrivalDeparture last = null;
+    ArrivalDeparture first = last;
+
+    // start at 1 so we can test inserting at 0
+    int i = 1;
+    while (i < 10) {
+
+      ArrivalDeparture arrival = getArrival(
+              new Date(startTime + i),
+              new Date(startTime + i),
+              getBlock(),
+              "sp" + i,
+              i);
+      if (last != null) {
+        last.setNext(arrival);
+      } else {
+        first = arrival;
+      }
+      arrival.setPrevious(last);
+
+      ArrivalDeparture departure = getDeparture(
+              new Date(startTime + i),
+              new Date(startTime + 1),
+              getBlock(),
+              "sp" + i,
+              i);
+      departure.setPrevious(arrival);
+      arrival.setNext(departure);
+      i++;
+      i++;
+      last = departure;
+    }
+
+    return first;
   }
 }

@@ -121,7 +121,7 @@ public class TripDataHistoryCache implements TripDataHistoryCacheInterface{
 
 			IpcArrivalDeparture ipcad = null;
 			try {
-				ipcad = new IpcArrivalDeparture(arrivalDeparture);
+				ipcad = IpcArrivalDepartureGenerator.getInstance().generate(arrivalDeparture, false);
 			} catch (Exception e) {
 				logger.error("Error adding "+arrivalDeparture.toString()+" event to TripDataHistoryCache.", e);
 			}
@@ -146,7 +146,7 @@ public class TripDataHistoryCache implements TripDataHistoryCacheInterface{
 	public void populateCacheFromDb(Session session, Date startDate, Date endDate)
 	{
 		Criteria criteria =session.createCriteria(ArrivalDeparture.class);
-		List<ArrivalDeparture> results = StopArrivalDepartureCacheInterface.createArrivalDeparturesCriteria(criteria, startDate, endDate);
+		List<ArrivalDeparture> results = StopArrivalDepartureCacheInterface.getLinkedArrivalDepartures(criteria, startDate, endDate);
 		int counter = 0;
 		for(ArrivalDeparture result : results)		
 		{

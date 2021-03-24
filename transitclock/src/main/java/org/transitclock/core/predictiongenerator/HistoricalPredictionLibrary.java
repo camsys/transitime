@@ -81,11 +81,10 @@ public class HistoricalPredictionLibrary {
 							&& !currentArrivalDeparture.getVehicleId().equals(currentVehicleState.getVehicleId())
 							&& (currentDirection==null || currentDirection.equals(currentArrivalDeparture.getDirectionId())))
 					{
-						// this appears bound by percentage of service filled
 						getMonitoring().rateMetric("PredictionStopADVehicleHit", true);
 						IpcArrivalDeparture found;
 						// for this departure find the next arrival
-						if ((found = findMatchInList(nextStopList, currentArrivalDeparture)) != null) {
+						if ((found = findNextArrival(nextStopList, currentArrivalDeparture)) != null) {
 							getMonitoring().rateMetric("PredictionStopADTTHit", true);
 							// NOTE: this constructor is departure, arrival!!!!
 							TravelTimeDetails travelTimeDetails=new TravelTimeDetails(currentArrivalDeparture, found);
@@ -147,7 +146,6 @@ public class HistoricalPredictionLibrary {
 					new Date(currentVehicleState.getMatch().getAvlTime()));
 
 			List<IpcArrivalDeparture> currentStopList = StopArrivalDepartureCacheFactory.getInstance().getStopHistory(currentStopKey);
-
 			List<IpcArrivalDeparture> nextStopList = StopArrivalDepartureCacheFactory.getInstance().getStopHistory(nextStopKey);
 
 			if (currentStopList != null && nextStopList != null) {
@@ -159,7 +157,7 @@ public class HistoricalPredictionLibrary {
 					{
 						IpcArrivalDeparture found;
 
-						if ((found = findMatchInList(nextStopList, currentArrivalDeparture)) != null) {
+						if ((found = findNextArrival(nextStopList, currentArrivalDeparture)) != null) {
 							if(found.getTime().getTime() - currentArrivalDeparture.getTime().getTime()>0)
 							{
 								Block currentBlock=null;
@@ -187,12 +185,53 @@ public class HistoricalPredictionLibrary {
 		return null;
 	}
 	/* TODO could also make it a requirement that it is on the same route as the one we are generating prediction for */
+	private static IpcArrivalDeparture findNextArrival(List<IpcArrivalDeparture> nextStopList, IpcArrivalDeparture currentArrivalDeparture) {
+
+		if (currentArrivalDeparture.getNext() != null) {
+			// implied here is that vehicles and trips match
+			if (currentArrivalDeparture.isDeparture() && currentArrivalDeparture.getNext().isArrival()) {
+				if (currentArrivalDeparture.getStopPathIndex() + 1 == currentArrivalDeparture.getNext().getStopPathIndex()) {
+					logHit();
+					return currentArrivalDeparture.getNext();
+				} else {
+					logger.error("discontinuous stop sequences {} to {}", currentArrivalDeparture, currentArrivalDeparture.getNext());
+				}
+			}
+		}
+
+		IpcArrivalDeparture nextArrival = findMatchInList(nextStopList, currentArrivalDeparture);
+		if (nextArrival != null) {
+			logMiss();
+			logger.error("new algo found no result but old algol did! currentAD={}, legacyNext={}, newNext={}",
+							currentArrivalDeparture, nextArrival, currentArrivalDeparture.getNext());
+			return nextArrival;
+		}
+
+		return null;
+	}
+
+	private static int hits = 0;
+	private static int total = 0;
+	private static void logMiss() {
+		total++;
+	}
+
+	private static void logHit() {
+		hits++;
+		total++;
+		if (total % 1000 == 0) {
+			logger.info("HistoricalPredictionLibrary new algol status {} hits of {}, {}%", hits, total, (int)((double)hits/total*100));
+		}
+
+
+	}
+
 	private static IpcArrivalDeparture findMatchInList(List<IpcArrivalDeparture> nextStopList,
-													   IpcArrivalDeparture currentArrivalDeparture) {
+																										 IpcArrivalDeparture currentArrivalDeparture) {
 		for (IpcArrivalDeparture nextStopArrivalDeparture : nextStopList) {
 			if (currentArrivalDeparture.getVehicleId().equals(nextStopArrivalDeparture.getVehicleId())
-					&& currentArrivalDeparture.getTripId().equals(nextStopArrivalDeparture.getTripId())
-					&&  currentArrivalDeparture.isDeparture() && nextStopArrivalDeparture.isArrival() ) {
+							&& currentArrivalDeparture.getTripId().equals(nextStopArrivalDeparture.getTripId())
+							&&  currentArrivalDeparture.isDeparture() && nextStopArrivalDeparture.isArrival() ) {
 				return nextStopArrivalDeparture;
 			}
 		}

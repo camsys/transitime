@@ -40,15 +40,6 @@ public class KalmanPredictionGeneratorImplTest {
     dataGenerator = new KalmanDataGenerator(referenceTime);
     generator = new KalmanPredictionGeneratorTestImpl();
 
-    /**
-     * time needs to be populated for ArrivalDeparture creation
-     */
-    if (!Core.isCoreApplication()) {
-      Core.createTestCore(dataGenerator.AGENCY_ID);
-      if (Core.getInstance().getTime() == null) {
-        Core.getInstance().setTime(new Time(dataGenerator.getTimeZone()));
-      }
-    }
   }
 
   @Test

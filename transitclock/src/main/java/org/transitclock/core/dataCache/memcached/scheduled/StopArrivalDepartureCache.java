@@ -14,6 +14,7 @@ import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.StringConfigValue;
 
 import org.transitclock.core.dataCache.IpcArrivalDepartureComparator;
+import org.transitclock.core.dataCache.IpcArrivalDepartureGenerator;
 import org.transitclock.core.dataCache.StopArrivalDepartureCacheInterface;
 import org.transitclock.core.dataCache.StopArrivalDepartureCacheKey;
 import org.transitclock.db.structs.ArrivalDeparture;
@@ -73,7 +74,7 @@ public class StopArrivalDepartureCache extends StopArrivalDepartureCacheInterfac
 			list = new ArrayList<IpcArrivalDeparture>();
 
 		try {
-			list.add(new IpcArrivalDeparture(arrivalDeparture));
+			list.add(IpcArrivalDepartureGenerator.getInstance().generate(arrivalDeparture, true));
 			Collections.sort(list, new IpcArrivalDepartureComparator());
 			memcachedClient.set(createKey(key), expiryDuration, list);
 		} catch (Exception e) {

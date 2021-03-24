@@ -17,6 +17,7 @@ import org.transitclock.applications.Core;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.StringConfigValue;
 import org.transitclock.core.dataCache.IpcArrivalDepartureComparator;
+import org.transitclock.core.dataCache.IpcArrivalDepartureGenerator;
 import org.transitclock.core.dataCache.StopArrivalDepartureCacheInterface;
 import org.transitclock.core.dataCache.TripDataHistoryCacheFactory;
 import org.transitclock.core.dataCache.TripDataHistoryCacheInterface;
@@ -88,7 +89,7 @@ public class TripDataHistoryCache implements TripDataHistoryCacheInterface {
 				list = new ArrayList<IpcArrivalDeparture>();
 
 			try {
-				list.add(new IpcArrivalDeparture(arrivalDeparture));
+				list.add(IpcArrivalDepartureGenerator.getInstance().generate(arrivalDeparture, false));
 			} catch (Exception e) {
 				
 				e.printStackTrace();
@@ -103,7 +104,7 @@ public class TripDataHistoryCache implements TripDataHistoryCacheInterface {
 	public void populateCacheFromDb(Session session, Date startDate, Date endDate) {
 		Criteria criteria =session.createCriteria(ArrivalDeparture.class);				
 		
-		List<ArrivalDeparture> results = StopArrivalDepartureCacheInterface.createArrivalDeparturesCriteria(criteria, startDate, endDate);
+		List<ArrivalDeparture> results = StopArrivalDepartureCacheInterface.getLinkedArrivalDepartures(criteria, startDate, endDate);
 		for(ArrivalDeparture result : results)		
 		{						
 			// TODO this might be better done in the database.						

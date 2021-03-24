@@ -148,7 +148,7 @@ public class FrequencyBasedHistoricalAverageCache {
 			/* this is what puts the trip into the buckets (time slots) */
 			time=round(time, getCacheIncrementsForFrequencyService());
 							
-			TravelTimeResult pathDuration=getLastPathDuration(new IpcArrivalDeparture(arrivalDeparture), trip);
+			TravelTimeResult pathDuration=getLastPathDuration(IpcArrivalDepartureGenerator.getInstance().generate(arrivalDeparture, false), trip);
 							
 			if(pathDuration!=null && pathDuration.getDuration() > minTravelTimeFilterValue.getValue() && pathDuration.getDuration() < maxTravelTimeFilterValue.getValue())
 			{		
@@ -170,7 +170,7 @@ public class FrequencyBasedHistoricalAverageCache {
 					}
 				}
 			}				
-			DwellTimeResult stopDuration=getLastStopDuration(new IpcArrivalDeparture(arrivalDeparture), trip);
+			DwellTimeResult stopDuration=getLastStopDuration(IpcArrivalDepartureGenerator.getInstance().generate(arrivalDeparture, false), trip);
 			if(stopDuration!=null && stopDuration.getDuration() > minDwellTimeFilterValue.getValue() && stopDuration.getDuration() < maxDwellTimeFilterValue.getValue())
 			{
 				StopPathCacheKey historicalAverageCacheKey=new StopPathCacheKey(trip.getId(), stopDuration.getDeparture().getStopPathIndex(), false, new Long(time));
@@ -283,7 +283,7 @@ public class FrequencyBasedHistoricalAverageCache {
 	public void populateCacheFromDb(Session session, Date startDate, Date endDate) throws Exception 
 	{
 		Criteria criteria =session.createCriteria(ArrivalDeparture.class);
-		List<ArrivalDeparture> results = StopArrivalDepartureCacheInterface.createArrivalDeparturesCriteria(criteria, startDate, endDate);
+		List<ArrivalDeparture> results = StopArrivalDepartureCacheInterface.getLinkedArrivalDepartures(criteria, startDate, endDate);
 		Collections.sort(results, new ArrivalDepartureComparator());
 
 		int counter = 0;

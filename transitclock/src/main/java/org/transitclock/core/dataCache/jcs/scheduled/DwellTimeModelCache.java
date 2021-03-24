@@ -13,7 +13,7 @@ import org.transitclock.applications.Core;
 import org.transitclock.config.DoubleConfigValue;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.LongConfigValue;
-import org.transitclock.core.Indices;
+import org.transitclock.core.dataCache.IpcArrivalDepartureGenerator;
 import org.transitclock.core.dataCache.StopArrivalDepartureCacheFactory;
 import org.transitclock.core.dataCache.StopArrivalDepartureCacheKey;
 import org.transitclock.core.dataCache.StopPathCacheKey;
@@ -104,7 +104,7 @@ public class DwellTimeModelCache implements org.transitclock.core.dataCache.Dwel
 	
 					if(stopData!=null && stopData.size()>1)
 					{
-						IpcArrivalDeparture arrival=findArrival(stopData, new IpcArrivalDeparture(departure));
+						IpcArrivalDeparture arrival=findArrival(stopData, IpcArrivalDepartureGenerator.getInstance().generate(departure, false));
 						if(arrival!=null)
 						{
 							IpcArrivalDeparture previousArrival=findPreviousArrival(stopData, arrival);

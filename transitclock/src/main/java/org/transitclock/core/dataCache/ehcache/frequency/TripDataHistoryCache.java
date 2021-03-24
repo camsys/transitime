@@ -163,7 +163,7 @@ public class TripDataHistoryCache implements TripDataHistoryCacheInterface{
 					}
 					
 					try {
-						list.add(new IpcArrivalDeparture(arrivalDeparture));
+						list.add(IpcArrivalDepartureGenerator.getInstance().generate(arrivalDeparture, false));
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -190,7 +190,7 @@ public class TripDataHistoryCache implements TripDataHistoryCacheInterface{
 	{
  		Criteria criteria =session.createCriteria(ArrivalDeparture.class);				
 		
-		List<ArrivalDeparture> results = StopArrivalDepartureCacheInterface.createArrivalDeparturesCriteria(criteria, startDate, endDate);
+		List<ArrivalDeparture> results = StopArrivalDepartureCacheInterface.getLinkedArrivalDepartures(criteria, startDate, endDate);
 		for(ArrivalDeparture result : results)		
 		{						
 			// TODO this might be better done in the database.						

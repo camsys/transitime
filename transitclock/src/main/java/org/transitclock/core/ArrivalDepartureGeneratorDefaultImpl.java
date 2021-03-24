@@ -16,21 +16,22 @@
  */
 package org.transitclock.core;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
-import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.LongConfigValue;
 import org.transitclock.configData.AgencyConfig;
 import org.transitclock.configData.CoreConfig;
 import org.transitclock.core.dataCache.DwellTimeModelCacheFactory;
 import org.transitclock.core.dataCache.HoldingTimeCache;
+import org.transitclock.core.dataCache.IpcArrivalDepartureGenerator;
 import org.transitclock.core.dataCache.StopArrivalDepartureCacheFactory;
+import org.transitclock.core.dataCache.StopArrivalDepartureCacheInterface;
 import org.transitclock.core.dataCache.TripDataHistoryCacheFactory;
 import org.transitclock.core.dataCache.VehicleStateManager;
 import org.transitclock.core.dataCache.frequency.FrequencyBasedHistoricalAverageCache;
@@ -41,7 +42,6 @@ import org.transitclock.core.predAccuracy.PredictionAccuracyModule;
 import org.transitclock.db.structs.*;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
 import org.transitclock.logging.Markers;
-import org.transitclock.utils.Geo;
 import org.transitclock.utils.Time;
 
 /**
@@ -180,6 +180,11 @@ public class ArrivalDepartureGeneratorDefaultImpl
 					"Used when correcting situation where arrival time is after departure time. Default " +
 							   "time to use when specifying amount of time between arrival and departure.");
 
+	public static final IntegerConfigValue MAX_ARRIVALS_DEPARTURES_PER_TRIP
+					= new IntegerConfigValue("transitclock.core.cache.max_ad_per_trip",
+					500,
+					"Max arrivals and departures that are supported in a single trip to " +
+									"prevent infinite recursion");
 
 	/********************** Member Functions **************************/
 
@@ -335,10 +340,181 @@ public class ArrivalDepartureGeneratorDefaultImpl
 				stopPathId);
 
 		departure = StopArrivalDepartureCacheFactory.getInstance().verifyDeparture(departure);
-		updateCache(vehicleState, departure);
 
+		if (vehicleState.getLastArrivalDeparture() == null
+						|| vehicleState.getLastArrivalDeparture().getTime() < departure.getTime()) {
+			// we have the latest departure
+			if (vehicleState.getLastArrivalDeparture() == null
+							|| vehicleState.getLastArrivalDeparture().getTripId().equals(departure.getTripId())) {
+
+				if (vehicleState.getLastArrivalDeparture() == null) {
+					vehicleState.setLastArrivalDeparture(departure);
+				} else {
+					vehicleState.getLastArrivalDeparture().setNext(departure);
+				}
+				departure.setPrevious(vehicleState.getLastArrivalDeparture());
+
+				verifyPastArrival(departure);
+			}
+			vehicleState.setLastDepartureTime(departure.getTime());
+			vehicleState.setLastArrivalDeparture(departure);
+
+		} else {
+			// we have an earlier departure, insert into list
+			insertArrivalDeparture(vehicleState, departure);
+		}
+
+		updateCache(vehicleState, departure);
 		logger.debug("Creating departure: {}", departure);
 		return departure;
+	}
+
+	/**
+	 * insert a departure into the linked list of departures chained off of
+	 * previous
+	 * @param vehicleState
+	 * @param ad
+	 */
+	 public void insertArrivalDeparture(VehicleState vehicleState, ArrivalDeparture ad) {
+		ArrivalDeparture index = vehicleState.getLastArrivalDeparture();
+		ArrivalDeparture lastIndex = null;
+
+		int loopCount = 0;
+		if (index != null && index.getStopPathIndex() >= ad.getStopPathIndex()) {
+			while (index != null && index.getStopPathIndex() >= ad.getStopPathIndex()) {
+				loopCount++;
+				lastIndex = index;
+				index = index.getPrevious();
+				if (loopCount > getMaxDepth()) throw new IllegalStateException("loop detected in A/D " + index);
+			}
+		} else if (index != null && index.getStopPathIndex() < ad.getStopPathIndex()) {
+			while (index != null && index.getStopPathIndex() < ad.getStopPathIndex()) {
+				loopCount++;
+				lastIndex = index;
+				index = index.getNext();
+				if (loopCount > getMaxDepth()) throw new IllegalStateException("loop detected in A/D " + index);
+			}
+		}
+
+		// if we have an arrival it needs to go before the departure for the same stop
+		if (index != null && index.isDeparture() && ad.isArrival()) {
+			// go back one more, arrivals occur before departures for same stopPathIndex
+			if (index.getPrevious() != null
+							&& index.getStopPathIndex() == index.getPrevious().getStopPathIndex()) {
+				lastIndex = index;
+				index = index.getPrevious();
+			}
+		}
+
+		if (index != null && lastIndex != null) {
+			if (index.getStopPathIndex() <= lastIndex.getStopPathIndex()) {
+				insertForward(index, lastIndex, ad);
+			} else {
+				insertForward(lastIndex, index, ad);
+			}
+		} else if (lastIndex != null) {
+			if (lastIndex.getStopPathIndex() > ad.getStopPathIndex()) {
+				insertForward(index, lastIndex, ad);
+			} else {
+				insertForward(lastIndex, index, ad);
+			}
+		} else {
+			insertForward(index, lastIndex, ad);
+		}
+
+		// run forwards and backwards through the list giving a sanity check
+		verifyDepartureList(vehicleState);
+
+	}
+
+	private void insertForward(ArrivalDeparture previous, ArrivalDeparture next, ArrivalDeparture ad) {
+		// lastIndex.next -> ad.next -> index
+		if (previous != null && next != null) {
+			//  ad(arrival) -> previous(departure) -> next
+			if (ad.isArrival() && previous.getStopPathIndex() == ad.getStopPathIndex()) {
+				// we need to go back one further
+				next = previous;
+				if (previous.getPrevious() != null) previous = previous.getPrevious();
+			} else if (ad.isDeparture() && next.getStopPathIndex() == ad.getStopPathIndex()) {
+				// next need to go one forward
+				if (next.getNext() != null)
+				{
+					previous = next;
+					next = next.getNext();
+				}
+			}
+
+			if (previous.getStopPathIndex() <= ad.getStopPathIndex()
+							&& ad.getStopPathIndex() <= next.getStopPathIndex()) {
+				// yay
+			} else {
+				logger.error("out of order {} -> {} -> {}",
+								previous,
+								ad,
+								next);
+				//throw new IllegalStateException("misorded");
+			}
+		}
+		// we've found our insertion point
+		if (previous != null) {
+			previous.setNext(ad);
+
+		}
+		ad.setPrevious(previous);
+		ad.setNext(next);
+		if (next != null) next.setPrevious(ad);
+
+	}
+
+	private int getMaxDepth() {
+		return MAX_ARRIVALS_DEPARTURES_PER_TRIP.getValue();
+	}
+
+	/**
+	 * run through the list of previous departures and verify consistency
+	 * @param vehicleState
+	 */
+	private void verifyDepartureList(VehicleState vehicleState) {
+		ArrivalDeparture index = vehicleState.getLastArrivalDeparture();
+		ArrivalDeparture lastIndex = null;
+		int loopCount = 0;
+		while (index != null) {
+			loopCount++;
+			if (loopCount > getMaxDepth()) throw new IllegalStateException("loop detected in previous list!");
+			if (lastIndex != null) {
+				if (index.getStopPathIndex() > lastIndex.getStopPathIndex()) {
+					logger.error("out of order stop path; {} comes before {}", index, lastIndex);
+				}
+				if (index.getTime() > lastIndex.getTime()) {
+					logger.error("out of order avl time; {} come before {}", index, lastIndex);
+				}
+				if (index.isDeparture() == lastIndex.isDeparture()
+								/*&& index.getStopPathIndex() == lastIndex.getStopPathIndex()*/) {
+					logger.error("expecting paired A/Ds, found {} and {}", index, lastIndex);
+				}
+			}
+			index = index.getPrevious();
+		}
+
+		index = vehicleState.getLastArrivalDeparture();
+		lastIndex = null;
+		loopCount = 0;
+		while (index != null) {
+			loopCount++;
+			if (loopCount > getMaxDepth()) throw new IllegalStateException("loop detected in next list!");
+			if (lastIndex != null) {
+				if (index.getStopPathIndex() < lastIndex.getStopPathIndex()) {
+					logger.error("out of order stop path; {} comes after {}", index, lastIndex);
+				}
+				if (index.getTime() < lastIndex.getTime()) {
+					logger.error("out of order avl time; {} come after {}", index, lastIndex);
+				}
+				if (index.isDeparture() == lastIndex.isDeparture()) {
+					logger.error("expecting paired A/Ds, found {} and {}", index, lastIndex);
+				}
+			}
+			index = index.getNext();
+		}
 	}
 
 	/**
@@ -397,13 +573,28 @@ public class ArrivalDepartureGeneratorDefaultImpl
 				stopPathId);
 
 		arrival = StopArrivalDepartureCacheFactory.getInstance().verifyArrival(arrival);
-		updateCache(vehicleState, arrival);
-		logger.debug("Creating arrival: {}", arrival);
+
 
 		// Remember this arrival time so that can make sure that subsequent
 		// departures are for after the arrival time.
-		if (arrival.getTime() > vehicleState.getLastArrivalTime())
+		if (vehicleState.getLastArrivalDeparture() == null
+					|| vehicleState.getLastArrivalDeparture().getTime() < arrival.getTime()) {
+			// we have the latest arrival/departure
+			if (vehicleState.getLastArrivalDeparture() != null
+							&& vehicleState.getLastArrivalDeparture().getTripId().equals(arrival.getTripId())) {
+				arrival.setPrevious(vehicleState.getLastArrivalDeparture());
+				vehicleState.getLastArrivalDeparture().setNext(arrival);
+				verifyPastDeparture(arrival);
+			}
 			vehicleState.setLastArrivalTime(arrivalTime);
+			vehicleState.setLastArrivalDeparture(arrival);
+		} else {
+			// we have an earlier arrival, insert into list
+			insertArrivalDeparture(vehicleState, arrival);
+		}
+
+		updateCache(vehicleState, arrival);
+		logger.debug("Creating arrival: {}", arrival);
 		return arrival;
 	}
 
@@ -414,7 +605,18 @@ public class ArrivalDepartureGeneratorDefaultImpl
 
 		if(StopArrivalDepartureCacheFactory.getInstance()!=null)
 		{
-			StopArrivalDepartureCacheFactory.getInstance().putArrivalDeparture(arrivalDeparture);
+			StopArrivalDepartureCacheInterface stopArrivalDepartureCacheInterface = StopArrivalDepartureCacheFactory.getInstance();
+			stopArrivalDepartureCacheInterface.putArrivalDeparture(arrivalDeparture);
+			ArrivalDeparture ptr = arrivalDeparture.getPrevious();
+			if (ptr != null) {
+				IpcArrivalDeparture ipcPtr = stopArrivalDepartureCacheInterface.get(ptr);
+				while (ptr.getPrevious() != null && ipcPtr.getPrevious() == null) {
+					// keep cache consistent
+					stopArrivalDepartureCacheInterface.putArrivalDeparture(ptr);
+					ptr  = ptr.getPrevious();
+				}
+
+			}
 		}
 		
 		if(DwellTimeModelCacheFactory.getInstance()!=null)
@@ -427,24 +629,20 @@ public class ArrivalDepartureGeneratorDefaultImpl
 			try {
 				ScheduleBasedHistoricalAverageCache.getInstance().putArrivalDeparture(arrivalDeparture);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+				logger.error("error updating cache {}", e, e);			}
 		}
 
 		if(FrequencyBasedHistoricalAverageCache.getInstance()!=null)
 			try {
 				FrequencyBasedHistoricalAverageCache.getInstance().putArrivalDeparture(arrivalDeparture);
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+				logger.error("error updating cache {}", e, e);			}
 
 		if(HoldingTimeGeneratorFactory.getInstance()!=null)
 		{
 			HoldingTime holdingTime;
 			try {
-				holdingTime = HoldingTimeGeneratorFactory.getInstance().generateHoldingTime(vehicleState, new IpcArrivalDeparture(arrivalDeparture));
+				holdingTime = HoldingTimeGeneratorFactory.getInstance().generateHoldingTime(vehicleState, IpcArrivalDepartureGenerator.getInstance().generate(arrivalDeparture, false));
 				if(holdingTime!=null)
 				{
 					HoldingTimeCache.getInstance().putHoldingTime(holdingTime);
@@ -456,8 +654,14 @@ public class ArrivalDepartureGeneratorDefaultImpl
 				HoldingTimeGeneratorFactory.getInstance().handleDeparture(vehicleState, arrivalDeparture);
 
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error("error updating cache {}", e, e);			}
+
+			if (IpcArrivalDepartureGenerator.getInstance() != null) {
+				try {
+					IpcArrivalDepartureGenerator.getInstance().update(arrivalDeparture);
+				} catch (Exception e) {
+					logger.error("error updating cache {}", e, e);
+				}
 			}
 		
 		}
@@ -873,12 +1077,51 @@ public class ArrivalDepartureGeneratorDefaultImpl
 
 		Long dwellTime = recalculateDwellTimeUsingThresholds(departureTime - arrivalTime);
 		Departure verifiedDeparture = createDepartureTime(vehicleState, departureTime, block, tripIndex, stopPathIndex, dwellTime);
-		// remember this departure time to ensure subsequent arrivals are in order
-		if (verifiedDeparture.getTime() > vehicleState.getLastDepartureTime()) {
-			vehicleState.setLastDepartureTime(verifiedDeparture.getTime());
-		}
 		return verifiedDeparture;
 	}
+
+	/**
+	 * we have a departure, look back to previous arrival
+	 * @param departure
+	 */
+	private void verifyPastArrival(Departure departure) {
+		ArrivalDeparture arrival = departure.getPrevious();
+		if (arrival != null && arrival.isArrival()) {
+			verifyPastArrivalDeparture(departure, arrival);
+			if (departure.getTime() < arrival.getTime()) {
+				logger.error("out of order A/Ds temporally");
+			}
+		}
+
+	}
+
+	/**
+	 * we have an arrival, look back to previous departure
+	 * @param arrival
+	 */
+	private void verifyPastDeparture(Arrival arrival) {
+		ArrivalDeparture departure = arrival.getPrevious();
+		if (departure != null && departure.isDeparture()) {
+			verifyPastArrivalDeparture(departure, arrival);
+			if (arrival.getTime() < departure.getTime()) {
+				logger.error("out of order A/Ds temporally");
+			}
+		}
+
+	}
+
+	private void verifyPastArrivalDeparture(ArrivalDeparture departure, ArrivalDeparture arrival) {
+		if (!departure.getTripId().equals(arrival.getTripId())) {
+			logger.error("jumped trip {} to {}", arrival.getTripId(), departure.getTripId());
+		}
+		if (!arrival.isArrival()) {
+			logger.error("unexpected departure {}", arrival);
+		}
+		if (!departure.isDeparture()) {
+			logger.error("unexpected arrival {}", departure);
+		}
+	}
+
 
 	/**
 	 * Handles the case where the old match indicates that vehicle has

@@ -18,7 +18,7 @@ public class IpcArrivalDeparture implements Serializable {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 8916143683528781201L;
+	private static final long serialVersionUID = 8916143683528781202L;
 	
 	@XmlAttribute
 	private String vehicleId;
@@ -57,25 +57,29 @@ public class IpcArrivalDeparture implements Serializable {
 	@XmlAttribute
 	private transient Long dwellTime;
 
+	private IpcArrivalDeparture next;
+	private IpcArrivalDeparture previous;
+
+
 	protected IpcArrivalDeparture(){}
 
-	public IpcArrivalDeparture(ArrivalDeparture arrivalDepature) throws Exception {
+	public IpcArrivalDeparture(ArrivalDeparture arrivalDeparture) throws Exception {
 		
-		this.vehicleId=arrivalDepature.getVehicleId();
-		this.time=new Date(arrivalDepature.getTime());
-		this.avlTime=arrivalDepature.getAvlTime();
-		this.routeId=arrivalDepature.getRouteId();
-		this.tripId=arrivalDepature.getTripId();
-		this.isArrival=arrivalDepature.isArrival();
-		this.stopId=arrivalDepature.getStopId();
-		this.stopPathIndex=arrivalDepature.getStopPathIndex();
+		this.vehicleId=arrivalDeparture.getVehicleId();
+		this.time=new Date(arrivalDeparture.getTime());
+		this.avlTime=arrivalDeparture.getAvlTime();
+		this.routeId=arrivalDeparture.getRouteId();
+		this.tripId=arrivalDeparture.getTripId();
+		this.isArrival=arrivalDeparture.isArrival();
+		this.stopId=arrivalDeparture.getStopId();
+		this.stopPathIndex=arrivalDeparture.getStopPathIndex();
 		
-		this.scheduledAdherence=arrivalDepature.getScheduleAdherence();
-		this.freqStartTime=arrivalDepature.getFreqStartTime();
-		this.directionId=arrivalDepature.getDirectionId();
-		this.blockId=arrivalDepature.getBlockId();
-		this.serviceId=arrivalDepature.getServiceId();
-		this.dwellTime=arrivalDepature.getDwellTime();
+		this.scheduledAdherence=arrivalDeparture.getScheduleAdherence();
+		this.freqStartTime=arrivalDeparture.getFreqStartTime();
+		this.directionId=arrivalDeparture.getDirectionId();
+		this.blockId=arrivalDeparture.getBlockId();
+		this.serviceId=arrivalDeparture.getServiceId();
+		this.dwellTime=arrivalDeparture.getDwellTime();
 	}
 	
 	
@@ -207,6 +211,9 @@ public class IpcArrivalDeparture implements Serializable {
 		this.dwellTime = dwellTime;
 	}
 
+	public IpcArrivalDeparture getPrevious() { return previous; }
+	public IpcArrivalDeparture getNext() { return next; }
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -327,6 +334,30 @@ public class IpcArrivalDeparture implements Serializable {
 	}
 
 
-	
-	
+	public void setNext(IpcArrivalDeparture nextAd) {
+		next = nextAd;
+	}
+
+	public void setPrevious(IpcArrivalDeparture previousAd) {
+		previous = previousAd;
+	}
+
+  public IpcArrivalDeparture copyUnlinked() {
+		IpcArrivalDeparture copy = new IpcArrivalDeparture();
+		copy.vehicleId = vehicleId;
+		copy.time = time;
+		copy.avlTime = avlTime;
+		copy.routeId = routeId;
+		copy.tripId = tripId;
+		copy.isArrival = isArrival;
+		copy.stopId = stopId;
+		copy.stopPathIndex = stopPathIndex;
+		copy.scheduledAdherence = scheduledAdherence;
+		copy.freqStartTime = freqStartTime;
+		copy.directionId = directionId;
+		copy.blockId = blockId;
+		copy.serviceId = serviceId;
+		copy.dwellTime = dwellTime;
+		return copy;
+  }
 }

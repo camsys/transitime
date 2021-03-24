@@ -16,9 +16,8 @@ import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
-import org.transitclock.core.dataCache.ArrivalDepartureComparator;
 import org.transitclock.core.dataCache.IpcArrivalDepartureComparator;
-import org.transitclock.core.dataCache.KalmanErrorCacheKey;
+import org.transitclock.core.dataCache.IpcArrivalDepartureGenerator;
 import org.transitclock.core.dataCache.TripDataHistoryCacheFactory;
 import org.transitclock.core.dataCache.TripDataHistoryCacheInterface;
 import org.transitclock.core.dataCache.TripKey;
@@ -100,7 +99,7 @@ public class TripDataHistoryCache implements TripDataHistoryCacheInterface {
 					list = new ArrayList<IpcArrivalDeparture>();				
 				
 				try {
-					list.add(new IpcArrivalDeparture(arrivalDeparture));
+					list.add(IpcArrivalDepartureGenerator.getInstance().generate(arrivalDeparture, false));
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

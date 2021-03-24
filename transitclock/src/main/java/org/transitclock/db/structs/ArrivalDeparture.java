@@ -232,6 +232,19 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 	})
 	private StopPath stopPath;
 
+	/**
+	 * back pointer for easier trip traversal.  Populated via getLinkedArrivalDepartures.
+	 */
+	@Transient
+	private ArrivalDeparture previous;
+
+	/**
+	 * foward pointer for easier trip traversal.  Populated via getLinkedArrivalDepartures.
+	 */
+	@Transient
+	private ArrivalDeparture next;
+
+
 	public enum ArrivalsOrDepartures {ARRIVALS, DEPARTURES};
 
 	private static final Logger logger = 
@@ -1456,4 +1469,28 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 	public Trip getTripFromDb() { return trip; }
 
 	public StopPath getStopPathFromDb() { return stopPath; }
+
+
+	public void setNext(ArrivalDeparture next) {
+		this.next = next;
+	}
+
+	/**
+	 * forward pointer for easier trip traversal.  Populated via getLinkedArrivalDepartures.
+	 */
+	public ArrivalDeparture getNext() {
+		return next;
+	}
+
+	public void setPrevious(ArrivalDeparture last) {
+		previous = last;
+	}
+
+	/**
+	 * back pointer for easier trip traversal.  Populated via getLinkedArrivalDepartures.
+	 */
+	public ArrivalDeparture getPrevious() {
+		return previous;
+	}
+
 }

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.LongConfigValue;
 import org.transitclock.config.StringConfigValue;
+import org.transitclock.core.dataCache.IpcArrivalDepartureGenerator;
 import org.transitclock.core.dataCache.StopArrivalDepartureCacheFactory;
 import org.transitclock.core.dataCache.StopArrivalDepartureCacheKey;
 import org.transitclock.core.dataCache.StopPathCacheKey;
@@ -79,7 +80,7 @@ public class DwellTimeModelCache implements org.transitclock.core.dataCache.Dwel
 
 				if(stopData!=null && stopData.size()>1)
 				{
-					IpcArrivalDeparture arrival=findArrival(stopData, new IpcArrivalDeparture(departure));
+					IpcArrivalDeparture arrival=findArrival(stopData, IpcArrivalDepartureGenerator.getInstance().generate(departure, false));
 					if(arrival!=null)
 					{
 						IpcArrivalDeparture previousArrival=findPreviousArrival(stopData, arrival);
@@ -93,7 +94,7 @@ public class DwellTimeModelCache implements org.transitclock.core.dataCache.Dwel
 							/* Leave out silly values as they are most likely errors or unusual circumstance. */																				
 							DwellTimeDataFilter datafilter = DwellTimeFilterFactory.getInstance();
 							
-							if(!datafilter.filter(arrival, new IpcArrivalDeparture(departure)))
+							if(!datafilter.filter(arrival, IpcArrivalDepartureGenerator.getInstance().generate(departure, false)))
 							{						
 								
 								/* TODO Should also abstract behind an anomaly detention interface/Factory */	

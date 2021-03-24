@@ -67,6 +67,8 @@ public class VehicleState {
 	private long lastArrivalTime = 0;
 	// verify new arrival is greater than last departure
 	private long lastDepartureTime = 0;
+	// pointer to previous A/D forming a linked list
+	private ArrivalDeparture lastArrivalDeparture = null;
 	private Date lastAvlTime = null;
 
 	// So can keep track of whether assigning vehicle to same block that
@@ -1015,6 +1017,11 @@ public class VehicleState {
 	public long getLastDepartureTime() {
 		return lastDepartureTime;
 	}
+
+	public void setLastArrivalDeparture(ArrivalDeparture last) { this.lastArrivalDeparture = last; }
+
+	public ArrivalDeparture getLastArrivalDeparture() { return lastArrivalDeparture; }
+
 	public Date getLastAvlTime() {
 		return lastAvlTime;
 	}
