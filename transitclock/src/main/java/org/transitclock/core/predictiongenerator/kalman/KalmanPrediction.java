@@ -3,6 +3,7 @@ package org.transitclock.core.predictiongenerator.kalman;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.config.BooleanConfigValue;
+import org.transitclock.config.DoubleConfigValue;
 
 /**
  * The theory behind the Kalman Filter application to link travel times is provided
@@ -52,6 +53,21 @@ public class KalmanPrediction {
           "transitclock.prediction.kalman.useaverage", new Boolean(true),
           "Will use average travel time as opposed to last historical vehicle in Kalman prediction calculation."
   );
+  private static final DoubleConfigValue trafficBiasCoefficient = new DoubleConfigValue(
+          "transitclock.prediction.traffic.biasCoefficient",
+          65.0/15.0,
+          "Coefficient of bias between traffic and travel time"
+  );
+  private static final DoubleConfigValue trafficBiasOffset = new DoubleConfigValue(
+          "transitclock.prediction.traffic.biasOffset",
+          10.0,
+          "Offset to Coefficient of bias between traffic and travel time"
+  );
+  private static final DoubleConfigValue trafficBiasClamp = new DoubleConfigValue(
+          "transitclock.prediciton.traffic.biasClamp",
+          85.0,
+          "Max bias allowed for traffic"
+  );
 
   /**
    * @param lastVehicleSegment The last vehicle info for the time taken to cover the same segment
@@ -97,21 +113,29 @@ public class KalmanPrediction {
     long busDuration = destination.getTime() - origin.getTime();
     Long trafficDuration = null;
     if (destination.getTrafficTime() != null && origin.getTrafficTime() != null) {
-      trafficDuration = destination.getTrafficTime()/* - origin.getTrafficTime()*/;
+      trafficDuration = destination.getTrafficTime();
     }
     if (trafficDuration != null) {
-      logger.info("bus tt {} vs traffic tt {}; {} % diff",
+      float trafficWeight = getTrafficWeight(destination.getHorizonMinutes());
+      logger.info("bus tt {} vs traffic tt {} weighted {}% @ {}m; {} % diff",
               busDuration,
               trafficDuration,
+              trafficWeight,
+              destination.getHorizonMinutes(),
               (((double)trafficDuration-busDuration)/busDuration));
-      return new Float(((1-getTrafficWeight()) * busDuration)
-                + getTrafficWeight() * trafficDuration).longValue();
+      return new Float(((1-trafficWeight) * busDuration)
+                + trafficWeight * trafficDuration).longValue();
     }
     return busDuration;
   }
 
-  private float getTrafficWeight() {
-    return 0.5f;
+  private float getTrafficWeight(int horizon) {
+    // y = mx + b
+    // y = coefficient * horizon + offset
+    if (horizon <= 0) return new Double(trafficBiasOffset.getValue()).floatValue();
+    return new Double(Math.min(
+            (trafficBiasCoefficient.getValue() * horizon + trafficBiasOffset.getValue()),
+            trafficBiasClamp.getValue())).floatValue();
   }
 
   private double historicalVariance(TripSegment historicalSegments[], double average) {

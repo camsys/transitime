@@ -12,17 +12,19 @@ public class VehicleStopDetail {
   protected long time=-1L;
   protected Vehicle vehicle;
   protected Long trafficTime = null;
+  protected Integer horizon = null;
 
   public VehicleStopDetail(Stop stop, long time, Vehicle vehicle) {
 		this.stop = stop;
 		this.time = time;
 		this.vehicle = vehicle;
  }
-	public VehicleStopDetail(Stop stop, long time, Long trafficTime, Vehicle vehicle) {
+	public VehicleStopDetail(Stop stop, long time, Long trafficTime, Integer horizon, Vehicle vehicle) {
 		this.stop = stop;
 		this.time = time;
 		this.trafficTime = trafficTime;
 		this.vehicle = vehicle;
+		this.horizon = horizon;
 	}
 
 	/**
@@ -102,6 +104,9 @@ public void setVehicle(Vehicle vehicle) {
 
 public Long getTrafficTime() {
 	return trafficTime;
+}
+public Integer getHorizonMinutes() {
+	return horizon/60;
 }
 public void setTrafficTime(long trafficTime) { this.trafficTime = trafficTime; }
 

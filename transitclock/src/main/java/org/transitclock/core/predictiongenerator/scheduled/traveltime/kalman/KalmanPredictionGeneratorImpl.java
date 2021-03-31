@@ -255,7 +255,8 @@ public class KalmanPredictionGeneratorImpl extends PredictionGeneratorDefaultImp
                                                   TravelTimeDetails travelTimeDetails,
                                                   Indices indices) {
     Vehicle vehicle = new Vehicle(avlReport.getVehicleId());
-
+    // how far in the future is the prediction for
+    int horizonSeconds = getHorizonSeconds(avlReport, indices);
     Long trafficTravelTime = getTrafficForIndices(indices);
     if (logger.isInfoEnabled() && trafficTravelTime != null) {
       TrafficSensorData sensorData = TrafficManager.getInstance().getTrafficSensorDataForStopPath(indices.getStopPath());
@@ -272,7 +273,7 @@ public class KalmanPredictionGeneratorImpl extends PredictionGeneratorDefaultImp
       }
     }
 
-    VehicleStopDetail originDetail = new VehicleStopDetail(null, 0, 0l, vehicle);
+    VehicleStopDetail originDetail = new VehicleStopDetail(null, 0, 0l, horizonSeconds, vehicle);
     TripSegment[] historical_segments_k = new TripSegment[lastDaysTimes.size()];
     for (int i = 0; i < lastDaysTimes.size() && i < maxKalmanDays.getValue(); i++) {
       // We don't have historical AVL times so guess at it based on now
@@ -280,14 +281,27 @@ public class KalmanPredictionGeneratorImpl extends PredictionGeneratorDefaultImp
       logger.debug("Kalman is using historical value : "+lastDaysTimes.get(i) +" for : " + indices.toString());
       VehicleStopDetail destinationDetail = new VehicleStopDetail(null, lastDaysTimes.get(i).getTravelTime(),
               getTrafficHistory(indices, historicalAvlTime),
+              horizonSeconds,
               vehicle);
       // TODO: why do we insert into array in reverse order?
       historical_segments_k[lastDaysTimes.size()-i-1] = new TripSegment(originDetail, destinationDetail);
     }
-    VehicleStopDetail destinationDetail_0_k_1 = new VehicleStopDetail(null, travelTimeDetails.getTravelTime(), trafficTravelTime, vehicle);
+    VehicleStopDetail destinationDetail_0_k_1 = new VehicleStopDetail(null, travelTimeDetails.getTravelTime(), trafficTravelTime, horizonSeconds, vehicle);
     TripSegment ts_day_0_k_1 = new TripSegment(originDetail, destinationDetail_0_k_1);
     TripSegment last_vehicle_segment = ts_day_0_k_1;
     return new LinkTravelTimes(last_vehicle_segment, historical_segments_k);
+  }
+
+  /*
+  * calculate how far out the prediction is from now.
+   */
+  private int getHorizonSeconds(AvlReport avlReport, Indices indices) {
+    long avlReportSecondsIntoDay = Core.getInstance().getTime()
+            .getSecondsIntoDay(avlReport.getTime());
+    long indexSecondsIntoDay = indices.getScheduleTime().getTime();
+    int horizonSeconds = new Long(indexSecondsIntoDay
+            - (avlReportSecondsIntoDay)).intValue();
+    return horizonSeconds;
   }
 
   private Long getTrafficHistory(Indices indices, Long historicalTime) {
