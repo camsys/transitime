@@ -429,6 +429,7 @@ abstract public class PredictionAccuracyQuery {
 						predLength, predAccuracy, sourceResult);
 			}
 		} catch (SQLException e) {
+			e.printStackTrace();
 			throw e;
 		} finally {
 			if (statement != null)

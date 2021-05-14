@@ -186,13 +186,13 @@ public class GtfsRtTripFeed {
 		Set<IpcSkippedStop> skippedStopsForTrip = null;
 		if(allSkippedStops != null && !allSkippedStops.isEmpty()) {
 			skippedStopsForTrip = allSkippedStops.get(tripId);
-			logger.info("Checking skipped stops for Trip {}", tripId);
+			logger.debug("Checking skipped stops for Trip {}", tripId);
 			if(skippedStopsForTrip != null) {
 				logger.info("Skipped Stop Entries {} for Trip {}", skippedStopsForTrip.size(), tripId);
 				logger.info("Skipped Stops For Trip {} {}", tripId, skippedStopsForTrip);
 			}
 		} else {
-			logger.warn("All Skipped Stops is empty");
+			logger.debug("All Skipped Stops is empty");
 		}
 
 		// Add the StopTimeUpdate information for each prediction
@@ -297,9 +297,9 @@ public class GtfsRtTripFeed {
 		IpcCanceledTrip canceledTrip = canceledTrips.get(new CanceledTripKey(vehicleId, tripId));
 		if(canceledTrip != null) {
 			String canceledTripTripId = canceledTrip.getTripId();
-			logger.info("Found canceled tripId {} found for firstPred tripId {} and vehicleId {}",canceledTripTripId, tripId, vehicleId);
+			logger.debug("Found canceled tripId {} found for firstPred tripId {} and vehicleId {}",canceledTripTripId, tripId, vehicleId);
 		} else {
-			logger.info("No canceled trip found for firstPred tripId {} and vehicleId {}", tripId, vehicleId);
+			logger.debug("No canceled trip found for firstPred tripId {} and vehicleId {}", tripId, vehicleId);
 		}
 
 		if(canceledTrip != null && canceledTrip.getTripId() != null && canceledTrip.getTripId().equalsIgnoreCase(tripId)){

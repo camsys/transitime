@@ -176,10 +176,6 @@ public class PredAccuracyRangeQuery extends PredictionAccuracyQuery {
 	 *
 	 * @param beginDateStr
 	 *            Begin date for date range of data to use.
-	 * @param endDateStr
-	 *            End date for date range of data to use. Since want to include
-	 *            data for the end date, 1 day is added to the end date for the
-	 *            query.
 	 * @param beginTimeStr
 	 *            For specifying time of day between the begin and end date to
 	 *            use data for. Can thereby specify a date range of a week but
@@ -213,9 +209,13 @@ public class PredAccuracyRangeQuery extends PredictionAccuracyQuery {
 			String predSource, String predType, int maxEarlySec, int maxLateSec)
 			throws SQLException, ParseException {
 		// Actually perform the query
-		doQuery(beginDateStr, numDays, beginTimeStr, endTimeStr, routeIds,
-				predSource, predType);
-
+		try {
+			doQuery(beginDateStr, numDays, beginTimeStr, endTimeStr, routeIds,
+							predSource, predType);
+		} catch (Throwable t) {
+			logger.error("PredAccuracyRangeQuery query failed with {}", t, t);
+			return null;
+		}
 		// If query returned no data then simply return null so that
 		// can easily see that there is a problem
 		if (map.isEmpty()) {

@@ -85,6 +85,8 @@
 		response.setHeader("Access-Control-Allow-Origin", "*");
 		response.getWriter().write(jsonString);
     } catch (java.sql.SQLException e) {
+    	e.printStackTrace();
     	response.setStatus(400);
-    	response.getWriter().write(e.getMessage());    }
+    	response.getWriter().write(e.getMessage());
+    }
 %>
