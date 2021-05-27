@@ -644,8 +644,8 @@
         var valuesPert = [];
 
         if(flooredValue){
-            var u = data[valueOfPercentile- 1];
-            var a = data[valueOfPercentile];
+            var u = valueOfPercentile- 1;
+            var a = valueOfPercentile;
             sortedIndexValues.push(u);
             sortedIndexValues.push(a);
 
@@ -657,7 +657,8 @@
             pickedValue = sortedData[ceilValue - 1];
         }
         data.forEach(function(eachValue,index){
-            if(sortedIndexValues.length == 2 && (sortedData[sortedIndexValues[0]] === eachValue || sortedData[sortedIndexValues[1]] === eachValue)){
+            if(sortedIndexValues.length == 2 && (sortedData[sortedIndexValues[0]] === eachValue ||
+                sortedData[sortedIndexValues[1]] === eachValue)){
                 nonSortedIndexValues.push(index);
             }else if(sortedIndexValues.length == 1 && (sortedData[sortedIndexValues[0]] === eachValue)){
                 nonSortedIndexValues.push(index);
@@ -1079,8 +1080,6 @@
 
         highestPoints = [];
         request = getParams(false)
-        /*DONT COMMIT URL*/
-        // var visualDataURL = "http://gtfsrt.dev3.dart.obaweb.org:8080/api/v1/key/5c348c1d/agency/1"+  "/report/runTime/avgTripRunTimes";
 
         var visualDataURL = apiUrlPrefix +  "/report/runTime/avgTripRunTimes";
         var isAllRoutes = false;
