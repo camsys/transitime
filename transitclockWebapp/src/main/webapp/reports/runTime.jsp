@@ -262,6 +262,9 @@
             transform: translateY(3px);
             outline: none;
         }
+        .hide-routes{
+            display: none !important;
+        }
 
     </style>
 
@@ -383,14 +386,14 @@
                                 </span>
                     </select>
                 </div>
-                    <div class="param vertical route-settings">
-                        <span>Route Settings</span>
+                <div class="param vertical route-settings">
+                    <span>Route Settings</span>
 
-                        <div id="radioButtons" class="custom-radioButtons">
-                            <input type="radio" name="stopType"  checked="checked"  id="timePointsOnly"><label for="timePointsOnly" id="timePointsOnlyLabel">Time Points</label>
-                            <input type="radio" name="stopType" id="allStops"><label for="allStops">All Stops</label>
-                        </div>
+                    <div id="radioButtons" class="custom-radioButtons">
+                        <input type="radio" name="stopType"  checked="checked"  id="timePointsOnly"><label for="timePointsOnly" id="timePointsOnlyLabel">Time Points</label>
+                        <input type="radio" name="stopType" id="allStops"><label for="allStops">All Stops</label>
                     </div>
+                </div>
             </div>
 
             <div class="submitDiv">
@@ -407,7 +410,7 @@
         <br>
 
         <div id="run-time-tabs">
-            <ul>
+            <ul class="only-individual-route">
                 <li><a href="#component">Component</a></li>
 
                 <li><a href="#percentage">Percentile</a></li>
@@ -526,7 +529,7 @@
                 <br>
             </div>
 
-            <div id="percentage">
+            <div id="percentage" class="only-individual-route">
                 <div class="percentile-select-container" id="percentile-select-container"></div>
                 <h3>Average Percentile RunTime</h3>
                 <div id="percentile-summary-content"></div>
@@ -536,7 +539,7 @@
                 </table>
             </div>
 
-            <div id="distribution">
+            <div id="distribution" class="only-individual-route">
                 Distribution Tab
                 <div id="distributionVisualization">
 
@@ -1095,6 +1098,13 @@
             isAllRoutes = true;
             visualDataURL =  apiUrlPrefix + "/report/runTime/routeRunTimes";
         }
+        if(isAllRoutes){
+            $("#run-time-tabs" ).tabs().tabs('destroy');
+            $(".only-individual-route").addClass("hide-routes");
+        } else{
+            $(".only-individual-route").removeClass("hide-routes");
+            $("#run-time-tabs" ).tabs();
+        }
 
         $.ajax({
             url: visualDataURL,
@@ -1310,7 +1320,7 @@
                     backgroundColor: '#70a260',
                     label: "Scheduled",
                     showLine: false,
-                    fill: false,
+                    // fill: false,
                     // yAxisId: "icons"
                 },
                 {
@@ -1319,7 +1329,7 @@
                     backgroundColor: '#dfbf2c',
                     label: "Next trip start",
                     showLine: false,
-                    fill: false,
+                    // fill: false,
                     // yAxisId: "icons"
                 }],
             labels: response.data.trips
@@ -1475,11 +1485,14 @@
                 (request.tripPattern == "" ? "All Trip Patterns" : request.tripPattern) + " | " +
                 beginDateString + " to " + endDateString + " | " + timeRange + " | " + serviceDayString
                 + "</p>");
+            $("#component").show();
             $("#mainResults").show();
+
             visualizeData();
             $(".individual-route").hide();
             return true;
         } else{
+            $("#component").show();
             $(".individual-route").show();
             $("#comparisonModal").hide();
         }
