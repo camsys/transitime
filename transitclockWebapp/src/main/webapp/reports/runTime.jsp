@@ -1417,7 +1417,7 @@
                     tableTD += "<td>"+avgDwell+"</td>";
                     $(".average-time-details").html(tableTD);
                     $("#mainResults").show();
-                    visualizeData(response, isAllRoutes);
+                    // visualizeData(response, isAllRoutes);
                 } else {
                     $("#submit").removeAttr("disabled");
                     alert("Error parsing average trip run time information.");
