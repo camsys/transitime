@@ -383,14 +383,14 @@
                                 </span>
                     </select>
                 </div>
-                    <div class="param vertical route-settings">
-                        <span>Route Settings</span>
+                <div class="param vertical route-settings">
+                    <span>Route Settings</span>
 
-                        <div id="radioButtons" class="custom-radioButtons">
-                            <input type="radio" name="stopType"  checked="checked"  id="timePointsOnly"><label for="timePointsOnly" id="timePointsOnlyLabel">Time Points</label>
-                            <input type="radio" name="stopType" id="allStops"><label for="allStops">All Stops</label>
-                        </div>
+                    <div id="radioButtons" class="custom-radioButtons">
+                        <input type="radio" name="stopType"  checked="checked"  id="timePointsOnly"><label for="timePointsOnly" id="timePointsOnlyLabel">Time Points</label>
+                        <input type="radio" name="stopType" id="allStops"><label for="allStops">All Stops</label>
                     </div>
+                </div>
             </div>
 
             <div class="submitDiv">
@@ -1417,7 +1417,7 @@
                     tableTD += "<td>"+avgDwell+"</td>";
                     $(".average-time-details").html(tableTD);
                     $("#mainResults").show();
-                    // visualizeData(response, isAllRoutes);
+                    visualizeDataIndiviudalRoute(response, isAllRoutes);
                 } else {
                     $("#submit").removeAttr("disabled");
                     alert("Error parsing average trip run time information.");
@@ -1431,7 +1431,7 @@
         })
     })
 
-    function visualizeData(response, isAllRoutes) {
+    function visualizeDataIndiviudalRoute(response, isAllRoutes) {
         if(visualarGraphChart && visualarGraphChart.destroy){
             visualarGraphChart.destroy();
         }
@@ -1506,7 +1506,7 @@
         }
     }
 
-   function visualizeData() {
+    function visualizeData() {
         $("#submit").attr("disabled", true);
 
         highestPoints = [];
