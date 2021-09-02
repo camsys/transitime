@@ -177,8 +177,8 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 	 protected IpcPrediction generatePredictionForStop(AvlReport avlReport,  
 			Indices indices, long predictionTime, boolean useArrivalTimes,
 			boolean affectedByWaitStop, boolean isDelayed,
-	    boolean lateSoMarkAsUncertain, int tripCounter, Integer scheduleDeviation,
-																										 Algorithm lastTravelTime, Algorithm lastDwell) {
+	    boolean lateSoMarkAsUncertain, int tripCounter, Integer scheduleDeviation, Algorithm lastTravelTime,
+													   Algorithm lastDwell) {
 
 		getMonitoring().sumMetric("PredictionGenerationDefault");
 		 // Determine additional parameters for the prediction to be generated
@@ -209,18 +209,18 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 			return new IpcPrediction(avlReport, stopId, indices.getStopPathIndex(), gtfsStopSeq, trip,
 					predictionTime,	predictionTime, indices.atEndOfTrip(),
 					affectedByWaitStop, isDelayed, lateSoMarkAsUncertain, ArrivalOrDeparture.ARRIVAL,
-					scheduleDeviation, freqStartTime, tripCounter,vehicleState.isCanceled(), lastTravelTime, lastDwell);
+					scheduleDeviation, freqStartTime, tripCounter,vehicleState.isCanceled(), lastTravelTime, lastDwell,
+					null);
 
 		} else {
 			
 			// Generate a departure time
 			PredictionResult expectedStopTime = getStopTimeForPath(indices, avlReport, vehicleState);
 			lastDwell = expectedStopTime.getAlgorithm();
-						int expectedStopTimeMsec = 
-								(int) expectedStopTime.getPrediction();
+			int expectedStopTimeMsec = (int) expectedStopTime.getPrediction();
+
 			// If at a wait stop then need to handle specially...
 			if (indices.isWaitStop()) {
-				
 				
 				logger.debug("For vehicleId={} the original arrival time " +
 						"for waitStop stopId={} is {}",
@@ -328,7 +328,7 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 							predictionForNextStopCalculation,
 							indices.atEndOfTrip(), affectedByWaitStop,
 							isDelayed, lateSoMarkAsUncertain, ArrivalOrDeparture.DEPARTURE, scheduleDeviation,
-							freqStartTime, tripCounter,vehicleState.isCanceled(), lastTravelTime, lastDwell);
+							freqStartTime, tripCounter,vehicleState.isCanceled(), lastTravelTime, lastDwell, expectedStopTimeMsec);
 
 				} else {
 					getMonitoring().sumMetric("PredictionGenerationStop");
@@ -338,7 +338,8 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 							trip, expectedDepartureTime, expectedDepartureTime,
 							indices.atEndOfTrip(), affectedByWaitStop,
 							isDelayed, lateSoMarkAsUncertain, ArrivalOrDeparture.DEPARTURE,
-							scheduleDeviation, freqStartTime, tripCounter,vehicleState.isCanceled(), lastTravelTime, lastDwell);
+							scheduleDeviation, freqStartTime, tripCounter,vehicleState.isCanceled(), lastTravelTime,
+							lastDwell, expectedStopTimeMsec);
 
 				}
 			} else {
@@ -350,7 +351,7 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 						predictionTime + expectedStopTimeMsec, 
 						indices.atEndOfTrip(), affectedByWaitStop, isDelayed, lateSoMarkAsUncertain,
 						ArrivalOrDeparture.DEPARTURE, scheduleDeviation, freqStartTime,
-						tripCounter,vehicleState.isCanceled(), lastTravelTime, lastDwell);
+						tripCounter,vehicleState.isCanceled(), lastTravelTime, lastDwell, expectedStopTimeMsec);
 			}
 		}			
 	}
@@ -406,7 +407,7 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 		
 		// Get time to end of first path and thereby determine prediction for 
 		// first stop.
-		
+
 		long predictionTime = avlTime + expectedTravelTimeFromMatchToEndOfStopPath(avlReport, match);
 		Algorithm lastTravelTime = getAlgorithm(indices);
 		Algorithm lastDwell = lastTravelTime;

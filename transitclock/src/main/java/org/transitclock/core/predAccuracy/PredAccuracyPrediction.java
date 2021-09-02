@@ -48,6 +48,7 @@ public class PredAccuracyPrediction {
 	private final String source;
 	private final int travelTimeAlgorithm;
 	private final int dwellTimeAlgorithm;
+	private final Integer dwellTime;
 
 	/********************** Member Functions **************************/
 
@@ -74,10 +75,10 @@ public class PredAccuracyPrediction {
 	 * @param travelTimeAlgorithm
 	 * 			  This is the algorithm used to generate prediction.
 	 */
-	public PredAccuracyPrediction(String routeId, String directionId,
-																String stopId, String tripId, String vehicleId, Date predictedTime,
-																Date predictionReadTime, boolean isArrival,
-																Boolean affectedByWaitStop, String source, int travelTimeAlgorithm, int dwellTimeAlgorithm, String scheduledTime) {
+	public PredAccuracyPrediction(String routeId, String directionId, String stopId, String tripId, String vehicleId,
+								  Date predictedTime, Date predictionReadTime, boolean isArrival,
+								  Boolean affectedByWaitStop, String source, int travelTimeAlgorithm,
+								  int dwellTimeAlgorithm, String scheduledTime, Integer dwellTime) {
 		super();
 		this.routeId = routeId;
 		this.directionId = directionId;
@@ -92,6 +93,7 @@ public class PredAccuracyPrediction {
 		this.scheduledTime = scheduledTime;
 		this.travelTimeAlgorithm = travelTimeAlgorithm;
 		this.dwellTimeAlgorithm = dwellTimeAlgorithm;
+		this.dwellTime = dwellTime;
 	}
 	
 	public int getAlgorithm() {
@@ -142,6 +144,23 @@ public class PredAccuracyPrediction {
 	public Boolean isAffectedByWaitStop() {
 		return affectedByWaitStop;
 	}
+
+	public String getScheduledTime() {
+		return scheduledTime;
+	}
+
+
+	public Algorithm getTravelTimeType() {
+		return Algorithm.fromValue(travelTimeAlgorithm);
+	}
+
+	public Algorithm getDwellTimeType() {
+		return Algorithm.fromValue(dwellTimeAlgorithm);
+	}
+
+	public Integer getDwellTime() {
+		return dwellTime;
+	}
 	
 	@Override
 	public String toString() {
@@ -160,19 +179,8 @@ public class PredAccuracyPrediction {
 				+ ", source=" + source
 				+ ", algorithm=" + travelTimeAlgorithm
 				+ ", scheduleTime=" + scheduledTime
+				+ ", dwellTime=" + dwellTime
 				+ "]";
 	}
 
-	public String getScheduledTime() {
-		return scheduledTime;
-	}
-
-
-  public Algorithm getTravelTime() {
-		return Algorithm.fromValue(travelTimeAlgorithm);
-  }
-
-	public Algorithm getDwellTime() {
-		return Algorithm.fromValue(dwellTimeAlgorithm);
-	}
 }

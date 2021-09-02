@@ -29,7 +29,6 @@ import javax.persistence.Index;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.persistence.Transient;
 
 import org.hibernate.CallbackException;
 import org.hibernate.Session;
@@ -129,6 +128,9 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 	@Column
 	private final int dwellTimeAlgorithm;
 
+	@Column
+	private final Integer dwellTime;
+
 
 	private static final long serialVersionUID = -6900411351649946447L;
 
@@ -149,10 +151,11 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 	 * @param vehicleId
 	 */
 	public PredictionAccuracy(String routeId, String directionId,
-														String stopId, String tripId, Date arrivalDepartureTime,
-														Date predictedTime, Date predictionReadTime,
-														String predictionSource, String vehicleId,
-														Boolean affectedByWaitStop, Algorithm travelTime, Algorithm dwellTime) {
+							  String stopId, String tripId, Date arrivalDepartureTime,
+							  Date predictedTime, Date predictionReadTime,
+							  String predictionSource, String vehicleId,
+							  Boolean affectedByWaitStop, Algorithm travelTimeType,
+							  Algorithm dwellTimeType, Integer dwellTime) {
 		super();
 		this.routeId = routeId;
 		
@@ -169,8 +172,9 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 		this.predictionSource = predictionSource;
 		this.vehicleId = vehicleId;
 		this.affectedByWaitStop = affectedByWaitStop;
-		this.travelTimeAlgorithm=travelTime.getValue();
-		this.dwellTimeAlgorithm=dwellTime.getValue();
+		this.travelTimeAlgorithm=travelTimeType.getValue();
+		this.dwellTimeAlgorithm=dwellTimeType.getValue();
+		this.dwellTime = dwellTime;
 	}
 
 	/**
@@ -193,6 +197,7 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 		this.affectedByWaitStop = null;
 		this.travelTimeAlgorithm = Algorithm.UNKNOWN.getValue();
 		this.dwellTimeAlgorithm = Algorithm.UNKNOWN.getValue();
+		this.dwellTime = null;
 	}
 
 	@Override
@@ -240,6 +245,9 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 		result =
 				prime * result
 						+ ((vehicleId == null) ? 0 : vehicleId.hashCode());
+		result =
+				prime * result
+						+ ((dwellTime == null) ? 0 : dwellTime.hashCode());
 		return result;
 	}
 

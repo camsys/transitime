@@ -250,7 +250,8 @@ public class NextBusPredictionAccuracyModule extends PredictionAccuracyModule {
 					PredAccuracyPrediction pred = new PredAccuracyPrediction(
 							routeId, directionId, stopId, tripId, vehicleId,
 							predictedTime, predictionsReadTime, isArrival,
-							affectedByWaitStop, "NextBus", Algorithm.NEXTBUS.getValue(),Algorithm.NEXTBUS.getValue(), null);
+							affectedByWaitStop, "NextBus", Algorithm.NEXTBUS.getValue(),
+							Algorithm.NEXTBUS.getValue(), null, null);
 					storePrediction(pred);
 				}
 			}

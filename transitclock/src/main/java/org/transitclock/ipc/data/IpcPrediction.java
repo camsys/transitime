@@ -83,6 +83,7 @@ public class IpcPrediction implements Serializable {
 	private boolean isCanceled;
 	private final int travelTimeAlgorithm;
 	private final int dwellTimeAlgorithm;
+	private final Integer dwellTime;
 
 	public boolean isCanceled() {
 		return isCanceled;
@@ -141,7 +142,7 @@ public class IpcPrediction implements Serializable {
 		      boolean atEndOfTrip, boolean affectedByWaitStop,
 		      boolean isDelayed, boolean lateAndSubsequentTripSoMarkAsUncertain,
 		      ArrivalOrDeparture arrivalOrDeparture, Integer delay, long freqStartTime,
-			int tripCounter,boolean isCanceled, Algorithm travelTime, Algorithm dwellTime) {
+			int tripCounter,boolean isCanceled, Algorithm travelTimeType, Algorithm dwellTimeType, Integer dwellTime) {
 		this.vehicleId = avlReport.getVehicleId();
 	    this.routeId = trip.getRouteId();
 	    this.stopId = stopId;
@@ -179,8 +180,9 @@ public class IpcPrediction implements Serializable {
 	    this.freqStartTime = freqStartTime;
 		this.tripCounter =  tripCounter;
 		this.isCanceled=isCanceled;
-		this.travelTimeAlgorithm = travelTime.getValue();
-		this.dwellTimeAlgorithm = dwellTime.getValue();
+		this.travelTimeAlgorithm = travelTimeType.getValue();
+		this.dwellTimeAlgorithm = dwellTimeType.getValue();
+		this.dwellTime = dwellTime;
 	}
 
 	/**
@@ -195,7 +197,8 @@ public class IpcPrediction implements Serializable {
 			boolean affectedByWaitStop, String driverId, short passengerCount,
 			float passengerFullness, boolean isDelayed,
 			boolean lateAndSubsequentTripSoMarkAsUncertain, boolean isArrival,  Integer delay,
-		    Long freqStartTime, int tripCounter,boolean isCanceled, Algorithm travelTime, Algorithm dwelLTime) {
+		    Long freqStartTime, int tripCounter,boolean isCanceled, Algorithm travelTimeType, Algorithm dwellTimeType,
+		    Integer dwellTime) {
 
 		this.vehicleId = vehicleId;
 		this.routeId = routeId;
@@ -229,8 +232,9 @@ public class IpcPrediction implements Serializable {
 
 		this.delay = delay;
 		this.isCanceled=isCanceled;
-		this.travelTimeAlgorithm = travelTime.getValue();
-		this.dwellTimeAlgorithm = dwelLTime.getValue();
+		this.travelTimeAlgorithm = travelTimeType.getValue();
+		this.dwellTimeAlgorithm = dwellTimeType.getValue();
+		this.dwellTime = dwellTime;
 	}
 
 	
@@ -272,6 +276,8 @@ public class IpcPrediction implements Serializable {
 		private int travelTimeAlgorithm;
 		private int dwellTimeAlgorithm;
 
+		private Integer dwellTime;
+
 		private static final long serialVersionUID = -8585283691951746719L;
 		private static final short currentSerializationVersion = 0;
 
@@ -310,6 +316,7 @@ public class IpcPrediction implements Serializable {
 			this.isCanceled=p.isCanceled;
 			this.travelTimeAlgorithm = p.travelTimeAlgorithm;
 			this.dwellTimeAlgorithm = p.dwellTimeAlgorithm;
+			this.dwellTime = p.dwellTime;
 		}
 
 		/*
@@ -352,6 +359,7 @@ public class IpcPrediction implements Serializable {
 			stream.writeBoolean(isCanceled);
 			stream.writeInt(travelTimeAlgorithm);
 			stream.writeInt(dwellTimeAlgorithm);
+			stream.writeLong(dwellTime);
 		}
 
 		/*
@@ -401,6 +409,7 @@ public class IpcPrediction implements Serializable {
 			isCanceled=stream.readBoolean();
 			travelTimeAlgorithm=stream.readInt();
 			dwellTimeAlgorithm=stream.readInt();
+			dwellTime=stream.readInt();
 		}
 
 		/*
@@ -416,7 +425,8 @@ public class IpcPrediction implements Serializable {
 					tripStartEpochTime, affectedByWaitStop, driverId,
 					passengerCount, passengerFullness, isDelayed, lateAndSubsequentTripSoMarkAsUncertain,
 					isArrival, delay, freqStartTime, tripCounter,isCanceled,
-							Algorithm.fromValue(travelTimeAlgorithm), Algorithm.fromValue(dwellTimeAlgorithm));
+							Algorithm.fromValue(travelTimeAlgorithm), Algorithm.fromValue(dwellTimeAlgorithm),
+					dwellTime);
 
 		}
 	}
@@ -619,7 +629,12 @@ public class IpcPrediction implements Serializable {
 		return freqStartTime;
 	}
 
-	public Algorithm getTravelTime() { return Algorithm.fromValue(travelTimeAlgorithm); }
-	public Algorithm getDwelLTime() { return Algorithm.fromValue(dwellTimeAlgorithm); }
+	public Algorithm getTravelTimeType() { return Algorithm.fromValue(travelTimeAlgorithm); }
+
+	public Algorithm getDwellTimeType() { return Algorithm.fromValue(dwellTimeAlgorithm); }
+
+	public Integer getDwellTime() {
+		return dwellTime;
+	}
 	
 }
