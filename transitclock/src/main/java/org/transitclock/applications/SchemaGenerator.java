@@ -31,7 +31,10 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -40,9 +43,15 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.hbm2ddl.SchemaExport.Action;
+import org.hibernate.tool.schema.TargetType;
 
 import com.google.common.reflect.ClassPath;
 
@@ -71,6 +80,7 @@ public class SchemaGenerator {
 	private final Configuration cfg;
 	private final String packageName;
 	private final String outputDirectory;
+	private static List<Class<Object>> classList=new ArrayList<Class<Object>>();
 	
 	private static final Logger logger =
 			LoggerFactory.getLogger(SchemaGenerator.class);
@@ -100,7 +110,7 @@ public class SchemaGenerator {
 		this.cfg.setProperty("hibernate.hbm2ddl.auto", "create");
 
 		for (Class<Object> clazz : getClasses(packageName)) {
-			this.cfg.addAnnotatedClass(clazz);
+			classList.add(clazz);
 		}
 		
 		this.packageName = packageName;
@@ -207,10 +217,17 @@ public class SchemaGenerator {
 	 * @param dbDialect to use
 	 */
 	private void generate(Dialect dialect) {
-		cfg.setProperty("hibernate.dialect", dialect.getDialectClass());
-
-		SchemaExport export = new SchemaExport(cfg);
+		
+		Map<String, String> settings = new HashMap<>();
+		settings.put("hibernate.dialect",  dialect.getDialectClass());
+		
+		SchemaExport export = new SchemaExport();
 		export.setDelimiter(";");
+		
+		ServiceRegistry serviceRegistry = 
+			      new StandardServiceRegistryBuilder().applySettings(settings).build();
+		
+		
 		
 		// Determine file name. Use "ddl_" plus dialect name such as mysql or
 		// oracle plus the package name with "_" replacing "." such as
@@ -222,13 +239,28 @@ public class SchemaGenerator {
 				"_" + packeNameSuffix + ".sql";
 		
 		export.setOutputFile(outputFilename);
-		
+		 EnumSet<TargetType> enumSet = EnumSet.of(TargetType.SCRIPT);
 		// Export, but only to an SQL file. Don't actually modify the database
 		System.out.println("Writing file " + outputFilename);
-		export.execute(true, false, false, false);
+				
+		
+		MetadataSources metadatasource = new MetadataSources(serviceRegistry);
+							
+		for(Class<Object> annotatedClass:classList)
+		{
+			metadatasource.addAnnotatedClass( annotatedClass);
+		}
+		
+		Metadata metadata =metadatasource.buildMetadata();
+		
+	    new SchemaExport() //
+	            .setOutputFile(outputFilename) //
+	            .create(EnumSet.of(TargetType.SCRIPT), metadata);
+	 
+	    metadata.buildSessionFactory().close();
 		
 		// Get rid of unneeded SQL for dropping tables and keys and such
-		trimCruftFromFile(outputFilename);
+		//trimCruftFromFile(outputFilename);
 	}
 
 	/**
