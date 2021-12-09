@@ -77,7 +77,7 @@ import com.google.common.reflect.ClassPath;
  *
  */
 public class SchemaGenerator {
-	private final Configuration cfg;
+	
 	private final String packageName;
 	private final String outputDirectory;
 	private static List<Class<Object>> classList=new ArrayList<Class<Object>>();
@@ -106,8 +106,7 @@ public class SchemaGenerator {
 
 	@SuppressWarnings("unchecked")
 	public SchemaGenerator(String packageName, String outputDirectory) throws Exception {
-		this.cfg = new Configuration();
-		this.cfg.setProperty("hibernate.hbm2ddl.auto", "create");
+		
 
 		for (Class<Object> clazz : getClasses(packageName)) {
 			classList.add(clazz);
@@ -221,13 +220,8 @@ public class SchemaGenerator {
 		Map<String, String> settings = new HashMap<>();
 		settings.put("hibernate.dialect",  dialect.getDialectClass());
 		
-		SchemaExport export = new SchemaExport();
-		export.setDelimiter(";");
-		
 		ServiceRegistry serviceRegistry = 
 			      new StandardServiceRegistryBuilder().applySettings(settings).build();
-		
-		
 		
 		// Determine file name. Use "ddl_" plus dialect name such as mysql or
 		// oracle plus the package name with "_" replacing "." such as
@@ -238,11 +232,8 @@ public class SchemaGenerator {
 				"ddl_" + dialect.name().toLowerCase() + 
 				"_" + packeNameSuffix + ".sql";
 		
-		export.setOutputFile(outputFilename);
-		 EnumSet<TargetType> enumSet = EnumSet.of(TargetType.SCRIPT);
 		// Export, but only to an SQL file. Don't actually modify the database
-		System.out.println("Writing file " + outputFilename);
-				
+		System.out.println("Writing file " + outputFilename);		
 		
 		MetadataSources metadatasource = new MetadataSources(serviceRegistry);
 							
@@ -253,14 +244,14 @@ public class SchemaGenerator {
 		
 		Metadata metadata =metadatasource.buildMetadata();
 		
-	    new SchemaExport() //
-	            .setOutputFile(outputFilename) //
+	    new SchemaExport().setDelimiter(";") //
+	            .setOutputFile(outputFilename)
 	            .create(EnumSet.of(TargetType.SCRIPT), metadata);
 	 
 	    metadata.buildSessionFactory().close();
 		
 		// Get rid of unneeded SQL for dropping tables and keys and such
-		//trimCruftFromFile(outputFilename);
+		trimCruftFromFile(outputFilename);
 	}
 
 	/**
