@@ -80,7 +80,7 @@ public class SchemaGenerator {
 	
 	private final String packageName;
 	private final String outputDirectory;
-	private static List<Class<Object>> classList=new ArrayList<Class<Object>>();
+	private static List<Class<Object>> classList=null;
 	
 	private static final Logger logger =
 			LoggerFactory.getLogger(SchemaGenerator.class);
@@ -107,7 +107,7 @@ public class SchemaGenerator {
 	@SuppressWarnings("unchecked")
 	public SchemaGenerator(String packageName, String outputDirectory) throws Exception {
 		
-
+		classList=new ArrayList<Class<Object>>();
 		for (Class<Object> clazz : getClasses(packageName)) {
 			classList.add(clazz);
 		}
@@ -160,24 +160,13 @@ public class SchemaGenerator {
 				// Filter out the alter table commands where dropping a key or
 				// a constraint
 				if (line.contains("alter table")) {
-					String nextLine = reader.readLine();
-					if (nextLine.contains("drop")) {
-						// Need to continue reading until process a blank line
-						while (reader.readLine().length() != 0);
+					
+					if (line.contains("drop")) {
+						 
 						
 						// Continue to next line since filtering out drop commands
 						continue;					
-					} else {
-						// It is an "alter table" command but not a "drop". 
-						// Therefore need to keep this command. Since read in
-						// two lines need to handle this specially and then
-						// continue
-						writer.write(line);
-						writer.write("\n");
-						writer.write(nextLine);
-						writer.write("\n");
-						continue;
-					}
+					} 
 				}
 				
 				// Line not being filtered so write it to the file
