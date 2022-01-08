@@ -22,16 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.Column;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinTable;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.*;
 
 import org.hibernate.CallbackException;
 import org.hibernate.HibernateException;
@@ -79,7 +70,17 @@ public class TripPattern implements Serializable, Lifecycle {
 	// Paths are automatically stored.
 	@OneToMany(fetch=FetchType.LAZY)
 	@Cascade({CascadeType.SAVE_UPDATE})
-	@JoinTable(name="TripPattern_to_Path_joinTable")
+	@JoinTable(name="TripPattern_to_Path_joinTable",
+			joinColumns= {
+					@JoinColumn(name="TripPatterns_id", referencedColumnName="id"),
+					@JoinColumn(name="TripPatterns_configRev", referencedColumnName="configrev")
+			},
+			inverseJoinColumns= {
+					@JoinColumn(name="stopPaths_tripPatternId", referencedColumnName="trippatternid"),
+					@JoinColumn(name="stopPaths_stopPathId", referencedColumnName="stoppathid"),
+					@JoinColumn(name="stopPaths_configRev", referencedColumnName="configRev")
+			})
+
 	@OrderColumn( name="listIndex")
 	final protected List<StopPath> stopPaths;
 	
