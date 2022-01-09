@@ -554,7 +554,7 @@
         stops = {};
         var request = {};
 
-        request.a = 1;
+        request.a = <%= request.getParameter("a")%>;
         request.r = $("#route").val();
         request.headsign = $("#direction").val();
 
