@@ -43,6 +43,7 @@ import org.transitclock.gtfs.DbConfig;
 import org.transitclock.gtfs.TitleFormatter;
 import org.transitclock.gtfs.gtfsStructs.GtfsTrip;
 import org.transitclock.utils.IntervalTimer;
+import org.transitclock.utils.QueryBuilder;
 import org.transitclock.utils.Time;
 
 
@@ -362,6 +363,7 @@ public class Trip implements Lifecycle, Serializable {
 		boardingType = null;
 	}
 
+
 	/**
 	 * For refining the headsign. For some agencies like VTA & AC Transit the
 	 * headsign includes the route number at the beginning. This is indeed the
@@ -490,6 +492,21 @@ public class Trip implements Lifecycle, Serializable {
 		// Now put the Trips into a map and return it
 		Map<String, Trip> tripsMap = new HashMap<String, Trip>();
 		for (Trip trip : tripsList) {
+			tripsMap.put(trip.getId(), trip);
+		}
+		return tripsMap;
+	}
+	public static Map<String, Trip> getTripsByTripIds(Session session, int configRev, List<String> tripsToLoad) {
+		String hql = "FROM Trip "
+		+ "    WHERE "
+		+ "configRev = :configRev "
+		+ "and tripId in (" + QueryBuilder.buildInClause(tripsToLoad) + ")";
+		Query query = session.createQuery(hql);
+		query.setInteger("configRev", configRev);
+		List<Trip> tripList = query.list();
+
+		Map<String, Trip> tripsMap = new HashMap<>();
+		for (Trip trip : tripList) {
 			tripsMap.put(trip.getId(), trip);
 		}
 		return tripsMap;

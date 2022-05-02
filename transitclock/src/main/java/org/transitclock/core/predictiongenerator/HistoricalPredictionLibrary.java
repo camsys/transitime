@@ -265,7 +265,7 @@ public class HistoricalPredictionLibrary {
 		for (int i = 0; i < num_days_look_back && num_found < num_days; i++) {
 
 			Date nearestDay = DateUtils.truncate(DateUtils.addDays(startDate, (i + 1) * -1), Calendar.DAY_OF_MONTH);
-			boolean isHoliday = false;
+			boolean isHoliday = false; // TODO!
 			if (!calendarMatches(startDate, nearestDay, isHoliday)) {
 				continue;
 			}

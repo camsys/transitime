@@ -5,6 +5,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.applications.Core;
 import org.transitclock.avl.ApcModule;
 import org.transitclock.core.dataCache.frequency.FrequencyBasedHistoricalAverageCache;
 import org.transitclock.core.dataCache.scheduled.ScheduleBasedHistoricalAverageCache;
@@ -13,8 +14,12 @@ import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ArrivalDeparture;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledFuture;
+
+import static org.transitclock.gtfs.DbConfig.MAX_PREVIOUS_CONFIG_REV_LOAD;
 
 /**
  * A task populating the cache on startup.  Designed to be
@@ -87,10 +92,11 @@ public class CacheTask implements ParallelTask {
             switch (type) {
                 case TripDataHistoryCacheFactory:
                     if (results != null) {
-                        logger.info("populating TripDataHistoryCache with " + results.size() + "records");
+                        logger.info("populating TripDataHistoryCache with " + results.size() + " records");
                     } else {
                         logger.info("populating TripDataHistoryCache with NuLl records");
                     }
+                    loadMissingTrips(results);
                     TripDataHistoryCacheFactory.getInstance().populateCacheFromDb(results);
                     break;
                 case StopArrivalDepartureCacheFactory:
@@ -123,6 +129,29 @@ public class CacheTask implements ParallelTask {
                 // as it counts against the connection pool
                 session.close();
             }
+        }
+    }
+
+    private static void loadMissingTrips(List<ArrivalDeparture> results) {
+        try {
+
+            int i = 0;
+            while (i < MAX_PREVIOUS_CONFIG_REV_LOAD) {
+                // check if the set of trips is known about
+                HashSet<String> tripsToLoad = new HashSet<>();
+                for (ArrivalDeparture arrivalDeparture : results) {
+                    if (!Core.getInstance().getDbConfig().isKnownTrip(arrivalDeparture.getTripId())) {
+                        logger.info("found unknown trip {}", arrivalDeparture.getTripId());
+                        tripsToLoad.add(arrivalDeparture.getTripId());
+                    }
+                }
+                Core.getInstance().getDbConfig().loadTrips(tripsToLoad, i);
+            }
+            // for trips that aren't know, load them in bulk
+            // iteratively per configRev
+        } catch (Throwable t) {
+            logger.error("loadMissingTrips caught {}", t, t);
+            return;
         }
     }
 

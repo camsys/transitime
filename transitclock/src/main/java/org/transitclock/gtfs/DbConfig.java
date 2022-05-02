@@ -32,6 +32,7 @@ import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.*;
 import org.transitclock.utils.IntervalTimer;
 import org.transitclock.utils.MapKey;
+import org.transitclock.utils.QueryBuilder;
 import org.transitclock.utils.Time;
 
 import java.util.*;
@@ -585,6 +586,22 @@ public class DbConfig {
 		return tripsMap;
 	}
 
+	public void loadTrips(Collection tripIds, int configRevBack) {
+		if (tripIds == null || tripIds.isEmpty()) return;
+
+		logger.info("loading {} tripIds from ConfigRev {}", tripIds.size(), configRev-configRevBack);
+
+		synchronized (Block.getLazyLoadingSyncObject()) {
+			Map<String, Trip> tripsByTripIds = Trip.getTripsByTripIds(globalSession,
+							configRev - configRevBack,
+							new ArrayList<>(tripIds));
+			for (String tripId: tripsByTripIds.keySet()) {
+				tripsMap.put(tripId, tripsByTripIds.get(tripId));
+			}
+		}
+		logger.info("loaded {} trips from configRev {}", tripsMap.size(), configRev-configRevBack);
+	}
+
 	/**
 	 * For more quickly getting a trip. If trip not already read in yet it only
 	 * reads in the specific trip from the db, not all trips like getTrips().
@@ -684,13 +701,12 @@ public class DbConfig {
 
 	private String generateConfigRevStr(int configRev) {
 		int i = 0;
-		StringBuffer sb = new StringBuffer();
+		List<String> configRevs = new ArrayList<>();
 		while (i < MAX_PREVIOUS_CONFIG_REV_LOAD) {
 			i++;
-			sb.append(configRev - i)
-							.append(",");
+			configRevs.add(String.valueOf(configRev * (i  * - 1)));
 		}
-		return sb.substring(0, sb.length()-1);
+		return QueryBuilder.buildInClause(configRevs);
 	}
 
 	/**
@@ -1247,6 +1263,10 @@ public class DbConfig {
 	 */
 	public int getConfigRev() {
 		return configRev;
+	}
+
+	public boolean isKnownTrip(String tripId) {
+		return this.individualTripsMap.keySet().contains(tripId);
 	}
 
 	/**
