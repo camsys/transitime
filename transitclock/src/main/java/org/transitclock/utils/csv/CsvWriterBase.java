@@ -144,4 +144,18 @@ public abstract class CsvWriterBase {
 			writer.append(o.toString());
 		return writer;
 	}
+
+	protected Writer appendCol(Object o) throws IOException {
+		if (o != null) {
+			writer.append(o.toString()).append(",");
+		}
+		return writer;
+	}
+
+	protected Writer appendLine(Object o) throws IOException {
+		if (o != null) {
+			writer.append(o.toString()).append("\n");
+		}
+		return writer;
+	}
 }

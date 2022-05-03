@@ -8,12 +8,14 @@ import org.hibernate.Session;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.core.predictiongenerator.PredictionCsvWriter;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Prediction;
 import org.transitclock.playback.PlaybackModule;
 import org.transitclock.utils.Time;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.Reader;
 import java.net.URL;
@@ -39,6 +41,8 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
     private static final String GTFS = "classpath:gtfs/S2";
 	private static final String AVL = "classpath:avl/S2_2113.csv";
     private static final String PREDICTIONS_CSV = "classpath:pred/S2_2113.csv";
+
+	private static final String OUTPUT_DIRECTORY = "/tmp/output";
 
     Collection<CombinedPredictionAccuracy> combinedPredictionAccuracy;
     
@@ -78,6 +82,9 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
 		
 		// Fill new predictions
 		List<Prediction> newPreds = session.createCriteria(Prediction.class).list();
+		writeOutPredictions(newPreds, generateOutputFileName("prediction", "S2_113"));
+
+
 		for (Prediction p : newPreds) {
 			long prediction = p.getPredictionTime().getTime();
 			Triple<Integer, ArrivalOrDeparture, Long> key = createKeyFromPrediction(p);
@@ -88,8 +95,29 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
 		combinedPredictionAccuracy = predsByStopAndCreationTime.values();
 		session.close();
     }
-   
-    @Test
+
+	private String generateOutputFileName(String fileType, String id) {
+		File outputDir = new File(OUTPUT_DIRECTORY);
+		if (!outputDir.exists()) {
+			outputDir.mkdirs();
+		}
+		return OUTPUT_DIRECTORY + File.separator + fileType + "_" + id + ".csv";
+	}
+
+	private void writeOutPredictions(List<Prediction> predictions, String fileName) {
+		if (predictions == null) {
+			logger.error("no predictions to write out to disk");
+			return;
+		}
+		logger.info("writing {} predictions to {}", predictions.size(), fileName);
+		PredictionCsvWriter writer = new PredictionCsvWriter(fileName, null);
+		for (Prediction prediction : predictions) {
+			writer.write(prediction);
+		}
+		writer.close();;
+	}
+
+	@Test
     public void testPredictions() {
     	
     	int oldTotalPreds = 0, newTotalPreds = 0, bothTotalPreds = 0;

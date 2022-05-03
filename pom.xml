@@ -52,7 +52,8 @@
         <profile>
             <id>skip-integration-tests</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <!-- make it mandatory for now and on integration test branch -->
+                <activeByDefault>false</activeByDefault>
             </activation>
         </profile>
         <profile>
