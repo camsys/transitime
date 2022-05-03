@@ -134,7 +134,7 @@ public abstract class CsvBaseReader<T> {
 					in = new BufferedReader(new InputStreamReader(this.getClass().getClassLoader()
 									.getResourceAsStream(fileName.substring("classpath:".length()))));
 				} catch (Exception any) {
-					throw new IllegalArgumentException("file '" + fileName + "' not found on classpath");
+					throw new FileNotFoundException("file '" + fileName + "' not found on classpath");
 				}
 			} else {
 				// typical configuration of an external file on disk

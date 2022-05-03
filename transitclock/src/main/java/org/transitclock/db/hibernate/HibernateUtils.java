@@ -132,6 +132,9 @@ public class HibernateUtils {
 
 			// Couldn't find file directly so look in classpath for it
 			ClassLoader classLoader = HibernateUtils.class.getClassLoader();
+			if (fileName.contains("classpath:")) {
+				fileName = fileName.substring("classpath:".length());
+			}
 			URL url = classLoader.getResource(fileName);
 			if (url != null)
 				f = new File(url.getFile());

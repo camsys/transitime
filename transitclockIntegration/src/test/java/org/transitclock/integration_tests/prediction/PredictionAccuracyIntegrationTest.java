@@ -16,6 +16,7 @@ import org.transitclock.utils.Time;
 
 import java.io.FileReader;
 import java.io.Reader;
+import java.net.URL;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,9 +36,9 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(PredictionAccuracyIntegrationTest.class);
 
-    private static final String GTFS = "src/test/resources/gtfs/S2";
-	private static final String AVL = "src/test/resources/avl/S2_2113.csv";
-    private static final String PREDICTIONS_CSV = "src/test/resources/pred/S2_2113.csv";
+    private static final String GTFS = "classpath:gtfs/S2";
+	private static final String AVL = "classpath:avl/S2_2113.csv";
+    private static final String PREDICTIONS_CSV = "classpath:pred/S2_2113.csv";
 
     Collection<CombinedPredictionAccuracy> combinedPredictionAccuracy;
     
@@ -60,7 +61,9 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
     	
     	// Fill old predictions
 		try {
-			Reader in = new FileReader(PREDICTIONS_CSV);
+			URL predictionsCsv = PredictionAccuracyIntegrationTest.class.getClassLoader()
+					.getResource(PREDICTIONS_CSV.substring("classpath:".length()));
+			Reader in = new FileReader(predictionsCsv.getFile());
 			Iterable<CSVRecord> records = CSVFormat.DEFAULT.withHeader().parse(in);
 			
 			for (CSVRecord r : records) {

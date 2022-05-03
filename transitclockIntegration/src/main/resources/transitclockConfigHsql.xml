@@ -21,8 +21,7 @@
         <allowableLateSecondsForInitialMatching>2700</allowableLateSecondsForInitialMatching>
     </core>
     <avl>
-       <csvAvlFeedFileName>sample.csv</csvAvlFeedFileName>
-    	<maxSpeed>40</maxSpeed>
+       <maxSpeed>40</maxSpeed>
     </avl>
 
     <find>
@@ -32,6 +31,6 @@
     </find>
 
     <hibernate>
-        <configFile>src/main/resources/hsql_integration_test_hibernate.cfg.xml</configFile>
+    <configFile>classpath:hsql_integration_test_hibernate.cfg.xml</configFile>
     </hibernate>
 </transitclock>

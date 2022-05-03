@@ -1,5 +1,6 @@
 package org.transitclock.playback;
 
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class PlaybackModule {
 
 	private static String defaultGtfsDirectoryName = "src/main/resources/wmata_gtfs"; 
 	private static String defaultAvlReportsCsv = "src/main/resources/avl/03142016_SE-04.csv";
-	private static final String transitimeConfigFile = "src/main/resources/transitclockConfigHsql.xml";
+	private static final String transitimeConfigFile = "classpath:transitclockConfigHsql.xml";
 
 	private static final String agencyId = "1";
 	
@@ -80,6 +81,9 @@ public class PlaybackModule {
 		System.setProperty("transitclock.avl.csvAvlFeedFileName", avlReportsCsv);
 		System.setProperty("transitclock.configFiles", transitimeConfigFile);
 		System.setProperty("transitclock.core.agencyId", agencyId);
+		// set time to the earliest example of tests so all service is future
+		// and therefore not ignored as expired
+		System.setProperty("transitclock.gtfs.systemTime", "2016-01-01 00:00:00");
 			
 		ConfigFileReader.processConfig();
 		
@@ -212,9 +216,24 @@ public class PlaybackModule {
 	private static void setupGtfs(String gtfsDirectoryName) {
 		TitleFormatter titleFormatter = new TitleFormatter(null, true);
 		boolean shouldStoreNewRevs = true, shouldDeleteRevs = false;
-		GtfsData gtfsData = new GtfsData(1, null, null, shouldStoreNewRevs, shouldDeleteRevs, AgencyConfig.getAgencyId(), gtfsDirectoryName, null, 
-				pathOffsetDistance,  maxStopToPathDistance, maxDistanceForEliminatingVertices,
-				defaultWaitTimeAtStopMsec, maxSpeedKph, maxTravelTimeSegmentLength, false, titleFormatter, 200.0, true);
+		GtfsData gtfsData = new GtfsData(1,
+				null,
+				null,
+				shouldStoreNewRevs,
+				shouldDeleteRevs,
+				AgencyConfig.getAgencyId(),
+				gtfsDirectoryName,
+				null,
+				pathOffsetDistance,
+				maxStopToPathDistance,
+				maxDistanceForEliminatingVertices,
+				defaultWaitTimeAtStopMsec,
+				maxSpeedKph,
+				maxTravelTimeSegmentLength,
+				false,
+				titleFormatter/*,
+				200.0,
+				true*/);
 		gtfsData.processData();
 	}
 	
