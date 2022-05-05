@@ -206,7 +206,7 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
     	
     }
     
-    private static Triple<Integer, ArrivalOrDeparture, Long> createKeyFromCsvRecord(CSVRecord r) {
+    private static Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long> createKeyFromCsvRecord(CSVRecord r) {
     	try {
 	    	int stopSeq = Integer.parseInt(r.get("gtfsStopSeq"));
 	    	boolean isArrival = Integer.parseInt(r.get("isArrival")) > 0;
