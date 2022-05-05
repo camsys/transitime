@@ -7,6 +7,8 @@ import org.transitclock.utils.Time;
 import org.transitclock.utils.csv.CsvWriterBase;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.util.Date;
 
 /**
  * serialize Prediction object to CSV.
@@ -41,17 +43,17 @@ public class PredictionCsvWriter extends CsvWriterBase {
         // affectedByWaitStop
         appendCol(prediction.isAffectedByWaitStop());
         // avlTime
-        appendCol(prediction.getAvlTime());
+        appendCol(formatTime(prediction.getAvlTime()));
         //configRev
         appendCol(prediction.getConfigRev());
         // creationTime
-        appendCol(prediction.getCreationTime());
+        appendCol(formatTime(prediction.getCreationTime()));
         // gtfsStopSeq
         appendCol(prediction.getGtfsStopSeq());
         // isArrival
         appendCol(prediction.isArrival());
         // predictionTIme
-        appendCol(prediction.getPredictionTime());
+        appendCol(formatTime(prediction.getPredictionTime()));
         // routeId
         appendCol(prediction.getRouteId());
         // schedBasedPred
@@ -62,5 +64,10 @@ public class PredictionCsvWriter extends CsvWriterBase {
         appendCol(prediction.getTripId());
         // vehicleId
         appendLine(prediction.getVehicleId());
+    }
+
+    private String formatTime(Date value) {
+        DateFormat sdf = Time.getReadableDateFormat24NoTimeZoneNoMsec();
+        return sdf.format(value);
     }
 }

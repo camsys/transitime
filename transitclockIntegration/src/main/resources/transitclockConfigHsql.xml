@@ -14,7 +14,7 @@
     </autoBlockAssigner>
     <core>
         <agencyId>1</agencyId>
-        <maxPredictionTimeForDbSecs>900</maxPredictionTimeForDbSecs>
+        <maxPredictionTimeForDbSecs>2700</maxPredictionTimeForDbSecs>
         <exclusiveBlockAssignments>true</exclusiveBlockAssignments>
         <integrationTest>true</integrationTest>
         <matchHistoryMaxSize>40</matchHistoryMaxSize>
@@ -29,7 +29,9 @@
         <dwelltime>30000</dwelltime>
         <fuzzytime>180000</fuzzytime>
     </find>
-
+    <db>
+        <validateQuery>CALL NOW()</validateQuery>
+    </db>
     <hibernate>
     <configFile>classpath:hsql_integration_test_hibernate.cfg.xml</configFile>
     </hibernate>

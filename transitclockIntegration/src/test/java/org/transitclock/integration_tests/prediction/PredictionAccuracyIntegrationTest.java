@@ -12,7 +12,11 @@ import org.transitclock.core.predictiongenerator.PredictionCsvWriter;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Prediction;
+import org.transitclock.playback.CombinedPredictionAccuracy;
+import org.transitclock.playback.CombinedPredictionAccuracyComparator;
+import org.transitclock.playback.CombinedPredictionCsvWriter;
 import org.transitclock.playback.PlaybackModule;
+import org.transitclock.utils.DateUtils;
 import org.transitclock.utils.Time;
 
 import java.io.File;
@@ -20,10 +24,7 @@ import java.io.FileReader;
 import java.io.Reader;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This integration test buids an entirely new transitime DB from GTFS files, prepares the DB for the app to run
@@ -52,8 +53,8 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
     	// Run trace
     	PlaybackModule.runTrace(GTFS, AVL);
     	
-    	Map<Triple<Integer, ArrivalOrDeparture, Long>, CombinedPredictionAccuracy> predsByStopAndCreationTime
-    		= new HashMap<Triple<Integer, ArrivalOrDeparture, Long>, CombinedPredictionAccuracy>();
+    	Map<Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long>, CombinedPredictionAccuracy> predsByStopAndCreationTime
+    		= new HashMap<Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long>, CombinedPredictionAccuracy>();
     	
     	// Fill CombinedPredictionAccuracy objects with stop information
     	Session session = HibernateUtils.getSession();
@@ -72,9 +73,10 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
 			
 			for (CSVRecord r : records) {
 				long prediction = Time.parse(r.get("predictionTime")).getTime();
-				Triple<Integer, ArrivalOrDeparture, Long> key = createKeyFromCsvRecord(r);
+				Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long> key = createKeyFromCsvRecord(r);
 				CombinedPredictionAccuracy pred = getOrCreatePred(predsByStopAndCreationTime, key);
 				pred.oldPredTime = prediction;
+				pred.oldPrediction = createPredictionFromCsvRecord(r);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -87,14 +89,30 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
 
 		for (Prediction p : newPreds) {
 			long prediction = p.getPredictionTime().getTime();
-			Triple<Integer, ArrivalOrDeparture, Long> key = createKeyFromPrediction(p);
+			Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long> key = createKeyFromPrediction(p);
 			CombinedPredictionAccuracy pred = getOrCreatePred(predsByStopAndCreationTime, key);
 			pred.newPredTime = prediction;
+			pred.newPrediction = p;
 		}
-		
+
 		combinedPredictionAccuracy = predsByStopAndCreationTime.values();
+		ArrayList<CombinedPredictionAccuracy> sortedList = new ArrayList<>(combinedPredictionAccuracy);
+		Collections.sort(sortedList, new CombinedPredictionAccuracyComparator());
+		writeOutCombinedPredictions(sortedList, generateOutputFileName("combined_prediction", "S2_113"));
 		session.close();
     }
+
+	private void writeOutCombinedPredictions(Collection<CombinedPredictionAccuracy> combinedPredictionAccuracy, String fileName) {
+		if (combinedPredictionAccuracy == null) {
+			logger.error("no combined predictions to write out to disk");
+			return;
+		}
+		CombinedPredictionCsvWriter writer = new CombinedPredictionCsvWriter(fileName, null);
+		for (CombinedPredictionAccuracy predictionAccuracy : combinedPredictionAccuracy) {
+			writer.write(predictionAccuracy);
+		}
+		writer.close();
+	}
 
 	private String generateOutputFileName(String fileType, String id) {
 		File outputDir = new File(OUTPUT_DIRECTORY);
@@ -114,7 +132,7 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
 		for (Prediction prediction : predictions) {
 			writer.write(prediction);
 		}
-		writer.close();;
+		writer.close();
 	}
 
 	@Test
@@ -155,7 +173,10 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
     		
     		if (pred.oldPredTime > 0 && pred.newPredTime > 0 && pred.actualADTime > 0) {
     			bothTotalPreds++;
-    			if (oldError < newError)
+				logger.info("matched prediction {}, {}, {}, {}",
+						pred.stopSeq, pred.actualADTime, pred.oldPredTime, pred.newPredTime);
+
+				if (oldError < newError)
     				oldBetter++;
     			else if (newError < oldError)
     				newBetter++;
@@ -189,7 +210,7 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
     	try {
 	    	int stopSeq = Integer.parseInt(r.get("gtfsStopSeq"));
 	    	boolean isArrival = Integer.parseInt(r.get("isArrival")) > 0;
-	    	ArrivalOrDeparture ad = isArrival ? ArrivalOrDeparture.ARRIVAL : ArrivalOrDeparture.DEPARTURE;
+	    	CombinedPredictionAccuracy.ArrivalOrDeparture ad = isArrival ? CombinedPredictionAccuracy.ArrivalOrDeparture.ARRIVAL : CombinedPredictionAccuracy.ArrivalOrDeparture.DEPARTURE;
 	    	long avlTime = Time.parse(r.get("avlTime")).getTime();
 	    	
 	    	return Triple.of(stopSeq, ad, avlTime);
@@ -199,17 +220,41 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
     		return null;
     	}
     }
+
+	private static Prediction createPredictionFromCsvRecord(CSVRecord r) {
+		try {
+			long predictionTime = Time.parse(r.get("predictionTime")).getTime();
+			long avlTime = Time.parse(r.get("avlTime")).getTime();
+			long creationTime= Time.parse(r.get("creationTime")).getTime();
+			String vehicleId = r.get("vehicleId");
+			String stopId = r.get("stopId");
+			String tripId = r.get("tripId");
+			String routeId = r.get("routeId");
+			boolean affectedByWaitStop = Integer.parseInt(r.get("affectedByWaitStop")) > 0;
+			boolean isArrival = Integer.parseInt(r.get("isArrival")) > 0;
+			boolean schedBasedPred = Integer.parseInt(r.get("schedBasedPred")) > 0;
+			int stopSeq = Integer.parseInt(r.get("gtfsStopSeq"));
+			return new Prediction(predictionTime, avlTime, creationTime, vehicleId,
+					stopId, tripId, routeId, affectedByWaitStop, isArrival, schedBasedPred,
+					stopSeq);
+		} catch (ParseException ex) {
+			logger.error(ex.getMessage());
+			return null;
+		}
+
+	}
     
-    private static Triple<Integer, ArrivalOrDeparture, Long> createKeyFromPrediction(Prediction p) {
+    private static Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long> createKeyFromPrediction(Prediction p) {
     	return Triple.of(p.getGtfsStopSeq(), 
-    			p.isArrival() ? ArrivalOrDeparture.ARRIVAL : ArrivalOrDeparture.DEPARTURE,
+    			p.isArrival() ? CombinedPredictionAccuracy.ArrivalOrDeparture.ARRIVAL : CombinedPredictionAccuracy.ArrivalOrDeparture.DEPARTURE,
     			p.getAvlTime().getTime());
     }
-    
-    private CombinedPredictionAccuracy getOrCreatePred(
-    		Map<Triple<Integer, ArrivalOrDeparture, Long>, CombinedPredictionAccuracy>
+
+
+	private CombinedPredictionAccuracy getOrCreatePred(
+    		Map<Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long>, CombinedPredictionAccuracy>
     			predsByStopAndCreationTime,
-        	Triple<Integer, ArrivalOrDeparture, Long> key) {
+        	Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long> key) {
     	CombinedPredictionAccuracy pred = predsByStopAndCreationTime.get(key);
 		if (pred == null) {
 			// This prediction does not have an associated arrival departure. Cannot gauge accuracy.
@@ -218,42 +263,4 @@ public class PredictionAccuracyIntegrationTest extends TestCase {
 		}
 		return pred;
     }
-    
-    /* 
-     * CombinedPredictionAccuracy: keep track of stop, old prediction, new prediction.
-     * Arrival/Departure Key: key by gtfsStopSeq & whether arrival or departure 
-     */
-    private class CombinedPredictionAccuracy {
-
-    	int stopSeq;
-    	ArrivalOrDeparture which;
-    	long avlTime;
-
-    	long actualADTime = -1;
-    	long predLength = -1; // actualADTime - avlTime
-    	
-    	long oldPredTime = -1;
-    	long newPredTime = -1;
-    	
-    	CombinedPredictionAccuracy(int stopSeq, ArrivalOrDeparture which, long avlTime) {
-    		this.stopSeq = stopSeq;
-    		this.which = which;
-    		this.avlTime = avlTime;
-    	}
-    	
-    	CombinedPredictionAccuracy(ArrivalDeparture ad) {
-    		this(ad.getGtfsStopSequence(),
-    				ad.isArrival() ? ArrivalOrDeparture.ARRIVAL : ArrivalOrDeparture.DEPARTURE,
-    				ad.getAvlTime().getTime());
-    		this.actualADTime = ad.getTime();
-    		this.predLength = actualADTime - avlTime;
-    	}
-    	
-    	Triple<Integer, ArrivalOrDeparture, Long> getKey() {
-    		return Triple.of(stopSeq, which, avlTime);
-    	}
-    } 
-    
-    private enum ArrivalOrDeparture {ARRIVAL, DEPARTURE};
-    
 }
