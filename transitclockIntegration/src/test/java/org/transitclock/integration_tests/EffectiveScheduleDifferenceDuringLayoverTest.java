@@ -6,12 +6,11 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
 import org.transitclock.avl.BatchCsvAvlFeedModule.AvlPostProcessor;
 import org.transitclock.core.RealTimeSchedAdhProcessor;
-import org.transitclock.core.TemporalDifference;
 import org.transitclock.core.VehicleState;
 import org.transitclock.core.dataCache.VehicleStateManager;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.db.structs.Trip;
-import org.transitclock.playback.PlaybackModule;
+import org.transitclock.integration_tests.playback.PlaybackModule;
 
 import junit.framework.TestCase;
 

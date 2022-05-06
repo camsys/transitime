@@ -3,7 +3,7 @@ package org.transitclock.integration_tests;
 import org.junit.Test;
 import org.transitclock.core.dataCache.VehicleDataCache;
 import org.transitclock.ipc.data.IpcVehicleComplete;
-import org.transitclock.playback.PlaybackModule;
+import org.transitclock.integration_tests.playback.PlaybackModule;
 import org.transitclock.utils.Time;
 
 import junit.framework.TestCase;

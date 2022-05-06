@@ -1,4 +1,4 @@
-package org.transitclock.playback;
+package org.transitclock.integration_tests.playback;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.transitclock.db.structs.ArrivalDeparture;
@@ -9,6 +9,23 @@ import org.transitclock.db.structs.Prediction;
  * Arrival/Departure Key: key by gtfsStopSeq & whether arrival or departure
  */
 public class CombinedPredictionAccuracy {
+    public void setOldPrediction(Prediction p) {
+        oldPrediction = p;
+        if (p!= null && p.getPredictionTime() != null)
+            oldPredTime = p.getPredictionTime().getTime();
+        else
+            oldPredTime = -1;
+    }
+
+    public void setNewPrediction(Prediction p) {
+        newPrediction = p;
+        if (p!= null && p.getPredictionTime() != null)
+            newPredTime = p.getPredictionTime().getTime();
+        else
+            newPredTime = -1;
+    }
+
+
     public enum ArrivalOrDeparture {ARRIVAL, DEPARTURE};
 
     public int stopSeq;

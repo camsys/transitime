@@ -18,35 +18,35 @@
 	<name>transitclockTraccarClient</name>
 	<url>http://maven.apache.org</url>
 	<build>
-		<plugins>
-			<!-- activate the plugin -->
-			<plugin>
-				<groupId>io.swagger</groupId>
-				<artifactId>swagger-codegen-maven-plugin</artifactId>
-				<version>2.1.6</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<configuration>
-							<!-- specify the swagger yaml -->
-							<inputSpec>${project.basedir}/src/main/resources/swagger.json</inputSpec>
-							<!-- target to generate java client code -->
-							<language>java</language>
-							<!-- hint: if you want to generate java server code, e.g. based on
-                                              Spring Boot, you can use the following target: <language>spring</language> -->
-							<!-- pass any necessary config options -->
-							<configOptions>
-								<dateLibrary>joda</dateLibrary>
-							</configOptions>
-							<!-- override the default library to jersey2 -->
-							<library>jersey2</library>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
+<!--&lt;!&ndash;		<plugins>&ndash;&gt;-->
+<!--&lt;!&ndash;			&lt;!&ndash; activate the plugin &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;			<plugin>&ndash;&gt;-->
+<!--&lt;!&ndash;				<groupId>io.swagger</groupId>&ndash;&gt;-->
+<!--&lt;!&ndash;				<artifactId>swagger-codegen-maven-plugin</artifactId>&ndash;&gt;-->
+<!--&lt;!&ndash;				<version>2.1.6</version>&ndash;&gt;-->
+<!--&lt;!&ndash;				<executions>&ndash;&gt;-->
+<!--&lt;!&ndash;					<execution>&ndash;&gt;-->
+<!--&lt;!&ndash;						<goals>&ndash;&gt;-->
+<!--&lt;!&ndash;							<goal>generate</goal>&ndash;&gt;-->
+<!--&lt;!&ndash;						</goals>&ndash;&gt;-->
+<!--&lt;!&ndash;						<configuration>&ndash;&gt;-->
+<!--&lt;!&ndash;							&lt;!&ndash; specify the swagger yaml &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;							<inputSpec>${project.basedir}/src/main/resources/swagger.json</inputSpec>&ndash;&gt;-->
+<!--&lt;!&ndash;							&lt;!&ndash; target to generate java client code &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;							<language>java</language>&ndash;&gt;-->
+<!--&lt;!&ndash;							&lt;!&ndash; hint: if you want to generate java server code, e.g. based on&ndash;&gt;-->
+<!--&lt;!&ndash;                                              Spring Boot, you can use the following target: <language>spring</language> &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;							&lt;!&ndash; pass any necessary config options &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;							<configOptions>&ndash;&gt;-->
+<!--&lt;!&ndash;								<dateLibrary>joda</dateLibrary>&ndash;&gt;-->
+<!--&lt;!&ndash;							</configOptions>&ndash;&gt;-->
+<!--&lt;!&ndash;							&lt;!&ndash; override the default library to jersey2 &ndash;&gt;&ndash;&gt;-->
+<!--&lt;!&ndash;							<library>jersey2</library>&ndash;&gt;-->
+<!--&lt;!&ndash;						</configuration>&ndash;&gt;-->
+<!--&lt;!&ndash;					</execution>&ndash;&gt;-->
+<!--&lt;!&ndash;				</executions>&ndash;&gt;-->
+<!--&lt;!&ndash;			</plugin>&ndash;&gt;-->
+<!--		</plugins>-->
 		<pluginManagement>
 			<plugins>
 				<plugin>
@@ -86,6 +86,11 @@
 		</pluginManagement>
 	</build>
 	<dependencies>
+		<dependency>
+			<groupId>TheTransitClock</groupId>
+			<artifactId>transitclockSwagger</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

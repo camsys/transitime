@@ -1,6 +1,5 @@
-package org.transitclock.playback;
+package org.transitclock.integration_tests.playback;
 
-import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 

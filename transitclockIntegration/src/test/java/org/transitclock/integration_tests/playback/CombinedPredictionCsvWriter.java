@@ -1,4 +1,4 @@
-package org.transitclock.playback;
+package org.transitclock.integration_tests.playback;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
