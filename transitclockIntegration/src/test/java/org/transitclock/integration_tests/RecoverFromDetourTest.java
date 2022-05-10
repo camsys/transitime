@@ -22,7 +22,7 @@ public class RecoverFromDetourTest extends TestCase {
 	
 	@Test
 	public void test() {
-		PlaybackModule.runTrace(GTFS, AVL);
+		PlaybackModule.runTrace(GTFS, AVL, null);
 		IpcVehicleComplete v = VehicleDataCache.getInstance().getVehicle(VEHICLE);
 		assertFalse(v.isLayover());
 		int adh = Math.abs(v.getRealTimeSchedAdh().getTemporalDifference());

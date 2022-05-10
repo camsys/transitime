@@ -184,7 +184,7 @@ public abstract class CsvBaseReader<T> {
 					gtfsObject = handleRecord(record, supplemental);
 				} catch (ParseException e) {
 					logger.error("ParseException occurred for record {} "
-							+ "(comment lines not included when determing record #) for "
+							+ "(comment lines not included when determining record #) for "
 							+ "filename {} . {}",  
 							record.getRecordNumber(), fileName, e.getMessage());
 
@@ -193,7 +193,7 @@ public abstract class CsvBaseReader<T> {
 					continue;
 				} catch (NumberFormatException e) {
 					logger.error("NumberFormatException occurred for record {} "
-							+ "(comment lines not included when determing record #) "
+							+ "(comment lines not included when determining record #) "
 							+ "for filename {} . {}", 
 							record.getRecordNumber(), fileName, e.getMessage());
 

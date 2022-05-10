@@ -2,11 +2,13 @@ package org.transitclock.integration_tests.playback;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.hibernate.Session;
+import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Prediction;
+import org.transitclock.utils.DateRange;
 
 import java.util.*;
 
@@ -35,15 +37,24 @@ public class ReplayLoader {
     }
 
 
-    public void createCombinedPredictionAccuracyStructure() {
+    public void createCombinedPredictionAccuracyStructure(DateRange avlRange) {
         // Fill CombinedPredictionAccuracy objects with stop information
-        // TODO this wont work with historical data???
-        List<ArrivalDeparture> ads = getSession().createCriteria(ArrivalDeparture.class).list();
+        logger.info("loading A/Ds for {}", avlRange);
+        List<ArrivalDeparture> ads = getSession()
+                .createCriteria(ArrivalDeparture.class)
+                .add(Restrictions.between("time", avlRange.getStart(), avlRange.getEnd()))
+                .list();
+        boolean found = false;
         for (ArrivalDeparture ad : ads) {
+            found = true;
             CombinedPredictionAccuracy o = new CombinedPredictionAccuracy(ad);
+            logger.info("placeholder for {} ({}) and stopId={}",
+                    o.getKey(), new Date(o.getKey().getRight()), ad.getStopId());
             predsByStopAndCreationTime.put(o.getKey(), o);
         }
-
+        if (!found) {
+            throw new RuntimeException("no ArrivalDepartures found, cannot prime data store");
+        }
     }
 
     public void loadPredictionsFromCSV(String predictionsCsvFileName) {

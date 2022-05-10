@@ -43,8 +43,6 @@ public class ReplayCsv {
         return list;
     }
 
-
-
     private static Prediction createPredictionFromCsvRecord(CSVRecord r) {
         try {
             long predictionTime = Time.parse(r.get("predictionTime")).getTime();
@@ -54,9 +52,25 @@ public class ReplayCsv {
             String stopId = r.get("stopId");
             String tripId = r.get("tripId");
             String routeId = r.get("routeId");
-            boolean affectedByWaitStop = Integer.parseInt(r.get("affectedByWaitStop")) > 0;
-            boolean isArrival = Integer.parseInt(r.get("isArrival")) > 0;
-            boolean schedBasedPred = Integer.parseInt(r.get("schedBasedPred")) > 0;
+            boolean affectedByWaitStop = false;
+            try {
+                affectedByWaitStop = Integer.parseInt(r.get("affectedByWaitStop")) > 0;
+            } catch (NumberFormatException nfe) {
+                // support int or boolean
+                affectedByWaitStop = "true".equalsIgnoreCase(r.get("affectedByWaitStop"));
+            }
+            boolean isArrival;
+            try {
+                isArrival = Integer.parseInt(r.get("isArrival")) > 0;
+            } catch (NumberFormatException nfe) {
+                isArrival = "true".equalsIgnoreCase(r.get("isArrival"));
+            }
+            boolean schedBasedPred;
+            try {
+                schedBasedPred = Integer.parseInt(r.get("schedBasedPred")) > 0;
+            } catch (NumberFormatException nfe) {
+                schedBasedPred = "true".equalsIgnoreCase(r.get("schedBasedPred"));
+            }
             int stopSeq = Integer.parseInt(r.get("gtfsStopSeq"));
             return new Prediction(predictionTime, avlTime, creationTime, vehicleId,
                     stopId, tripId, routeId, affectedByWaitStop, isArrival, schedBasedPred,

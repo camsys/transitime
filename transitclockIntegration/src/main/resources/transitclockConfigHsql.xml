@@ -19,9 +19,12 @@
         <integrationTest>true</integrationTest>
         <matchHistoryMaxSize>40</matchHistoryMaxSize>
         <allowableLateSecondsForInitialMatching>2700</allowableLateSecondsForInitialMatching>
+        <maxHeadingOffsetFromSegment>120</maxHeadingOffsetFromSegment>
+        <predictionGeneratorClass>org.transitclock.core.predictiongenerator.scheduled.traveltime.kalman.KalmanPredictionGeneratorImpl</predictionGeneratorClass>
     </core>
     <avl>
        <maxSpeed>40</maxSpeed>
+        <serviceIdSuffix>true</serviceIdSuffix>
     </avl>
 
     <find>
@@ -31,6 +34,7 @@
     </find>
     <db>
         <validateQuery>CALL NOW()</validateQuery>
+        <batchSize>1000</batchSize>
     </db>
     <hibernate>
     <configFile>classpath:hsql_integration_test_hibernate.cfg.xml</configFile>

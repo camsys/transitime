@@ -1,5 +1,6 @@
 package org.transitclock.integration_tests.playback;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
 import org.transitclock.applications.UpdateTravelTimes;
+import org.transitclock.avl.BatchCsvArrivalDepartureModule;
 import org.transitclock.avl.BatchCsvAvlFeedModule;
 import org.transitclock.avl.BatchCsvAvlFeedModule.AvlPostProcessor;
 import org.transitclock.config.ConfigFileReader;
@@ -20,6 +22,7 @@ import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.gtfs.GtfsData;
 import org.transitclock.gtfs.TitleFormatter;
 import org.transitclock.ipc.data.IpcPredictionsForRouteStopDest;
+import org.transitclock.utils.DateRange;
 import org.transitclock.utils.Time;
 
 
@@ -58,7 +61,7 @@ public class PlaybackModule {
 			avlReportsCsv = args[1];
 		}
 		
-        runTrace(gtfsDirectoryName, avlReportsCsv, true, true);
+        runTrace(gtfsDirectoryName, avlReportsCsv, null,true, true);
 		
 		session = HibernateUtils.getSession();
 		// Look at 5 min intervals
@@ -76,16 +79,12 @@ public class PlaybackModule {
 		
 	}
 	
-	public static void runTrace(String gtfsDirectoryName, String avlReportsCsv, boolean addPredictionAccuracy, boolean log, AvlPostProcessor processor) {
-		System.setProperty("transitclock.avl.csvAvlFeedFileName", avlReportsCsv);
-		System.setProperty("transitclock.configFiles", transitimeConfigFile);
-		System.setProperty("transitclock.core.agencyId", agencyId);
-		// set time to the earliest example of tests so all service is future
-		// and therefore not ignored as expired
-		System.setProperty("transitclock.gtfs.systemTime", "2016-01-01 00:00:00");
-			
-		ConfigFileReader.processConfig();
-		
+	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureCsv,
+								boolean addPredictionAccuracy, boolean log, AvlPostProcessor processor) {
+		DateRange avlRange = null;
+		int configRev = 1;
+		runConfig(avlReportsCsv, transitimeConfigFile, agencyId);
+
 		if (log)
 			System.out.println("Adding GTFS to database... " + gtfsDirectoryName);
 		
@@ -93,23 +92,54 @@ public class PlaybackModule {
 		
 		if (log)
 			System.out.println("Done with GTFS. Adding AVLs.");
-		
+
+		session = HibernateUtils.getSession();
+		ArrayList<ArrivalDeparture> arrivalDepartures = new ArrayList<>();
+		if (arrivalDepartureCsv != null) {
+			System.setProperty("transitclock.core.cacheReloadStartTimeStr", "2010-01-01 00:00:00");
+			System.setProperty("transitclock.core.cacheReloadEndTimeStr", "2030-01-01 00:00:00");
+			System.setProperty("transitclock.avl.csvArrivalDepartureFeedFileName", arrivalDepartureCsv);
+
+			int size = session.createCriteria(ArrivalDeparture.class).list().size();
+			logger.info("pre load has {} ADs", size);
+
+			BatchCsvArrivalDepartureModule arrivalDepartureModule = new BatchCsvArrivalDepartureModule(agencyId, configRev, session);
+			arrivalDepartureModule.run();
+			if (arrivalDepartureModule.getArrivalDepartures().isEmpty()) {
+				throw new RuntimeException("History was configured with " + arrivalDepartureCsv
+				+ " but no records were available to save");
+			}
+
+			logger.info("expected {} ADs", arrivalDepartureModule.getArrivalDepartures().size());
+			size = session.createCriteria(ArrivalDeparture.class).list().size();
+			logger.info("post load has {} ADs", size);
+
+		}
+
+
+		try {
+			Core.getInstance().populateCaches();
+		} catch (Exception e) {
+			logger.error(" populate caches failed.", e);
+		}
+
 		// Core is created on first access
-		BatchCsvAvlFeedModule mod = new BatchCsvAvlFeedModule(agencyId);
+		BatchCsvAvlFeedModule avlModule = new BatchCsvAvlFeedModule(agencyId);
 		if (processor != null)
-			mod.setAvlPostProcessor(processor);
+			avlModule.setAvlPostProcessor(processor);
 		Date readTimeStart = new Date();
-		mod.run();
+		avlModule.run();
+		avlRange = avlModule.getAvlRange();
 		Date readTimeEnd = new Date();
-		
+
 		if (log)
 			System.out.println("done");
 		
 		if (!addPredictionAccuracy)
-			return;
+			return avlRange;
 		
 		// Prediction accuracy post process. Can't use the module because
-		// we're not reading in in real time.
+		// we're not reading in real time.
 		// This may not be performant for larger samples.
 		session = HibernateUtils.getSession();
 		
@@ -124,18 +154,30 @@ public class PlaybackModule {
 		UpdateTravelTimes.manageSessionAndProcessTravelTimes(agencyId, null, new Date(0), new Date(Long.MAX_VALUE));
 		if (log)
 			System.out.println("Done");
+		return avlRange;
+	}
+
+	public static void runConfig(String avlReportsCsv, String transitimeConfigFile, String agencyId) {
+		System.setProperty("transitclock.avl.csvAvlFeedFileName", avlReportsCsv);
+		System.setProperty("transitclock.configFiles", transitimeConfigFile);
+		System.setProperty("transitclock.core.agencyId", agencyId);
+		// set time to the earliest example of tests so all service is future
+		// and therefore not ignored as expired
+		System.setProperty("transitclock.gtfs.systemTime", "2016-01-01 00:00:00");
+
+		ConfigFileReader.processConfig();
+	}
+
+	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName, boolean addPredictionAccuracy, boolean log) {
+		return runTrace(gtfsDirectoryName, avlReportsCsv, arrivalDepartureFileName, addPredictionAccuracy, log, null);
 	}
 	
-	public static void runTrace(String gtfsDirectoryName, String avlReportsCsv, boolean addPredictionAccuracy, boolean log) {
-		runTrace(gtfsDirectoryName, avlReportsCsv, addPredictionAccuracy, log, null);
+	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName) {
+		return runTrace(gtfsDirectoryName, avlReportsCsv, arrivalDepartureFileName, false, true);
 	}
 	
-	public static void runTrace(String gtfsDirectoryName, String avlReportsCsv) {
-		runTrace(gtfsDirectoryName, avlReportsCsv, false, true);
-	}
-	
-	public static void runTrace(String gtfsDirectoryName, String avlReportsCsv, AvlPostProcessor processor) {
-		runTrace(gtfsDirectoryName, avlReportsCsv, false, true, processor);
+	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName, AvlPostProcessor processor) {
+		return runTrace(gtfsDirectoryName, avlReportsCsv, arrivalDepartureFileName, false, true, processor);
 	}
 
 	private static void statError() {
