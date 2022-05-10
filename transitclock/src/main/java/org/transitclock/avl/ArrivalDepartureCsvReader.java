@@ -15,9 +15,11 @@ import java.util.Date;
 public class ArrivalDepartureCsvReader extends CsvBaseReader<ArrivalDeparture> {
 
     private int configRev;
-    public ArrivalDepartureCsvReader(String fileName, int configRev) {
+    private boolean includeTrips;
+    public ArrivalDepartureCsvReader(String fileName, int configRev, boolean includeTrips) {
         super(fileName);
         this.configRev = configRev;
+        this.includeTrips = includeTrips;
     }
 
     @Override
@@ -94,6 +96,11 @@ public class ArrivalDepartureCsvReader extends CsvBaseReader<ArrivalDeparture> {
             } catch (NumberFormatException nfe) {
                 scheduleAdherenceStop = false;
             }
+
+            if (!includeTrips) {
+                tripPatternId = null;
+            }
+
             return new ArrivalDeparture.Builder(vehicleId, time, avlTime, block, directionId, tripIndex,
                         stopPathIndex, null, isArrival, configRev, scheduledTime, blockId,
                         tripId, stopId, gtfsStopSeq, stopPathLength, routeId, routeShortName, serviceId,

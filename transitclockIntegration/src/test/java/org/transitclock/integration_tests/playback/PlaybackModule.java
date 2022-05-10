@@ -110,9 +110,14 @@ public class PlaybackModule {
 				+ " but no records were available to save");
 			}
 
-			logger.info("expected {} ADs", arrivalDepartureModule.getArrivalDepartures().size());
+			int expectedSize = arrivalDepartureModule.getArrivalDepartures().size();
+			logger.info("expected {} ADs", expectedSize);
 			size = session.createCriteria(ArrivalDeparture.class).list().size();
 			logger.info("post load has {} ADs", size);
+			if (size != expectedSize) {
+				throw new RuntimeException("Expected " + expectedSize + " A/Ds but loaded"
+				+ size + " entries");
+			}
 
 		}
 

@@ -39,14 +39,24 @@ public class BatchCsvArrivalDepartureModule {
     public void run() {
         String fileName = getCsvArrivalDepartureFileName();
         ArrivalDepartureCsvReader arrivalDepartureCsvReader
-                = new ArrivalDepartureCsvReader(fileName, configRev);
+                = new ArrivalDepartureCsvReader(fileName, configRev, false);
         this.arrivalDepartures =
                 arrivalDepartureCsvReader.get();
         for (ArrivalDeparture arrivalDeparture : arrivalDepartures) {
             logger.info("Processing arrivalDeparture={}", arrivalDeparture);
-            session.save(arrivalDeparture);
+            try {
+                session.save(arrivalDeparture);
+                session.flush();// we do this to validate each record
+            } catch (Throwable t) {
+                logger.error("issue with record {}, {}", arrivalDeparture, t, t);
+            }
         }
-        session.flush();
+        try {
+            session.flush();
+        } catch (Throwable t) {
+            logger.error("issue flushing to db:", t);
+            throw new RuntimeException("ArrivalDeparture Data failed to load for " + fileName);
+        }
     }
 
     private String getCsvArrivalDepartureFileName() {
