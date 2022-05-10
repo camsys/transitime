@@ -20,32 +20,32 @@
 	<build>
 		<plugins>
 			<!-- activate the plugin -->
-			<plugin>
-				<groupId>io.swagger</groupId>
-				<artifactId>swagger-codegen-maven-plugin</artifactId>
-				<version>2.1.6</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-						<configuration>
-							<!-- specify the swagger yaml -->
-							<inputSpec>${project.basedir}/src/main/resources/swagger.json</inputSpec>
-							<!-- target to generate java client code -->
-							<language>java</language>
-							<!-- hint: if you want to generate java server code, e.g. based on
-                                              Spring Boot, you can use the following target: <language>spring</language> -->
-							<!-- pass any necessary config options -->
-							<configOptions>
-								<dateLibrary>joda</dateLibrary>
-							</configOptions>
-							<!-- override the default library to jersey2 -->
-							<library>jersey2</library>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+<!--			<plugin>-->
+<!--				<groupId>io.swagger</groupId>-->
+<!--				<artifactId>swagger-codegen-maven-plugin</artifactId>-->
+<!--				<version>2.1.6</version>-->
+<!--				<executions>-->
+<!--					<execution>-->
+<!--						<goals>-->
+<!--							<goal>generate</goal>-->
+<!--						</goals>-->
+<!--						<configuration>-->
+<!--							&lt;!&ndash; specify the swagger yaml &ndash;&gt;-->
+<!--							<inputSpec>${project.basedir}/src/main/resources/swagger.json</inputSpec>-->
+<!--							&lt;!&ndash; target to generate java client code &ndash;&gt;-->
+<!--							<language>java</language>-->
+<!--							&lt;!&ndash; hint: if you want to generate java server code, e.g. based on-->
+<!--                                              Spring Boot, you can use the following target: <language>spring</language> &ndash;&gt;-->
+<!--							&lt;!&ndash; pass any necessary config options &ndash;&gt;-->
+<!--							<configOptions>-->
+<!--								<dateLibrary>joda</dateLibrary>-->
+<!--							</configOptions>-->
+<!--							&lt;!&ndash; override the default library to jersey2 &ndash;&gt;-->
+<!--							<library>jersey2</library>-->
+<!--						</configuration>-->
+<!--					</execution>-->
+<!--				</executions>-->
+<!--			</plugin>-->
 		</plugins>
 		<pluginManagement>
 			<plugins>

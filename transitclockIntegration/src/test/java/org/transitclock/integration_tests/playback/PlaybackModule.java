@@ -3,6 +3,7 @@ package org.transitclock.integration_tests.playback;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -61,7 +62,7 @@ public class PlaybackModule {
 			avlReportsCsv = args[1];
 		}
 		
-        runTrace(gtfsDirectoryName, avlReportsCsv, null,true, true);
+        runTrace(gtfsDirectoryName, avlReportsCsv, null,true, true, null);
 		
 		session = HibernateUtils.getSession();
 		// Look at 5 min intervals
@@ -80,9 +81,13 @@ public class PlaybackModule {
 	}
 	
 	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureCsv,
-								boolean addPredictionAccuracy, boolean log, AvlPostProcessor processor) {
+								boolean addPredictionAccuracy, boolean log, AvlPostProcessor processor,
+									 String tz) {
 		DateRange avlRange = null;
 		int configRev = 1;
+		if (tz != null) {
+			TimeZone.setDefault(TimeZone.getTimeZone(tz));
+		}
 		runConfig(avlReportsCsv, transitimeConfigFile, agencyId);
 
 		if (log)
@@ -173,16 +178,22 @@ public class PlaybackModule {
 		ConfigFileReader.processConfig();
 	}
 
-	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName, boolean addPredictionAccuracy, boolean log) {
-		return runTrace(gtfsDirectoryName, avlReportsCsv, arrivalDepartureFileName, addPredictionAccuracy, log, null);
+	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName,
+									 boolean addPredictionAccuracy, boolean log, String tz) {
+		return runTrace(gtfsDirectoryName, avlReportsCsv, arrivalDepartureFileName, addPredictionAccuracy, log,
+				null, tz);
 	}
 	
-	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName) {
-		return runTrace(gtfsDirectoryName, avlReportsCsv, arrivalDepartureFileName, false, true);
+	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName,
+									 String tz) {
+		return runTrace(gtfsDirectoryName, avlReportsCsv, arrivalDepartureFileName, false, true,
+				tz);
 	}
 	
-	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName, AvlPostProcessor processor) {
-		return runTrace(gtfsDirectoryName, avlReportsCsv, arrivalDepartureFileName, false, true, processor);
+	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName,
+									 AvlPostProcessor processor, String tz) {
+		return runTrace(gtfsDirectoryName, avlReportsCsv, arrivalDepartureFileName, false, true,
+				processor, tz);
 	}
 
 	private static void statError() {

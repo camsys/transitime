@@ -21,30 +21,33 @@ public abstract class AbstractPredictionAccuracyIntegrationTest extends TestCase
 
 
     private ReplayService rs;
-	private String id, outputDirectory, gtfs, avl, predictionCsv, history;
-	public AbstractPredictionAccuracyIntegrationTest(String id, String outputDirectory, String gtfs, String avl, String predictionsCsv) {
+	private String id, outputDirectory, gtfs, avl, predictionCsv, history, tz;
+	public AbstractPredictionAccuracyIntegrationTest(String id, String outputDirectory, String gtfs, String avl,
+													 String predictionsCsv, String tz) {
 		this.id = id;
 		this.outputDirectory = outputDirectory;
 		this.gtfs = gtfs;
 		this.avl = avl;
 		this.predictionCsv = predictionsCsv;
 		this.history = null;
+		this.tz = tz;
 	}
 	public AbstractPredictionAccuracyIntegrationTest(String id, String outputDirectory, String gtfs, String avl,
-													 String predictionsCsv, String history) {
+													 String predictionsCsv, String history, String tz) {
 		this.id = id;
 		this.outputDirectory = outputDirectory;
 		this.gtfs = gtfs;
 		this.avl = avl;
 		this.predictionCsv = predictionsCsv;
 		this.history = history;
+		this.tz = tz;
 	}
 
 	@Override
     public void setUp() {
 		rs = new ReplayService(id, outputDirectory);
 
-		rs.run(gtfs, avl, history);
+		rs.run(gtfs, avl, history, tz);
 
 		if (predictionCsv != null)
 			rs.loadPastPredictions(predictionCsv);

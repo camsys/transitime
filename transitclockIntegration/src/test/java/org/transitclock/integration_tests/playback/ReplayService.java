@@ -29,10 +29,10 @@ public class ReplayService {
          System.setProperty("transitclock.integration_test.enabled", "true");
     }
 
-    public void run(String gtfsFileName, String avlFileName, String arrivalDepartureFileName) {
+    public void run(String gtfsFileName, String avlFileName, String arrivalDepartureFileName, String tz) {
         // Run trace
-        DateRange range = PlaybackModule.runTrace(gtfsFileName, avlFileName, arrivalDepartureFileName);
-        loader.createCombinedPredictionAccuracyStructure(range);
+        DateRange range = PlaybackModule.runTrace(gtfsFileName, avlFileName, arrivalDepartureFileName, tz);
+        loader.createCombinedPredictionAccuracyStructure(range, arrivalDepartureFileName);
 
     }
 

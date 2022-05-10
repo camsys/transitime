@@ -58,7 +58,7 @@ public class GenerateEffectiveScheduleDifferenceTest extends TestCase {
 			
 		};
 		
-		PlaybackModule.runTrace(GTFS, AVL, null, processor);
+		PlaybackModule.runTrace(GTFS, AVL, null, processor, null);
 	}
 	
 }

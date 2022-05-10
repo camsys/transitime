@@ -64,7 +64,7 @@
                 <module>transitclockApi</module>
                 <module>transitclockWebapp</module>
                 <module>transitclockSwagger</module>
-                <module>transitclockQuickStart</module>
+<!--                <module>transitclockQuickStart</module>-->
                 <module>transitclockTraccarClient</module>
                 <module>transitclockBarefootClient</module>
             </modules>

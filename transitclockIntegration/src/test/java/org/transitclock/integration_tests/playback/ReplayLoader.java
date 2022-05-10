@@ -2,6 +2,7 @@ package org.transitclock.integration_tests.playback;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.hibernate.Session;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,13 +39,14 @@ public class ReplayLoader {
     }
 
 
-    public void createCombinedPredictionAccuracyStructure(DateRange avlRange) {
+    public void createCombinedPredictionAccuracyStructure(DateRange avlRange, String arrivalDepartureFileName) {
         // Fill CombinedPredictionAccuracy objects with stop information
         waitForQueuesToDrain();
         logger.info("loading A/Ds for {}", avlRange);
         List<ArrivalDeparture> ads = getSession()
                 .createCriteria(ArrivalDeparture.class)
                 .add(Restrictions.between("time", avlRange.getStart(), avlRange.getEnd()))
+                .addOrder(Order.asc("time"))
                 .list();
         boolean found = false;
         for (ArrivalDeparture ad : ads) {
@@ -55,7 +57,8 @@ public class ReplayLoader {
             predsByStopAndCreationTime.put(o.getKey(), o);
         }
         if (!found) {
-            throw new RuntimeException("no ArrivalDepartures found, cannot prime data store");
+            if (arrivalDepartureFileName != null)
+                throw new RuntimeException("no ArrivalDepartures found, cannot prime data store");
         }
     }
 

@@ -11,7 +11,7 @@ public class PredictionAccuracy921_577IntegrationTest extends AbstractPrediction
     private static final String OUTPUT_DIRECTORY = "/tmp/output/921-577";
 
     public PredictionAccuracy921_577IntegrationTest() {
-        super ("921-577", OUTPUT_DIRECTORY, GTFS, AVL, PREDICTIONS_CSV, HISTORY);
+        super ("921-577", OUTPUT_DIRECTORY, GTFS, AVL, PREDICTIONS_CSV, HISTORY, "America/Chicago");
     }
 
     @Test
