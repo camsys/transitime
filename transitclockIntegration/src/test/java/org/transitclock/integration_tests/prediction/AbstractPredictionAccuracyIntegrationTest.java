@@ -21,36 +21,44 @@ public abstract class AbstractPredictionAccuracyIntegrationTest extends TestCase
 
 
     private ReplayService rs;
-	private String id, outputDirectory, gtfs, avl, predictionCsv, history, tz;
+	private TraceConfig config;
 	public AbstractPredictionAccuracyIntegrationTest(String id, String outputDirectory, String gtfs, String avl,
 													 String predictionsCsv, String tz) {
-		this.id = id;
-		this.outputDirectory = outputDirectory;
-		this.gtfs = gtfs;
-		this.avl = avl;
-		this.predictionCsv = predictionsCsv;
-		this.history = null;
-		this.tz = tz;
+		TraceConfig pc = new TraceConfig();
+		pc.setId(id);
+		pc.setGtfsDirectoryName(gtfs);
+		pc.setAvlReportsCsv(avl);
+		pc.setOutputDirectory(outputDirectory);
+		pc.setPredictionCsv(predictionsCsv);
+		pc.setOutputDirectory(outputDirectory);
+		pc.setTz(tz);
+		pc.setHistory(null);
+		this.config = pc;
+
 	}
-	public AbstractPredictionAccuracyIntegrationTest(String id, String outputDirectory, String gtfs, String avl,
-													 String predictionsCsv, String history, String tz) {
-		this.id = id;
-		this.outputDirectory = outputDirectory;
-		this.gtfs = gtfs;
-		this.avl = avl;
-		this.predictionCsv = predictionsCsv;
-		this.history = history;
-		this.tz = tz;
+	public AbstractPredictionAccuracyIntegrationTest(TraceConfig config) {
+		this.config = config;
 	}
 
+	public static TraceConfig createTraceConfig(String id, String tz) {
+		TraceConfig config = new TraceConfig();
+		config.setId(id);
+		config.setGtfsDirectoryName("classpath:gtfs/" + id);
+		config.setAvlReportsCsv("classpath:avl/" + id + ".csv");
+		config.setPredictionCsv("classpath:pred/" + id + ".csv");
+		config.setHistory("classpath:history/" + id + "csv");
+		config.setOutputDirectory("/tmp/output/" + id);
+		config.setTz(tz);
+		return config;
+	}
 	@Override
     public void setUp() {
-		rs = new ReplayService(id, outputDirectory);
+		rs = new ReplayService(config.getId(), config.getOutputDirectory());
 
-		rs.run(gtfs, avl, history, tz);
+		rs.run(config);
 
-		if (predictionCsv != null)
-			rs.loadPastPredictions(predictionCsv);
+		if (config.getPredictionCsv() != null)
+			rs.loadPastPredictions(config.getPredictionCsv());
 		rs.accumulate();
 
     }

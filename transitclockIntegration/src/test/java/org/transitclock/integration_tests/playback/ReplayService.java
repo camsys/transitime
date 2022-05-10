@@ -2,6 +2,7 @@ package org.transitclock.integration_tests.playback;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.integration_tests.prediction.TraceConfig;
 import org.transitclock.utils.DateRange;
 
 import java.util.*;
@@ -29,10 +30,10 @@ public class ReplayService {
          System.setProperty("transitclock.integration_test.enabled", "true");
     }
 
-    public void run(String gtfsFileName, String avlFileName, String arrivalDepartureFileName, String tz) {
+    public void run(TraceConfig config) {
         // Run trace
-        DateRange range = PlaybackModule.runTrace(gtfsFileName, avlFileName, arrivalDepartureFileName, tz);
-        loader.createCombinedPredictionAccuracyStructure(range, arrivalDepartureFileName);
+        DateRange range = PlaybackModule.runTrace(config, null);
+        loader.createCombinedPredictionAccuracyStructure(range, config.getArrivalDepartureCsv());
 
     }
 

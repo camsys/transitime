@@ -38,7 +38,7 @@ public class PlaybackModule {
 
 	private static String defaultGtfsDirectoryName = "src/main/resources/wmata_gtfs"; 
 	private static String defaultAvlReportsCsv = "src/main/resources/avl/03142016_SE-04.csv";
-	private static final String transitimeConfigFile = "classpath:transitclockConfigHsql.xml";
+	private static final String defaultTransitimeConfigFile = "classpath:transitclockConfigHsql.xml";
 
 	private static final String agencyId = "1";
 	
@@ -80,30 +80,30 @@ public class PlaybackModule {
 		
 	}
 	
-	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureCsv,
-								boolean addPredictionAccuracy, boolean log, AvlPostProcessor processor,
-									 String tz) {
+	public static DateRange runTrace(PlaybackConfig state, AvlPostProcessor processor) {
 		DateRange avlRange = null;
 		int configRev = 1;
-		if (tz != null) {
-			TimeZone.setDefault(TimeZone.getTimeZone(tz));
+		if (state.getTz() != null) {
+			TimeZone.setDefault(TimeZone.getTimeZone(state.getTz()));
 		}
-		runConfig(avlReportsCsv, transitimeConfigFile, agencyId);
+		String configFiles = state.getConfigFileNames();
+		if (configFiles == null) configFiles = defaultTransitimeConfigFile;
+		runConfig(state.getAvlReportsCsv(), configFiles, agencyId);
 
-		if (log)
-			System.out.println("Adding GTFS to database... " + gtfsDirectoryName);
+		if (state.isLog())
+			System.out.println("Adding GTFS to database... " + state.getGtfsDirectoryName());
 		
-		setupGtfs(gtfsDirectoryName);
+		setupGtfs(state.getGtfsDirectoryName());
 		
-		if (log)
+		if (state.isLog())
 			System.out.println("Done with GTFS. Adding AVLs.");
 
 		session = HibernateUtils.getSession();
 		ArrayList<ArrivalDeparture> arrivalDepartures = new ArrayList<>();
-		if (arrivalDepartureCsv != null) {
+		if (state.getArrivalDepartureCsv() != null) {
 			System.setProperty("transitclock.core.cacheReloadStartTimeStr", "2010-01-01 00:00:00");
 			System.setProperty("transitclock.core.cacheReloadEndTimeStr", "2030-01-01 00:00:00");
-			System.setProperty("transitclock.avl.csvArrivalDepartureFeedFileName", arrivalDepartureCsv);
+			System.setProperty("transitclock.avl.csvArrivalDepartureFeedFileName", state.getArrivalDepartureCsv());
 
 			int size = session.createCriteria(ArrivalDeparture.class).list().size();
 			logger.info("pre load has {} ADs", size);
@@ -111,7 +111,7 @@ public class PlaybackModule {
 			BatchCsvArrivalDepartureModule arrivalDepartureModule = new BatchCsvArrivalDepartureModule(agencyId, configRev, session);
 			arrivalDepartureModule.run();
 			if (arrivalDepartureModule.getArrivalDepartures().isEmpty()) {
-				throw new RuntimeException("History was configured with " + arrivalDepartureCsv
+				throw new RuntimeException("History was configured with " + state.getArrivalDepartureCsv()
 				+ " but no records were available to save");
 			}
 
@@ -142,10 +142,10 @@ public class PlaybackModule {
 		avlRange = avlModule.getAvlRange();
 		Date readTimeEnd = new Date();
 
-		if (log)
+		if (state.isLog())
 			System.out.println("done");
 		
-		if (!addPredictionAccuracy)
+		if (!state.isAddPredictionAccuracy())
 			return avlRange;
 		
 		// Prediction accuracy post process. Can't use the module because
@@ -153,16 +153,16 @@ public class PlaybackModule {
 		// This may not be performant for larger samples.
 		session = HibernateUtils.getSession();
 		
-		if (log)
+		if (state.isLog())
 			System.out.println("add predictionaccuracy");
 		
 		addPredictionAccuracy(readTimeStart, readTimeEnd);
 		session.close();
 		
-		if (log)
+		if (state.isLog())
 			System.out.println("Update travel times");
 		UpdateTravelTimes.manageSessionAndProcessTravelTimes(agencyId, null, new Date(0), new Date(Long.MAX_VALUE));
-		if (log)
+		if (state.isLog())
 			System.out.println("Done");
 		return avlRange;
 	}
@@ -180,8 +180,16 @@ public class PlaybackModule {
 
 	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName,
 									 boolean addPredictionAccuracy, boolean log, String tz) {
-		return runTrace(gtfsDirectoryName, avlReportsCsv, arrivalDepartureFileName, addPredictionAccuracy, log,
-				null, tz);
+		PlaybackConfig config = new PlaybackConfig();
+		config.setGtfsDirectoryName(gtfsDirectoryName);
+		config.setAvlReportsCsv(avlReportsCsv);
+		config.setArrivalDepartureCsv(arrivalDepartureFileName);
+
+		config.setAddPredictionAccuracy(addPredictionAccuracy);
+		config.setLog(log);
+		config.setTz(tz);
+
+		return runTrace(config, null);
 	}
 	
 	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName,
@@ -192,8 +200,16 @@ public class PlaybackModule {
 	
 	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName,
 									 AvlPostProcessor processor, String tz) {
-		return runTrace(gtfsDirectoryName, avlReportsCsv, arrivalDepartureFileName, false, true,
-				processor, tz);
+		PlaybackConfig config = new PlaybackConfig();
+		config.setGtfsDirectoryName(gtfsDirectoryName);
+		config.setAvlReportsCsv(avlReportsCsv);
+		config.setArrivalDepartureCsv(arrivalDepartureFileName);
+		config.setTz(tz);
+		// defaults
+		config.setLog(false);
+		config.setAddPredictionAccuracy(false);
+
+		return runTrace(config, processor);
 	}
 
 	private static void statError() {
