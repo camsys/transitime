@@ -5,6 +5,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.applications.Core;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Prediction;
@@ -39,6 +40,7 @@ public class ReplayLoader {
 
     public void createCombinedPredictionAccuracyStructure(DateRange avlRange) {
         // Fill CombinedPredictionAccuracy objects with stop information
+        waitForQueuesToDrain();
         logger.info("loading A/Ds for {}", avlRange);
         List<ArrivalDeparture> ads = getSession()
                 .createCriteria(ArrivalDeparture.class)
@@ -54,6 +56,18 @@ public class ReplayLoader {
         }
         if (!found) {
             throw new RuntimeException("no ArrivalDepartures found, cannot prime data store");
+        }
+    }
+
+    private void waitForQueuesToDrain() {
+        try {
+            while (Core.getInstance().getDbLogger().queueSize() > 0) {
+                logger.info("waitig on queues to drain with remaining size {}",
+                        Core.getInstance().getDbLogger().queueSize());
+                Thread.sleep(1 * 1000);
+            }
+        } catch (InterruptedException ie) {
+            return;
         }
     }
 
