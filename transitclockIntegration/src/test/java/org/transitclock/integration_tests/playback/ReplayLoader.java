@@ -63,11 +63,17 @@ public class ReplayLoader {
     }
 
     private void waitForQueuesToDrain() {
+        final int MAX_COUNT = 20;
         try {
-            while (Core.getInstance().getDbLogger().queueSize() > 0) {
-                logger.info("waitig on queues to drain with remaining size {}",
+            int i = 0;
+            while (Core.getInstance().getDbLogger().queueSize() > 0 && i < MAX_COUNT) {
+                i++;
+                logger.info("waiting on queues to drain with remaining size {}",
                         Core.getInstance().getDbLogger().queueSize());
                 Thread.sleep(1 * 1000);
+            }
+            if (i >= MAX_COUNT) {
+                logger.warn("DbLogger did not empty in allotted time.");
             }
         } catch (InterruptedException ie) {
             return;
