@@ -21,6 +21,7 @@
         <allowableLateSecondsForInitialMatching>2700</allowableLateSecondsForInitialMatching>
         <maxHeadingOffsetFromSegment>120</maxHeadingOffsetFromSegment>
         <predictionGeneratorClass>org.transitclock.core.predictiongenerator.scheduled.traveltime.kalman.KalmanPredictionGeneratorImpl</predictionGeneratorClass>
+        <fillHistoricalCaches>true</fillHistoricalCaches>
     </core>
     <avl>
        <maxSpeed>40</maxSpeed>

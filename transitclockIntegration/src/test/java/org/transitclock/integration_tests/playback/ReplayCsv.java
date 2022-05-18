@@ -28,8 +28,9 @@ public class ReplayCsv {
     public List<Prediction> loadPredictions(String predictionsCsvFileName) {
         ArrayList<Prediction> list = new ArrayList<>();
         try {
-            Reader in = new BufferedReader(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream(predictionsCsvFileName.substring("classpath:".length()))));
-            Iterable<CSVRecord> records = CSVFormat.DEFAULT.withHeader().parse(in);
+            InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(predictionsCsvFileName.substring("classpath:".length()));
+            if (inputStream == null) throw new FileNotFoundException(predictionsCsvFileName + " not found!");
+            Iterable<CSVRecord> records = CSVFormat.DEFAULT.withHeader().parse(new InputStreamReader(inputStream));
 
             for (CSVRecord r : records) {
                 Prediction p = createPredictionFromCsvRecord(r);
@@ -38,6 +39,8 @@ public class ReplayCsv {
             }
         } catch (IOException e) {
             logger.error("failed to load predictions from file " + predictionsCsvFileName , e);
+            // don't continue if we were configured to load this file but couldn't
+            throw new RuntimeException(e);
         }
         logger.info("Loading {} predictions from CSV file {}", list.size(), predictionsCsvFileName);
         return list;

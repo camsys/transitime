@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
 import org.transitclock.applications.UpdateTravelTimes;
+import org.transitclock.avl.BatchCsvApcModule;
 import org.transitclock.avl.BatchCsvArrivalDepartureModule;
 import org.transitclock.avl.BatchCsvAvlFeedModule;
 import org.transitclock.avl.BatchCsvAvlFeedModule.AvlPostProcessor;
@@ -19,6 +20,7 @@ import org.transitclock.config.ConfigFileReader;
 import org.transitclock.configData.AgencyConfig;
 import org.transitclock.core.dataCache.PredictionDataCache;
 import org.transitclock.db.hibernate.HibernateUtils;
+import org.transitclock.db.structs.ApcReport;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.gtfs.GtfsData;
 import org.transitclock.gtfs.TitleFormatter;
@@ -88,6 +90,8 @@ public class PlaybackModule {
 		}
 		String configFiles = state.getConfigFileNames();
 		if (configFiles == null) configFiles = defaultTransitimeConfigFile;
+
+		populateSystemProperties(state);
 		runConfig(state.getAvlReportsCsv(), configFiles, agencyId);
 
 		if (state.isLog())
@@ -99,11 +103,7 @@ public class PlaybackModule {
 			System.out.println("Done with GTFS. Adding AVLs.");
 
 		session = HibernateUtils.getSession();
-		ArrayList<ArrivalDeparture> arrivalDepartures = new ArrayList<>();
 		if (state.getArrivalDepartureCsv() != null) {
-			System.setProperty("transitclock.core.cacheReloadStartTimeStr", "2010-01-01 00:00:00");
-			System.setProperty("transitclock.core.cacheReloadEndTimeStr", "2030-01-01 00:00:00");
-			System.setProperty("transitclock.avl.csvArrivalDepartureFeedFileName", state.getArrivalDepartureCsv());
 
 			int size = session.createCriteria(ArrivalDeparture.class).list().size();
 			logger.info("pre load has {} ADs", size);
@@ -125,6 +125,17 @@ public class PlaybackModule {
 			}
 
 		}
+
+		if (state.getApcCsv() != null) {
+			logger.info("loading APC..");
+			BatchCsvApcModule apcModule = new BatchCsvApcModule(agencyId, configRev, session);
+			apcModule.setCsvFileName(state.getApcCsv());
+			List<ApcReport> reports = apcModule.run();
+			logger.info("loaded {} APCReports", reports.size());
+		} else {
+			logger.info("not loading APC data.");
+		}
+
 
 
 		try {
@@ -165,6 +176,14 @@ public class PlaybackModule {
 		if (state.isLog())
 			System.out.println("Done");
 		return avlRange;
+	}
+
+	private static void populateSystemProperties(PlaybackConfig state) {
+		if (state.getArrivalDepartureCsv() != null) {
+			System.setProperty("transitclock.core.cacheReloadStartTimeStr", "2010-01-01 00:00:00");
+			System.setProperty("transitclock.core.cacheReloadEndTimeStr", "2030-01-01 00:00:00");
+			System.setProperty("transitclock.avl.csvArrivalDepartureFeedFileName", state.getArrivalDepartureCsv());
+		}
 	}
 
 	public static void runConfig(String avlReportsCsv, String transitimeConfigFile, String agencyId) {

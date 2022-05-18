@@ -32,7 +32,7 @@ public abstract class AbstractPredictionAccuracyIntegrationTest extends TestCase
 		pc.setPredictionCsv(predictionsCsv);
 		pc.setOutputDirectory(outputDirectory);
 		pc.setTz(tz);
-		pc.setHistory(null);
+		pc.setArrivalDepartureCsv(null);
 		this.config = pc;
 
 	}
@@ -40,10 +40,17 @@ public abstract class AbstractPredictionAccuracyIntegrationTest extends TestCase
 		this.config = config;
 	}
 
-	public static TraceConfig createTraceConfig(String id, String tz) {
-		return createTraceConfig(id, tz, true);
+	public static TraceConfig createApcTraceConfig(String id, String tz) {
+		return createTraceConfig(id, tz, true, true);
 	}
-	public static TraceConfig createTraceConfig(String id, String tz, boolean includePredictionsCsv) {
+	public static TraceConfig createApcTraceConfig(String id, String tz, boolean includePredictionCsv) {
+		return createTraceConfig(id, tz, includePredictionCsv, true);
+	}
+	public static TraceConfig createTraceConfig(String id, String tz) {
+		return createTraceConfig(id, tz, true, true);
+	}
+	public static TraceConfig createTraceConfig(String id, String tz,
+												boolean includePredictionsCsv, boolean includeApcCsv) {
 		TraceConfig config = new TraceConfig();
 		config.setId(id);
 		config.setGtfsDirectoryName("classpath:gtfs/" + id);
@@ -51,7 +58,10 @@ public abstract class AbstractPredictionAccuracyIntegrationTest extends TestCase
 		if (includePredictionsCsv) {
 			config.setPredictionCsv("classpath:pred/" + id + ".csv");
 		}
-		config.setHistory("classpath:history/" + id + "csv");
+		if (includeApcCsv) {
+			config.setApcCsv("classpath:apc/" + id + ".csv");
+		}
+		config.setArrivalDepartureCsv("classpath:history/" + id + ".csv");
 		config.setOutputDirectory("/tmp/output/" + id);
 		config.setTz(tz);
 		return config;

@@ -11,8 +11,6 @@ public class TraceConfig extends PlaybackConfig {
     private String predictionCsv;
     private String outputDirectory;
     private String tz;
-    private String history;
-
     public String getId() {
         return id;
     }
@@ -47,11 +45,4 @@ public class TraceConfig extends PlaybackConfig {
         this.tz = tz;
     }
 
-    public String getHistory() {
-        return history;
-    }
-
-    public void setHistory(String history) {
-        this.history = history;
-    }
 }

@@ -481,7 +481,7 @@ public class Core {
 	{
 		boolean cacheLoaded = false;
 		Session session = HibernateUtils.getSession();
-
+		logger.info("in populateCaches with {} and {}", cacheReloadStartTimeStr.getValue(), cacheReloadEndTimeStr.getValue());
 		List<DateRange> cacheReloadRanges = DateRange.parseFromCSV(cacheReloadStartTimeStr.getValue(), cacheReloadEndTimeStr.getValue());
 		// CASE I:  a configured range of dates to load
 		for (DateRange cacheReloadRange : cacheReloadRanges) {

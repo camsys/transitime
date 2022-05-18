@@ -8,6 +8,7 @@ public class PlaybackConfig {
     private String avlReportsCsv;
     private String arrivalDepartureCsv;
     private String configFileNames;
+    private String apcCsv;
     private boolean addPredictionAccuracy;
     private boolean log;
     private String tz;
@@ -34,6 +35,14 @@ public class PlaybackConfig {
 
     public void setArrivalDepartureCsv(String arrivalDepartureCsv) {
         this.arrivalDepartureCsv = arrivalDepartureCsv;
+    }
+
+    public String getApcCsv() {
+        return apcCsv;
+    }
+
+    public void setApcCsv(String apcCsv) {
+        this.apcCsv = apcCsv;
     }
 
     public boolean isAddPredictionAccuracy() {
