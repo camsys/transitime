@@ -19,7 +19,7 @@ public abstract class AbstractPredictionAccuracyIntegrationTest extends TestCase
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractPredictionAccuracyIntegrationTest.class);
 
-
+	private static final String DEFAULT_CONFIG_FILE = "classpath:transitclockConfigHsql.xml";
     private ReplayService rs;
 	private TraceConfig config;
 	public AbstractPredictionAccuracyIntegrationTest(String id, String outputDirectory, String gtfs, String avl,
@@ -41,16 +41,17 @@ public abstract class AbstractPredictionAccuracyIntegrationTest extends TestCase
 	}
 
 	public static TraceConfig createApcTraceConfig(String id, String tz) {
-		return createTraceConfig(id, tz, true, true);
+		return createTraceConfig(id, tz, true, true, false);
 	}
-	public static TraceConfig createApcTraceConfig(String id, String tz, boolean includePredictionCsv) {
-		return createTraceConfig(id, tz, includePredictionCsv, true);
+	public static TraceConfig createApcTraceConfig(String id, String tz, boolean includePredictionCsv, boolean addConfigFile) {
+		return createTraceConfig(id, tz, includePredictionCsv, true, addConfigFile);
 	}
 	public static TraceConfig createTraceConfig(String id, String tz) {
-		return createTraceConfig(id, tz, true, true);
+		return createTraceConfig(id, tz, true, true, false);
 	}
 	public static TraceConfig createTraceConfig(String id, String tz,
-												boolean includePredictionsCsv, boolean includeApcCsv) {
+												boolean includePredictionsCsv, boolean includeApcCsv,
+												boolean addConfigFile) {
 		TraceConfig config = new TraceConfig();
 		config.setId(id);
 		config.setGtfsDirectoryName("classpath:gtfs/" + id);
@@ -64,6 +65,10 @@ public abstract class AbstractPredictionAccuracyIntegrationTest extends TestCase
 		config.setArrivalDepartureCsv("classpath:history/" + id + ".csv");
 		config.setOutputDirectory("/tmp/output/" + id);
 		config.setTz(tz);
+		if (addConfigFile) {
+			config.setConfigFileNames("classpath:config/" + id + ".xml"
+					+ ";" + DEFAULT_CONFIG_FILE);
+		}
 		return config;
 	}
 	@Override
