@@ -98,7 +98,7 @@ public class GenericJsonQuery extends GenericQuery {
 			} else if (o instanceof Number) {
 				addRowElement(i, ((Number) o).longValue());
 			} else if (o instanceof String) {
-				addRowElement(i, (String) o);
+				addRowElement(i, sanitize((String) o));
 			} else if (o instanceof Timestamp) {
 				addRowElement(i, ((Timestamp) o));
 			}
@@ -106,6 +106,11 @@ public class GenericJsonQuery extends GenericQuery {
 		
 		strBuilder.append('}');
 	}
+
+	private String sanitize(String o) {
+		return o.replace('\\', '/');
+	}
+
 	/**
 	 * Does SQL query and returns JSON formatted results.
 	 * 
