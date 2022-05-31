@@ -27,8 +27,8 @@ public class CombinedPredictionCsvWriter extends CsvWriterBase {
 
     @Override
     protected void writeHeader() throws IOException {
-        appendLine("id,affectedByWaitStop,avlTime,configRev,old_creationTime,gtfsStopSeq,isArrival," +
-                "old_predictionTime,routeId,schedBasedPred,stopId,tripId,vehicleId,new_predictionTime");
+        appendLine("tripId,gtfsStopSeq,affectedByWaitStop,avlTime,configRev,old_creationTime,isArrival," +
+                "old_predictionTime,routeId,schedBasedPred,stopId,vehicleId,new_predictionTime,horizonSeconds,actual,old_diff,old_error,new_diff,new_error");
 
     }
 
@@ -49,18 +49,17 @@ public class CombinedPredictionCsvWriter extends CsvWriterBase {
         }
         Prediction prediction = combined.oldPrediction;
         if (prediction != null) {
-            // id
-            appendCol(prediction.getId());
+            appendCol(prediction.getTripId());
+            // gtfsStopSeq
+            appendCol(combined.stopSeq);
             // affectedByWaitStop
             appendCol(prediction.isAffectedByWaitStop());
             // avlTime
-            appendCol(formatTime(prediction.getAvlTime()));
+            appendCol(formatTime(new Date(combined.avlTime)));
             //configRev
             appendCol(prediction.getConfigRev());
             // creationTime
             appendCol(formatTime(prediction.getCreationTime()));
-            // gtfsStopSeq
-            appendCol(prediction.getGtfsStopSeq());
             // isArrival
             appendCol(prediction.isArrival());
             // predictionTIme
@@ -71,24 +70,21 @@ public class CombinedPredictionCsvWriter extends CsvWriterBase {
             appendCol(prediction.isSchedBasedPred());
             // stopId
             appendCol(prediction.getStopId());
-            // tripId
-            appendCol(prediction.getTripId());
             // vehicleId
             appendCol(prediction.getVehicleId());
         } else if (combined.newPrediction != null) {
             prediction = combined.newPrediction;
-            // id
-            appendCol(-1);
+            appendCol(prediction.getTripId());
+            // gtfsStopSeq
+            appendCol(combined.stopSeq);
             // affectedByWaitStop
             appendCol(prediction.isAffectedByWaitStop());
             // avlTime
-            appendCol(formatTime(prediction.getAvlTime()));
+            appendCol(formatTime(new Date(combined.avlTime)));
             //configRev
             appendCol(prediction.getConfigRev());
             // creationTime
             appendCol(formatTime(prediction.getCreationTime()));
-            // gtfsStopSeq
-            appendCol(prediction.getGtfsStopSeq());
             // isArrival
             appendCol(prediction.isArrival());
             // predictionTIme
@@ -99,18 +95,44 @@ public class CombinedPredictionCsvWriter extends CsvWriterBase {
             appendCol(prediction.isSchedBasedPred());
             // stopId
             appendCol(prediction.getStopId());
-            // tripId
-            appendCol(prediction.getTripId());
             // vehicleId
             appendCol(prediction.getVehicleId());
 
         }
         // new prediction
         if (combined.newPrediction != null) {
-            appendLine(formatTime(combined.newPrediction.getPredictionTime()));
+            appendCol(formatTime(combined.newPrediction.getPredictionTime()));
         } else {
-            appendLine("-1");
+            appendCol("-1");
         }
+        if (combined.actualADTime > -1) {
+            // horizon
+            appendCol(toSeconds(combined.predLength));
+            // actual Arrival/Departure
+            appendCol(formatTime(new Date(combined.actualADTime)));
+            double oldDiff = toSeconds(combined.oldPredTime) - toSeconds(combined.actualADTime);
+            // original error
+            appendCol(oldDiff);
+            if (oldDiff != 0.0) {
+                appendCol(oldDiff / toSeconds(combined.predLength));
+            } else {
+                appendCol(0.0);
+            }
+            double newDiff = toSeconds(combined.newPredTime) - toSeconds(combined.actualADTime);
+            // new error
+            appendCol(newDiff);
+            if (newDiff != 0.0) {
+                appendLine(newDiff / toSeconds(combined.predLength));
+            } else {
+                appendLine(0.0);
+            }
+        } else {
+            appendLine(null);
+        }
+    }
+
+    private double toSeconds(long time) {
+        return time / 1000.0;
     }
 
     private String formatTime(Date value) {

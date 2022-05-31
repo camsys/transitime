@@ -154,8 +154,9 @@ public abstract class CsvWriterBase {
 
 	protected Writer appendLine(Object o) throws IOException {
 		if (o != null) {
-			writer.append(o.toString()).append("\n");
+			writer.append(o.toString());
 		}
+		writer.append("\n");
 		return writer;
 	}
 }

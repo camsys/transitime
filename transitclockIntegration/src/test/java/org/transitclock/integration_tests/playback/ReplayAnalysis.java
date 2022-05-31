@@ -52,7 +52,7 @@ public class ReplayAnalysis {
 
             if (pred.oldPredTime > 0 && pred.newPredTime > 0 && pred.actualADTime > 0) {
                 bothTotalPreds++;
-                logger.info("matched prediction {}, {}, {}, {}",
+                logger.debug("matched prediction {}, {}, {}, {}",
                         pred.stopSeq, pred.actualADTime, pred.oldPredTime, pred.newPredTime);
 
                 if (oldError < newError)

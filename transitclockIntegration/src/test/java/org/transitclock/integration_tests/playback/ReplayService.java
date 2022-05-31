@@ -2,6 +2,7 @@ package org.transitclock.integration_tests.playback;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.integration_tests.prediction.TraceConfig;
 import org.transitclock.utils.DateRange;
 
@@ -20,7 +21,7 @@ public class ReplayService {
     private ReplayLoader loader;
 
     public Collection<CombinedPredictionAccuracy> getCombinedPredictionAccuracy() {
-        return loader.getCombinedPredictionAccuracy();
+        return loader.getCombinedPredictionAccuracies();
     }
 
     public ReplayService(String id, String outputDirectory) {
@@ -30,10 +31,10 @@ public class ReplayService {
          System.setProperty("transitclock.integration_test.enabled", "true");
     }
 
-    public void run(TraceConfig config) {
+    public List<ArrivalDeparture> run(TraceConfig config) {
         // Run trace
         DateRange range = PlaybackModule.runTrace(config, null);
-        loader.createCombinedPredictionAccuracyStructure(range, config.getArrivalDepartureCsv());
+        return loader.queryArrivalDepartures(range, config.getArrivalDepartureCsv());
 
     }
 
@@ -41,9 +42,9 @@ public class ReplayService {
         loader.loadPredictionsFromCSV(predictionsCsvFileName);
     }
 
-    public void accumulate() {
+    public void accumulate(List<ArrivalDeparture> arrivalDepartures) {
         // Fill new predictions
-        loader.accumulate(id);
+        loader.accumulate(id, arrivalDepartures);
     }
 
     public ReplayResults compare() {

@@ -3,7 +3,7 @@ package org.transitclock.integration_tests.prediction;
 import org.junit.Test;
 
 /**
- * Bad predictions on route 921.
+ * Bad predictions on route 921, MET-208
  */
 public class PredictionAccuracy921_497IntegrationTest extends AbstractPredictionAccuracyIntegrationTest {
 

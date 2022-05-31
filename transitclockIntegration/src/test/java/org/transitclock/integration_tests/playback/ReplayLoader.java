@@ -1,6 +1,6 @@
 package org.transitclock.integration_tests.playback;
 
-import org.apache.commons.lang3.tuple.Triple;
+import org.apache.commons.collections.comparators.ComparatorChain;
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
@@ -14,6 +14,8 @@ import org.transitclock.utils.DateRange;
 
 import java.util.*;
 
+import static org.transitclock.utils.Time.sleep;
+
 /**
  * Delegate data loading operations to its own class.
  */
@@ -25,13 +27,13 @@ public class ReplayLoader {
 
     private ReplayCsv csv;
 
-    private Collection<CombinedPredictionAccuracy> combinedPredictionAccuracy;
-    public Collection<CombinedPredictionAccuracy> getCombinedPredictionAccuracy() {
-        return combinedPredictionAccuracy;
+    private Collection<CombinedPredictionAccuracy> combinedPredictionAccuracies;
+    public Collection<CombinedPredictionAccuracy> getCombinedPredictionAccuracies() {
+        return combinedPredictionAccuracies;
     }
 
-    private Map<Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long>, CombinedPredictionAccuracy> predsByStopAndCreationTime
-            = new HashMap<Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long>, CombinedPredictionAccuracy>();
+    private Map<PredictionKey, CombinedPredictionAccuracy> predsByStopAndAvlTime
+            = new HashMap<PredictionKey, CombinedPredictionAccuracy>();
 
 
     public ReplayLoader(String outputDirectory) {
@@ -39,7 +41,7 @@ public class ReplayLoader {
     }
 
 
-    public void createCombinedPredictionAccuracyStructure(DateRange avlRange, String arrivalDepartureFileName) {
+    public List<ArrivalDeparture> queryArrivalDepartures(DateRange avlRange, String arrivalDepartureFileName) {
         // Fill CombinedPredictionAccuracy objects with stop information
         waitForQueuesToDrain();
         logger.info("loading A/Ds for {}", avlRange);
@@ -48,89 +50,120 @@ public class ReplayLoader {
                 .add(Restrictions.between("time", avlRange.getStart(), avlRange.getEnd()))
                 .addOrder(Order.asc("time"))
                 .list();
-        boolean found = false;
-        for (ArrivalDeparture ad : ads) {
-            found = true;
-            CombinedPredictionAccuracy o = new CombinedPredictionAccuracy(ad);
-            logger.info("placeholder for {} ({}) and stopId={}",
-                    o.getKey(), new Date(o.getKey().getRight()), ad.getStopId());
-            predsByStopAndCreationTime.put(o.getKey(), o);
-        }
-        if (!found) {
-            if (arrivalDepartureFileName != null)
-                throw new RuntimeException("no ArrivalDepartures found, cannot prime data store");
-        }
+
+        if (ads == null || ads.isEmpty())
+            throw new RuntimeException("no ArrivalDepartures found, cannot prime data store");
+
+        return ads;
     }
 
     private void waitForQueuesToDrain() {
         final int MAX_COUNT = 20;
-        try {
-            int i = 0;
-            while (Core.getInstance().getDbLogger().queueSize() > 0 && i < MAX_COUNT) {
-                i++;
-                logger.info("waiting on queues to drain with remaining size {}",
-                        Core.getInstance().getDbLogger().queueSize());
-                Thread.sleep(1 * 1000);
-            }
-            if (i >= MAX_COUNT) {
-                logger.warn("DbLogger did not empty in allotted time.");
-            }
-        } catch (InterruptedException ie) {
-            return;
+        sleep(5000);
+        int i = 0;
+        while (Core.getInstance().getDbLogger().queueSize() > 0 && i < MAX_COUNT) {
+            i++;
+            logger.info("waiting on queues to drain with remaining size {}",
+                    Core.getInstance().getDbLogger().queueSize());
+            sleep(1000);
+        }
+        if (i >= MAX_COUNT) {
+            logger.warn("DbLogger did not empty in allotted time.");
         }
     }
 
     public void loadPredictionsFromCSV(String predictionsCsvFileName) {
 
         List<Prediction> predictions = csv.loadPredictions(predictionsCsvFileName);
-
         for (Prediction p : predictions) {
             // Fill old predictions
-            Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long> key = createKeyFromPrediction(p);
-            CombinedPredictionAccuracy pred = getOrCreatePred(predsByStopAndCreationTime, key);
+            PredictionKey key = createKeyFromPrediction(p);
+            CombinedPredictionAccuracy pred = getOrCreatePred(predsByStopAndAvlTime, key);
             pred.setOldPrediction(p);
         }
 
     }
 
     private CombinedPredictionAccuracy getOrCreatePred(
-            Map<Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long>, CombinedPredictionAccuracy>
+                    Map<PredictionKey, CombinedPredictionAccuracy>
                     predsByStopAndCreationTime,
-            Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long> key) {
+                    PredictionKey key) {
         CombinedPredictionAccuracy pred = predsByStopAndCreationTime.get(key);
         if (pred == null) {
             // This prediction does not have an associated arrival departure. Cannot gauge accuracy.
-            pred = new CombinedPredictionAccuracy(key.getLeft(), key.getMiddle(), key.getRight());
+            pred = new CombinedPredictionAccuracy(key.getTripId(), key.getStopSequence(),
+                    key.getArrivalOrDeparture(), key.getAvlTime());
             predsByStopAndCreationTime.put(key, pred);
         }
         return pred;
     }
 
-    public void accumulate(String id) {
+    public void accumulate(String id, List<ArrivalDeparture> arrivalDepartures) {
         List<Prediction> newPreds = getSession().createCriteria(Prediction.class).list();
-        // TODO these are hard coded, need to fix ID
         csv.write(newPreds,"prediction", id);
 
 
         for (Prediction p : newPreds) {
-            long prediction = p.getPredictionTime().getTime();
-            Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long> key = createKeyFromPrediction(p);
-            CombinedPredictionAccuracy pred = getOrCreatePred(predsByStopAndCreationTime, key);
+            PredictionKey key = createKeyFromPrediction(p);
+            CombinedPredictionAccuracy pred = getOrCreatePred(predsByStopAndAvlTime, key);
             pred.setNewPrediction(p);
         }
 
-        combinedPredictionAccuracy = predsByStopAndCreationTime.values();
-        ArrayList<CombinedPredictionAccuracy> sortedList = new ArrayList<>(combinedPredictionAccuracy);
-        Collections.sort(sortedList, new CombinedPredictionAccuracyComparator());
+        combinedPredictionAccuracies = predsByStopAndAvlTime.values();
+
+        // match the A/Ds to the predictions for accuracy comparison
+        for (CombinedPredictionAccuracy combined : combinedPredictionAccuracies) {
+            for (ArrivalDeparture ad : arrivalDepartures) {
+                // match on trip / stop / direction
+                if (match(combined, ad)) {
+                    combined.actualADTime = ad.getTime();
+                    combined.predLength = combined.actualADTime - combined.avlTime;
+                }
+            }
+        }
+
+
+        ArrayList<CombinedPredictionAccuracy> sortedList = filter(combinedPredictionAccuracies);
+        ComparatorChain chain = new ComparatorChain();
+
+        chain.addComparator(new CombinedPredictionAccuracyTripIdComparator());
+        chain.addComparator(new CombinedPredictionAccuracyAvlTimeComparator());
+        chain.addComparator(new CombinedPredictionAccuracyStopSequenceComparator());
+
+        Collections.sort(sortedList, chain);
+
         csv.write(sortedList, "combined_prediction", id);
 
         getSession().close();
 
     }
 
+    private boolean match(CombinedPredictionAccuracy combined, ArrivalDeparture ad) {
+        // match on trip / stop / direction
+        if (combined.tripId.equals(ad.getTripId())
+        && combined.stopSeq == ad.getGtfsStopSequence()
+        && combined.which.equals(CombinedPredictionAccuracy.ArrivalOrDeparture.ARRIVAL) == ad.isArrival()) {
+            return true;
+        }
+        return false;
+    }
 
-    private static Triple<Integer, CombinedPredictionAccuracy.ArrivalOrDeparture, Long> createKeyFromPrediction(Prediction p) {
-        return Triple.of(p.getGtfsStopSeq(),
+    // remove nonsensical accuracy objects
+    private ArrayList<CombinedPredictionAccuracy> filter(Collection<CombinedPredictionAccuracy> combinedPredictionAccuracy) {
+        ArrayList<CombinedPredictionAccuracy> filtered = new ArrayList<>();
+        for (CombinedPredictionAccuracy c : combinedPredictionAccuracy) {
+            if (c.oldPredTime > -1 || c.newPredTime > -1)
+                filtered.add(c);
+            if (c.oldPredTime == -1 && c.newPredTime == -1) {
+                logger.error("unmatched A/D {}", c);
+            }
+        }
+        return filtered;
+    }
+
+
+    private static PredictionKey createKeyFromPrediction(Prediction p) {
+        return new PredictionKey(p.getTripId(), p.getGtfsStopSeq(),
                 p.isArrival() ? CombinedPredictionAccuracy.ArrivalOrDeparture.ARRIVAL : CombinedPredictionAccuracy.ArrivalOrDeparture.DEPARTURE,
                 p.getAvlTime().getTime());
     }
