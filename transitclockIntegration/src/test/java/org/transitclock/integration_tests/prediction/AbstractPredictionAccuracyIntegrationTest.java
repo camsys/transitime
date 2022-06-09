@@ -66,7 +66,7 @@ public abstract class AbstractPredictionAccuracyIntegrationTest extends TestCase
 			config.setApcCsv("classpath:apc/" + id + ".csv");
 		}
 		config.setArrivalDepartureCsv("classpath:history/" + id + ".csv");
-		config.setOutputDirectory("/tmp/output/" + id);
+		config.setOutputDirectory(getOutputDirectory() + id);
 		config.setTz(tz);
 		if (addConfigFile) {
 			config.setConfigFileNames("classpath:config/" + id + ".xml"
@@ -74,6 +74,22 @@ public abstract class AbstractPredictionAccuracyIntegrationTest extends TestCase
 		}
 		return config;
 	}
+
+	private static String getOutputDirectory() {
+		// expecting ~/transitime/transitclockIntegration/ to which we add the classes dir
+		// so the output of the integration tests will end up in the jar file
+		String property = System.getProperty("user.dir");
+		if (property == null)
+			return "/tmp/output/";
+		if (!property.endsWith("/"))
+			property = property + "/";
+		if (property.endsWith("transitclockIntegration/"))
+			property = property + "/target/classes/reports/";
+		System.out.println("using outputdirectory of '" + property + "'");
+		logger.info("using outputdirectory of '" + property + "'");
+		return property;
+	}
+
 	@Override
     public void setUp() {
 		rs = new ReplayService(config.getId(), config.getOutputDirectory());
