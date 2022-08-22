@@ -592,6 +592,15 @@
         primary key (vehicleId, avlTime)
     );
 
+    create table RouteDirections (
+         id integer,
+         routeShortName varchar(60),
+         directionId varchar(60),
+         directionName varchar(60)
+    );
+
+
+
     create index ArrivalsDeparturesTimeIndex on ArrivalsDepartures (time);
 
     create index ArrivalsDeparturesRouteTimeIndex on ArrivalsDepartures (routeShortName, time);
