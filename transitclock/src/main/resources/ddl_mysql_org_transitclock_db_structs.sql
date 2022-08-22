@@ -71,6 +71,7 @@
         stopPathLength float,
         tripIndex integer,
         tripPatternId varchar(120),
+        scheduleAdherenceStop bit(1),
         primary key (vehicleId, tripId, time, stopId, isArrival, gtfsStopSeq)
     );
 
@@ -546,9 +547,9 @@
         trackerId varchar(60),
         bikeCapacity integer,
         doorCount integer,
-        doorWidth varchar(60),
+        doorWidth varchar(10),
         lowFloor integer,
-        wheelchairAccess bit,
+        wheelchairAccess varchar(10),
         type integer,
         primary key (id)
     );
