@@ -596,7 +596,9 @@
          id integer,
          routeShortName varchar(60),
          directionId varchar(60),
-         directionName varchar(60)
+         directionName varchar(60),
+         configRev integer
+
     );
 
 
