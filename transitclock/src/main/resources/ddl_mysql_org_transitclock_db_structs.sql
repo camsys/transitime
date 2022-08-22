@@ -533,7 +533,7 @@
         travelTimes_id integer,
         tripPattern_id varchar(120),
         tripPattern_configRev integer,
-        boardingType integer
+        boardingType integer,
         primary key (tripId, startTime, configRev)
     );
 
