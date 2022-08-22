@@ -533,6 +533,7 @@
         travelTimes_id integer,
         tripPattern_id varchar(120),
         tripPattern_configRev integer,
+        boardingType integer
         primary key (tripId, startTime, configRev)
     );
 
@@ -543,6 +544,11 @@
         description varchar(255),
         nonPassengerVehicle bit,
         trackerId varchar(60),
+        bikeCapacity integer,
+        doorCount integer,
+        doorWidth integer,
+        lowFloor integer,
+        wheelchairAccess bit,
         type integer,
         primary key (id)
     );
