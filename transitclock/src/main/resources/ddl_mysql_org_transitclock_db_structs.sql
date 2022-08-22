@@ -546,7 +546,7 @@
         trackerId varchar(60),
         bikeCapacity integer,
         doorCount integer,
-        doorWidth integer,
+        doorWidth varchar(60),
         lowFloor integer,
         wheelchairAccess bit,
         type integer,
