@@ -124,6 +124,8 @@ public class HibernateUtils {
 		// a File object for that file name and pass in the File object
 		// to configure().
 		String fileName = DbSetupConfig.getHibernateConfigFileName();
+		// this property came from a config file and may have spaces after it
+		if (fileName != null) fileName = fileName.trim();
 		logger.info("Configuring Hibernate for dbName={} using config file={}", dbName, fileName);
 
 		File f = new File(fileName);
