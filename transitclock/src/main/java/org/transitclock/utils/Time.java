@@ -249,7 +249,7 @@ public class Time {
 		return readableDateFormat24NoTimeZoneMsecYMD;
 	}
 
-	private static DateFormat getReadableDateFormat24NoTimeZoneNoMsec() {
+	public static DateFormat getReadableDateFormat24NoTimeZoneNoMsec() {
 		if(useMonthDayYearFormat.getValue()) {
 			return readableDateFormat24NoTimeZoneNoMsecMDY;
 		}

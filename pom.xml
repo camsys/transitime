@@ -3,6 +3,10 @@
     <groupId>TheTransitClock</groupId>
     <artifactId>transitclock</artifactId>
     <version>2.0.54.10-cs-SNAPSHOT</version>
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
     <packaging>pom</packaging>
     <name>transitclock</name>
     <url>http://www.transitclock.org//</url>
@@ -37,6 +41,7 @@
         <module>transitclock</module>
         <module>transitclockApi</module>
         <module>transitclockWebapp</module>
+        <module>transitclockSwagger</module>
         <module>transitclockTraccarClient</module>
         <module>transitclockBarefootClient</module>
          <!-- <module>transitclockQuickStart</module>
@@ -47,7 +52,8 @@
         <profile>
             <id>skip-integration-tests</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <!-- make it mandatory for now and on integration test branch -->
+                <activeByDefault>false</activeByDefault>
             </activation>
         </profile>
         <profile>
@@ -57,6 +63,7 @@
                 <module>transitclock</module>
                 <module>transitclockApi</module>
                 <module>transitclockWebapp</module>
+                <module>transitclockSwagger</module>
                 <module>transitclockQuickStart</module>
                 <module>transitclockTraccarClient</module>
                 <module>transitclockBarefootClient</module>
