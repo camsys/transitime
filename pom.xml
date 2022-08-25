@@ -53,7 +53,7 @@
             <id>skip-integration-tests</id>
             <activation>
                 <!-- make it mandatory for now and on integration test branch -->
-                <activeByDefault>false</activeByDefault>
+                <activeByDefault>true</activeByDefault>
             </activation>
         </profile>
         <profile>
@@ -64,7 +64,7 @@
                 <module>transitclockApi</module>
                 <module>transitclockWebapp</module>
                 <module>transitclockSwagger</module>
-                <module>transitclockQuickStart</module>
+<!--                <module>transitclockQuickStart</module>-->
                 <module>transitclockTraccarClient</module>
                 <module>transitclockBarefootClient</module>
             </modules>
