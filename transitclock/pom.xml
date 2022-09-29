@@ -24,7 +24,7 @@
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>
-			<id>repo.obaweb.org</id>
+			<id>repo.camsys-apps.com</id>
 			<url>http://repo.camsys-apps.com/releases</url>
 		</pluginRepository>
 	</pluginRepositories>
