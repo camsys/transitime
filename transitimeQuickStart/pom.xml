@@ -6,12 +6,11 @@
 	<parent>
 		<groupId>transitime</groupId>
 		<artifactId>transitime</artifactId>
-		<version>0.0.40-SNAPSHOT</version>
+		<version>0.0.50-SNAPSHOT</version>
 	</parent>
 	<groupId>org.transitime.app</groupId>
 	<artifactId>transitimeQuickStart</artifactId>
 	<name>transitimeQuickStart</name>
-	<url>http://maven.apache.org</url>
 	<properties>
 		<jettyVersion>9.4.0.M0</jettyVersion>
 	</properties>
@@ -85,8 +84,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.5.1</version>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>11</source>
+					<target>11</target>
 				</configuration>
 			</plugin>
 			<plugin>

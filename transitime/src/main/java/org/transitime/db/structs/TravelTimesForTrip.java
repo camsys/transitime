@@ -101,7 +101,7 @@ public class TravelTimesForTrip implements Serializable {
 	@Column(length=HibernateUtils.DEFAULT_ID_SIZE)
 	private final String tripCreatedForId;
 	
-	@ManyToMany(fetch=FetchType.LAZY)
+	@ManyToMany(fetch=FetchType.EAGER)
 	@JoinTable(name="TravelTimesForTrip_to_TravelTimesForPath_joinTable")
 	@Cascade({CascadeType.SAVE_UPDATE})
 	@OrderColumn(name="listIndex")

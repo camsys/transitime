@@ -35,9 +35,9 @@
     </profiles>
 
   <scm>
-    <connection>scm:git:http://github.com/sheldonabrown/core.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/sheldonabrown/core.git</developerConnection>
-    <url>http://github.com/sheldonabrown/core</url>
+    <connection>scm:git:http://github.com/transitime/core.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/transitime/core.git</developerConnection>
+    <url>https://github.com/transitime/core</url>
     <tag>HEAD</tag>
   </scm>
 
