@@ -127,7 +127,7 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk</artifactId>
-			<version>1.10.16</version>
+			<version>1.12.239</version>
 		</dependency>
 		<!-- For many java utilities, such as StringEscapeUtils -->
 		<dependency>
