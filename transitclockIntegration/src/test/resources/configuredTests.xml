@@ -7,13 +7,15 @@
             <history>history.csv</history>
             <apc>apc.csv</apc>
         </test>
-<!--        <test>-->
-<!--            <id>baseline</id>-->
-<!--            <gtfs>gtfs</gtfs>-->
-<!--            <avl>avl.csv</avl>-->
-<!--            <history>history.csv</history>-->
-<!--            <apc>apc.csv</apc>-->
-<!--        </test>-->
+        <test>
+            <id>baseline_normal</id>
+            <gtfs>gtfs</gtfs>
+            <avl>avl.csv</avl>
+            <history>history.csv</history>
+            <apc>apc.csv</apc>
+            <service_date>2022-09-14</service_date>
+            <description>Baseline "normal", bus only.</description>
+        </test>
         <test>
             <id>921-2641</id>
             <gtfs>gtfs</gtfs>
