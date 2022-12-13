@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>TheTransitClock</groupId>
 		<artifactId>transitclock</artifactId>
-		<version>2.0.46.6-cs</version>
+		<version>2.0.46.7-cs-SNAPSHOT</version>
 	</parent>
 	<artifactId>transitclockCore</artifactId>
 	<name>transitclockCore</name>
@@ -20,15 +20,9 @@
 
 	</properties>
 	<repositories>
-		<!-- Needed to fix problem with one-jar not working with AWS SDK. Was getting
-                error message "Fatal: Failed to load the internal config for AWS" -->
 		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>bintray-kevinlee-maven</id>
-			<name>bintray</name>
-			<url>http://dl.bintray.com/kevinlee/maven</url>
+			<id>repo.camsys-apps.com</id>
+			<url>https://repo.camsys-apps.com/third-party/</url>
 		</repository>
 	</repositories>
 	<pluginRepositories>
@@ -71,12 +65,12 @@
 		<dependency>
 			<groupId>TheTransitClock</groupId>
 			<artifactId>transitclockBarefootClient</artifactId>
-			<version>2.0.46.6-cs</version>
+			<version>2.0.46.7-cs-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>TheTransitClock</groupId>
 			<artifactId>transitclockTraccarClient</artifactId>
-			<version>2.0.46.6-cs</version>
+			<version>2.0.46.7-cs-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.esri.geometry</groupId>
@@ -240,7 +234,13 @@
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>3.2.4</version>
+			<version>3.8.0</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-inline</artifactId>
+			<version>3.8.0</version>
 			<scope>test</scope>
 		</dependency>
 		<!-- Used for reflection to find classes in package -->
