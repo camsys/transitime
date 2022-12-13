@@ -21,7 +21,10 @@ import com.google.protobuf.CodedInputStream;
 import com.google.transit.realtime.GtfsRealtime.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.avl.AvlExecutor;
+import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.StringConfigValue;
+import org.transitclock.configData.AvlConfig;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.db.structs.AvlReport.AssignmentType;
 import org.transitclock.utils.IntervalTimer;
@@ -53,6 +56,10 @@ public abstract class GtfsRtVehiclePositionsReaderBase {
 					null,
 					"api key value if necessary, null if not needed");
 
+	private static IntegerConfigValue minQueueSizeForRefresh =
+					new IntegerConfigValue("transitclock.avl.minQueueSizeForRefresh",
+									0,
+									"beyond this queue size refreshes will block waiting for queue to empty");
 
 	private final String urlString;
 	
@@ -84,11 +91,9 @@ public abstract class GtfsRtVehiclePositionsReaderBase {
 	}
 
 	/**
-	 * Returns the vehicleID. Returns null if no VehicleDescription associated
-	 * with the vehicle or if no ID associated with the VehicleDescription.
-	 * 
-	 * If not vehicleId try label (VIA San Antonio Feed).
-	 * 
+	 * Returns the licensePlate. Returns the vehicle label if no license plate is found
+	 * otherwise returns null
+	 *
 	 * @param vehicle
 	 * @return vehicle ID or null if there isn't one
 	 */
@@ -249,6 +254,10 @@ public abstract class GtfsRtVehiclePositionsReaderBase {
 
 			HttpURLConnection
 					connection = (HttpURLConnection) url.openConnection();
+			// Set the timeout so don't wait forever
+			int timeoutMsec = AvlConfig.getAvlFeedTimeoutInMSecs();
+			connection.setConnectTimeout(timeoutMsec);
+			connection.setReadTimeout(timeoutMsec);
 
 			if (gtfsRealtimeHeaderKey.getValue() != null &&
 					gtfsRealtimeHeaderValue.getValue() != null) {
@@ -278,9 +287,19 @@ public abstract class GtfsRtVehiclePositionsReaderBase {
 			logger.info("Parsing GTFS-realtime file into a FeedMessage took " +
 					"{} msec", timer.elapsedMsec());
 			
-			// Process each individual VehiclePostions message
+			// Process each individual VehiclePositions message
 			processMessage(feed);
 			inputStream.close();
+
+			int size = AvlExecutor.getInstance().getQueueSize();
+			while (size > minQueueSizeForRefresh.getValue()) {
+				// if configured, block until avl queue empties out
+				// the prevents queue starvation
+				Thread.sleep(100);
+				size = AvlExecutor.getInstance().getQueueSize();
+			}
+			logger.info("Processing GTFS-realtime complete in {} msec", timer.elapsedMsec());
+
 		} catch (Exception e) {
 			logger.error("Exception when reading GTFS-realtime data from " +
 					"URL {}", 

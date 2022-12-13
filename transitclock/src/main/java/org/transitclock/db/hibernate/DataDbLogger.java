@@ -32,11 +32,14 @@ import org.transitclock.configData.CoreConfig;
 import org.transitclock.configData.DbSetupConfig;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.AvlReport;
+import org.transitclock.db.structs.Headway;
 import org.transitclock.db.structs.Match;
 import org.transitclock.db.structs.MonitoringEvent;
 import org.transitclock.db.structs.Prediction;
 import org.transitclock.db.structs.PredictionAccuracy;
 import org.transitclock.db.structs.PredictionEvent;
+import org.transitclock.db.structs.RunTimesForRoutes;
+import org.transitclock.db.structs.TrafficSensorData;
 import org.transitclock.db.structs.VehicleConfig;
 import org.transitclock.db.structs.VehicleEvent;
 import org.transitclock.db.structs.VehicleState;
@@ -88,8 +91,11 @@ public class DataDbLogger {
   private DbQueue<PredictionAccuracy> predictionAccuracyQueue;
   private DbQueue<MonitoringEvent> monitoringEventQueue;
   private DbQueue<VehicleEvent> vehicleEventQueue;
-	private DbQueue<PredictionEvent> predictionEventQueue;
+  private DbQueue<PredictionEvent> predictionEventQueue;
   private DbQueue<VehicleState> vehicleStateQueue;
+  private DbQueue<TrafficSensorData> trafficSensorDataQueue;
+  private DbQueue<Headway> headwayQueue;
+  private DbQueue<RunTimesForRoutes> runTimesForRoutesQueue;
   private DbQueue<Object> genericQueue;
 	
 	private static final int QUEUE_CAPACITY = 5000000;
@@ -128,7 +134,7 @@ public class DataDbLogger {
 	// keep track of primary key values to reduce database duplicate exceptions
 	private Map<String, String> vehicleToPrimayKeyMap = new HashMap<>();
 
-	private static final Logger logger = 
+	private static final Logger logger =
 			LoggerFactory.getLogger(DataDbLogger.class);
 
 	/********************** Member Functions **************************/
@@ -193,6 +199,9 @@ public class DataDbLogger {
 	  vehicleEventQueue = new DbQueue<VehicleEvent>(agencyId, shouldStoreToDb, shouldPauseToReduceQueue, VehicleEvent.class.getSimpleName());
 		predictionEventQueue = new DbQueue<PredictionEvent>(agencyId, shouldStoreToDb, shouldPauseToReduceQueue, PredictionEvent.class.getSimpleName());
 	  vehicleStateQueue = new DbQueue<VehicleState>(agencyId, shouldStoreToDb, shouldPauseToReduceQueue, VehicleState.class.getSimpleName());
+	  trafficSensorDataQueue = new DbQueue<TrafficSensorData>(agencyId, shouldStoreToDb, shouldPauseToReduceQueue, TrafficSensorData.class.getSimpleName());
+	  headwayQueue = new DbQueue<Headway>(agencyId, shouldStoreToDb, shouldPauseToReduceQueue, Headway.class.getSimpleName());
+	  runTimesForRoutesQueue = new DbQueue<RunTimesForRoutes>(agencyId, shouldStoreToDb, shouldPauseToReduceQueue, RunTimesForRoutes.class.getSimpleName());
 	  genericQueue = new DbQueue<Object>(agencyId, shouldStoreToDb, shouldPauseToReduceQueue, Object.class.getSimpleName());
 		
 	}
@@ -246,17 +255,29 @@ public class DataDbLogger {
 		return false;
 		}
     public boolean add(VehicleState vs) {
-			String key = "vs_" + vs.getVehicleId();
-			String hash = vehicleToPrimayKeyMap.get(key);
-			if (hash != null && hash.equals(hashVehicleState(vs))) {
-				// we already have this value, prevent sql exception
-				return false;
-			}
-			vehicleToPrimayKeyMap.put(key, hash);
-			return vehicleStateQueue.add(vs);
+		String key = "vs_" + vs.getVehicleId();
+		String hash = vehicleToPrimayKeyMap.get(key);
+		if (hash != null && hash.equals(hashVehicleState(vs))) {
+			// we already have this value, prevent sql exception
+			return false;
 		}
+		vehicleToPrimayKeyMap.put(key, hash);
+		return vehicleStateQueue.add(vs);
+	}
 
-	
+	public boolean add(TrafficSensorData data) {
+		return trafficSensorDataQueue.add(data);
+	}
+
+	public boolean add(Headway data) {
+		return headwayQueue.add(data);
+	}
+
+	public boolean add(RunTimesForRoutes data) {
+		return runTimesForRoutesQueue.add(data);
+	}
+
+
 	/**
 	 * Determines set of class names in the queue. Useful for logging
 	 * error message when queue getting filled up so know what kind of
@@ -308,6 +329,9 @@ public class DataDbLogger {
 						vehicleEventQueue.queueLevel(),
 						predictionEventQueue.queueLevel(),
 						vehicleStateQueue.queueLevel(),
+						trafficSensorDataQueue.queueLevel(),
+						headwayQueue.queueLevel(),
+						runTimesForRoutesQueue.queueLevel(),
 						genericQueue.queueLevel()
 		};
 
@@ -315,7 +339,7 @@ public class DataDbLogger {
 		Collections.sort(levels);
 		return levels.get(levels.size()-1);
 	}
-
+	
 	// as a summary of queue sizes, return the largest queue size
 	public int queueSize() {
 		Integer[] sizesArray = {
@@ -329,6 +353,9 @@ public class DataDbLogger {
 						vehicleEventQueue.queueSize(),
 						predictionEventQueue.queueSize(),
 						vehicleStateQueue.queueSize(),
+						trafficSensorDataQueue.queueSize(),
+						headwayQueue.queueSize(),
+						runTimesForRoutesQueue.queueSize(),
 						genericQueue.queueSize()
 		};
 
@@ -361,7 +388,7 @@ public class DataDbLogger {
 		return simple.format(vs.getAvlTime());
 
 	}
-
+	
 	/**
 	 * Just for doing some testing
 	 * 

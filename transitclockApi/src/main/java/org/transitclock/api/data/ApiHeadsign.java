@@ -16,9 +16,10 @@
  */
 
 package org.transitclock.api.data;
+import com.google.common.base.Objects;
+import org.transitclock.gtfs.TitleFormatter;
 import org.transitclock.ipc.data.IpcTripPattern;
 import javax.xml.bind.annotation.XmlAttribute;
-import java.util.Objects;
 
 /**
  * A short description of a headsign. For when outputting list of headsigns for
@@ -36,6 +37,9 @@ public class ApiHeadsign implements Comparable<ApiHeadsign>{
 	private String direction;
 
 	@XmlAttribute
+	private String directionId;
+
+	@XmlAttribute
 	private String label;
 
 	/********************** Member Functions **************************/
@@ -44,13 +48,25 @@ public class ApiHeadsign implements Comparable<ApiHeadsign>{
      * Need a no-arg constructor for Jersey. Otherwise get really obtuse
      * "MessageBodyWriter not found for media type=application/json" exception.
      */
-	protected ApiHeadsign() {
+	protected ApiHeadsign() {}
+
+	public ApiHeadsign(IpcTripPattern tripPattern, boolean formatLabel) {
+		this.headsign = tripPattern.getHeadsign();
+		this.direction = getDirection(tripPattern);
+		this.directionId = tripPattern.getDirectionId();
+		this.label = getFormattedLabel(headsign, direction, formatLabel);
 	}
 
-	public ApiHeadsign(IpcTripPattern tripPattern) {
-		this.headsign = tripPattern.getHeadsign();
-		this.direction = tripPattern.getDirectionId();
-		this.label = this.headsign + " (" + this.direction + ")";
+	private String getDirection(IpcTripPattern tripPattern){
+		return tripPattern.getDirectionName() != null ? tripPattern.getDirectionName() : tripPattern.getDirectionId();
+	}
+
+	private String getFormattedLabel(String headsign, String direction, boolean formatLabel) {
+		String label = headsign + " (" + direction + ")";
+		if(formatLabel){
+			return TitleFormatter.capitalize(label);
+		}
+		return label;
 	}
 
 	@Override
@@ -58,13 +74,25 @@ public class ApiHeadsign implements Comparable<ApiHeadsign>{
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		ApiHeadsign that = (ApiHeadsign) o;
-		return Objects.equals(headsign, that.headsign) &&
-				Objects.equals(direction, that.direction);
+		return Objects.equal(headsign, that.headsign) &&
+				Objects.equal(direction, that.direction) &&
+				Objects.equal(directionId, that.directionId) &&
+				Objects.equal(label, that.label);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(headsign, direction);
+		return Objects.hashCode(headsign, direction, directionId, label);
+	}
+
+	@Override
+	public String toString() {
+		return "ApiHeadsign{" +
+				"headsign='" + headsign + '\'' +
+				", direction='" + direction + '\'' +
+				", directionId='" + directionId + '\'' +
+				", label='" + label + '\'' +
+				'}';
 	}
 
 	@Override
@@ -72,8 +100,4 @@ public class ApiHeadsign implements Comparable<ApiHeadsign>{
 		return this.toString().compareTo(apiHeadsign.toString());
 	}
 
-	@Override
-	public String toString() {
-		return this.headsign + "_" + this.direction;
-	}
 }

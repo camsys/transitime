@@ -65,6 +65,7 @@ public class VehicleState {
 	// So can make sure that departure time is after the arrival time
 	private Arrival arrivalToStoreToDb;
 	private long lastArrivalTime = 0;
+	private int lastArrivalStopPathIndex = -1;
 	// verify new arrival is greater than last departure
 	private long lastDepartureTime = 0;
 	private Date lastAvlTime = null;
@@ -83,6 +84,10 @@ public class VehicleState {
 	private boolean isDelayed = false;
 
 	private Integer tripCounter = 0;
+
+	private Integer lastTripIndex = null;
+
+	private String lastBlockId = null;
 
 	private Headway headway=null;
 
@@ -488,6 +493,24 @@ public class VehicleState {
 	}
 
 	/**
+	 * Returns the next to last temporal match that is not null. Returns null if there isn't
+	 * one. Useful for when need to compare the previous to last match with
+	 * the last one, such as for determining if vehicle has crossed any
+	 * stops.
+	 *
+	 * @return
+	 */
+	public TemporalMatch getPreviousValidMatch() {
+		for(int i =1; i < temporalMatchHistory.size(); i++){
+			TemporalMatch prevMatch = temporalMatchHistory.get(i);
+			if(prevMatch != null){
+				return prevMatch;
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Returns the current AvlReport. Returns null if there isn't one.
 	 * @return
 	 */
@@ -499,7 +522,21 @@ public class VehicleState {
 		}
 	}
 
+	public Integer getLastTripIndex() {
+		return lastTripIndex;
+	}
 
+	public void setLastTripIndex(Integer lastTripIndex) {
+		this.lastTripIndex = lastTripIndex;
+	}
+
+	public String getLastBlockId() {
+		return lastBlockId;
+	}
+
+	public void setLastBlockId(String lastBlockId) {
+		this.lastBlockId = lastBlockId;
+	}
 
 	/**
 	 * Looks in the AvlReport history for the most recent AvlReport that is at
@@ -982,6 +1019,22 @@ public class VehicleState {
 	}
 
 	/**
+	 * Stores the last arrival stopPathIndex so that can validate if new departure is for same stop path
+	 * @param stopPathIndex
+	 */
+	public void setLastArrivalStopPathIndex(int stopPathIndex){
+		lastArrivalStopPathIndex = stopPathIndex;
+	}
+
+	/**
+	 * Returns the last stored arrival stopPathIndex so can validate if new departure is for same stop path
+	 * @return
+	 */
+	public int getLastArrivalStopPathIndex() {
+		return lastArrivalStopPathIndex;
+	}
+
+	/**
 	 * Stores the last arrival time so that can make sure that departure
 	 * times are after the arrival times.
 	 * @param arrivalTime
@@ -989,6 +1042,7 @@ public class VehicleState {
 	public void setLastArrivalTime(long arrivalTime) {
 		lastArrivalTime = arrivalTime;
 	}
+
 
 	/**
 	 * Returns the last stored arrival time so can make sure that departure

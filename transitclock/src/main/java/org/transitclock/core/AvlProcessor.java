@@ -29,9 +29,9 @@ import org.transitclock.core.SpatialMatcher.MatchingType;
 import org.transitclock.core.autoAssigner.AutoBlockAssigner;
 import org.transitclock.core.blockAssigner.BlockAssigner;
 import org.transitclock.core.dataCache.PredictionDataCache;
-import org.transitclock.core.dataCache.CanceledTripManager;
 import org.transitclock.core.dataCache.VehicleDataCache;
 import org.transitclock.core.dataCache.VehicleStateManager;
+import org.transitclock.core.dataCache.canceledTrip.CanceledTripCache;
 import org.transitclock.db.structs.*;
 import org.transitclock.db.structs.AvlReport.AssignmentType;
 import org.transitclock.logging.Markers;
@@ -673,7 +673,7 @@ public class AvlProcessor {
 		// Multiple services can be active on a given day. Therefore need
 		// to look at all the active ones to find out what blocks are active...
 		List<Block> allBlocksForRoute = new ArrayList<Block>();
-		ServiceUtils serviceUtils = Core.getInstance().getServiceUtils();
+		ServiceUtilsImpl serviceUtils = Core.getInstance().getServiceUtils();
 		Collection<String> serviceIds =
 				serviceUtils.getServiceIds(avlReport.getDate());
 		for (String serviceId : serviceIds) {
@@ -1084,7 +1084,15 @@ public class AvlProcessor {
 				automaticalyMatchVehicleToAssignment(vehicleState);
 		if (autoAssigned)
 			return true;
-		
+
+		if (AssignmentType.TRIP_ID.equals(avlReport.getAssignmentType())
+					&& avlReport.getAssignmentId() != null) {
+			// given an assignment that didn't match that
+			// create an event for later forensics
+			logInvalidAssignment(vehicleState);
+			MonitoringService.getInstance().sumMetric("PredictionAvlInvalidMatch");
+		}
+
 		// There was no valid block or route assignment from AVL feed so can't
 		// do anything. But set the block assignment for the vehicle
 		// so it is up to date. This call also sets the vehicle state
@@ -1575,11 +1583,10 @@ public class AvlProcessor {
 	private boolean isCanceled(VehicleState vehicleState) {
 
 		AvlReport report = vehicleState.getAvlReport();
-		String vehicleId = report.getVehicleId();
 		String tripId = getTripId(report);
 
-		if(vehicleId != null && tripId != null){
-			return CanceledTripManager.getInstance().isCanceled(vehicleId, tripId);
+		if(tripId != null){
+			return CanceledTripCache.getInstance().isCanceled(tripId);
 		}
 
 		return false;
@@ -1592,6 +1599,15 @@ public class AvlProcessor {
 		return null;
 	}
 
+	private void logInvalidAssignment(VehicleState vehicleState) {
+		final String description = "Assignment " + vehicleState.getAvlReport().getAssignmentId()
+						+ " not valid";
+		VehicleEvent.create(vehicleState.getAvlReport(),
+						vehicleState.getMatch(), VehicleEvent.UNMATCHED_ASSIGNMENT,
+						description, false, // predictable
+						true, // becameUnpredictable
+						null); // supervisor
+	}
 	/**
 	 * First does housekeeping for the AvlReport (stores it in db, logs it,
 	 * etc). Processes the AVL report by matching to the assignment and
@@ -1663,8 +1679,8 @@ public class AvlProcessor {
 		// Do the low level work of matching vehicle and then generating results
 		lowLevelProcessAvlReport(avlReport, false);
 		logger.debug("Processing AVL report took {}msec", timer);
-        MonitoringService.getInstance().saveMetric("PredictionProcessingTimeInMillis", Double.valueOf(timer.elapsedMsec()), 1, MonitoringService.MetricType.AVERAGE, MonitoringService.ReportingIntervalTimeUnit.MINUTE, false);
-        MonitoringService.getInstance().saveMetric("PredictionTotalLatencyInMillis", Double.valueOf((System.currentTimeMillis() - avlReport.getTime())), 1, MonitoringService.MetricType.AVERAGE, MonitoringService.ReportingIntervalTimeUnit.MINUTE, false);
+        MonitoringService.getInstance().averageMetric("PredictionProcessingTimeInMillis", Double.valueOf(timer.elapsedMsec()));
+        MonitoringService.getInstance().averageMetric("PredictionTotalLatencyInMillis", Double.valueOf((System.currentTimeMillis() - avlReport.getTime())));
 	}
 
 }

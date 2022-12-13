@@ -1,22 +1,20 @@
-//Edit route input width.
-$("#route").attr("style", "width: 200px");
-	
+
 /* For drawing the route and stops */
 var routeOptions = {
 	color: '#00ee00',
 	weight: 4,
-	opacity: 0.4,
+	opacity: 1,
 	lineJoin: 'round',
 	clickable: false
 };
 				
  var stopOptions = {
     color: '#006600',
-    opacity: 0.4,
+    opacity: 1,
     radius: 4,
     weight: 2,
     fillColor: '#006600',
-    fillOpacity: 0.3,
+    fillOpacity: 1,
 };
 
 var routePolylineOptions = {clickable: false, color: "#00f", opacity: 0.5, weight: 4};
@@ -52,13 +50,17 @@ function drawAvlMarker(avl) {
 	
   	// Create popup with detailed info
 
-	var content = $("<div />");
-	var table = $("<table />").attr("class", "popupTable");
+	var content = $("<div />").attr("class","card");
+	content.append('<div class="card-header header-theme">Vehicle</div>')
+	var table = $("<div />").attr("class", "card-body");
 	
 	for (var i = 0; i < labels.length; i++) {
-		var label = $("<td />").attr("class", "popupTableLabel").text(labels[i] + ": ");
-		var value = $("<td />").text(avl[keys[i]]);
-		table.append( $("<tr />").append(label, value) )
+		var label = $("<b />").text(labels[i] + ": ");
+		var value = $("<div />").attr("class", "vehicle-value").text('N/A');
+		if(avl[keys[i]]){
+			value = $("<div />").attr("class", "vehicle-value").text(avl[keys[i]]);
+		}
+		table.append( $("<div />").attr("class", "vehicle-item").append(label, value) )
 	}
 
 	// Links to schedule and google maps for vehicle
@@ -66,9 +68,9 @@ function drawAvlMarker(avl) {
 
 	var mapsLink = 'http://google.com/maps?q=loc:' + avl.lat + ',' + avl.lon
 
-	links.append( $("<a data-toggle='modal' href='#schedule-modal' style='padding-right:10px;vertical-align: middle' class='schedule-link' onclick='scheduleAjax(" + avl['tripId'] + "); return false;'>Schedule</a>"))
-	links.append( $("<div style='border-left:2px solid black;height:20px;display:inline-block;vertical-align:middle'></div>"))
-	links.append( $("<a href=" + mapsLink + " target='_blank' style='padding-left:10px;vertical-align:middle'>View Location in Google Maps</a>"))
+	links.append( $("<a data-toggle='modal' href='#schedule-modal' class='list-group-item list-group-item-action secondary-btn' onclick='scheduleAjax(" + avl['tripId'] + "); return false;'>Schedule</a>"))
+	// links.append( $("<div style='border-left:2px solid black;height:20px;display:inline-block;vertical-align:middle'></div>"))
+	links.append( $("<a href=" + mapsLink + " target='_blank' class='list-group-item list-group-item-action' >View Location in Google Maps</a>"))
 
 	content.append(table)
 	content.append(links)
@@ -136,44 +138,72 @@ function processAvlCallback(jsonData) {
 	return vehicles;
 }
 
-  
+function routeConfigCallback(data, status) {
+	// Draw the paths for the route
+	if (map._loaded) {
+		routeConfigCallback2(data, status);
+	} else{
+		map.on("load",  routeConfigCallback2(data, status));
+	}
+}
+
 /**
  * Reads in route data obtained via AJAX and draws route and stops on map.
  */
-function routeConfigCallback(data, status) {
+
+function routeConfigCallback2(data, status) {
 	// Draw the paths for the route
-	
 	var route = data.routes[0];
-	
+	var locsToFit = [];
+
+
 	for (var i=0; i<route.shape.length; ++i) {
 		var shape = route.shape[i];
-		L.polyline(shape.loc, routeOptions).addTo(routeGroup);
+
+		var routeOptions2 = JSON.parse(JSON.stringify(routeOptions));
+		routeOptions2.color = '#'+route.color;
+		routeOptions2.fillColor = '#'+route.textColor;
+
+		L.polyline(shape.loc, routeOptions2).addTo(routeGroup);
 	}
-	  
-  	// Draw stops for the route. 
-  	for (var i=0; i<route.direction.length; ++i) {
-  		var direction = route.direction[i];
-  		for (var j=0; j<direction.stop.length; ++j) {
-  			var stop = direction.stop[j];
-  			
-  			// Create the stop Marker
-  			var stopMarker = L.circleMarker([stop.lat,stop.lon], stopOptions).addTo(routeGroup);
-  					
-  			// Create popup for stop marker
-  
-  			var content = $("<table />").attr("class", "popupTable");
-  			var labels = ["Stop ID", "Name"], keys = ["id", "name"];
-  			for (var i = 0; i < labels.length; i++) {
-  				var label = $("<td />").attr("class", "popupTableLabel").text(labels[i] + ": ");
-  				var value = $("<td />").text(stop[keys[i]]);
-  				content.append( $("<tr />").append(label, value) );
-  			}
-  			
-  			stopMarker.bindPopup(content[0]);
-  		}
-   	 }
+
+	// Draw stops for the route.
+	for (var i=0; i<route.direction.length; ++i) {
+		var direction = route.direction[i];
+		for (var j=0; j<direction.stop.length; ++j) {
+			var stop = direction.stop[j];
+
+			var stopOptions2 = JSON.parse(JSON.stringify(stopOptions));
+
+			stopOptions2.radius= 4;
+			stopOptions2.color = '#'+route.color;
+			stopOptions2.fillColor = '#'+route.textColor;
+
+			locsToFit.push(L.latLng(stop.lat, stop.lon));
+			// Create the stop Marker
+			var stopMarker = L.circleMarker([stop.lat,stop.lon], stopOptions2).addTo(routeGroup);
+
+			// Create popup for stop marker
+
+			var content = $("<div />").attr("class", "card");
+			var labels = ["Stop ID"], keys = ["id"];
+			content.append('<div class="card-header header-theme">'+ stop["name"]+'</div>')
+			var content2 = $("<div />").attr("class", "card-body");
+			for (var k = 0; k < labels.length; k++) {
+				var label = $("<b />").text(labels[k] + ": ")
+				var value = $("<div />").attr("class","vehicle-value").text(stop[keys[k]]);
+				content2.append( $("<div />").attr("class", "vehicle-item").append(label, value) );
+			}
+			content.append(content2);
+			stopMarker.bindPopup(content[0]);
+		}
+	}
+
+	if (locsToFit.length > 0) {
+		map.fitBounds(locsToFit);
+	}
 }
-  
+
 // Data in vehicles will be available as CSV when you click the `export' link.
 // CSV should be the AVL CSV format used elsewhere in Transitime.
 // org.transitclock.avl.AvlCsvWriter writes the following header:
@@ -264,6 +294,10 @@ else {
 	// set beginDate and endDate to defaults
 	request.beginDate = $("#beginDate").val()
 	request.numDays = $("#numDays").val()
+	if($("#route").val())
+	{
+		drawRoute($("#route").val());
+	}
 }
 
 // draw route data when dropdown is selected
@@ -294,12 +328,17 @@ $("#submit").on("click", function() {
     request.r = $("#route").val();
     request.includeHeadway = "true";
 
-    var askConfirm = allVehiclesRequested() && (request.r == "All Routes" || request.r ==" ");
+    var askConfirm = allVehiclesRequested() && (request.r == "All Routes" || request.r ==" " );
     var confirmYes = false;
     if (askConfirm) {
         confirmYes = confirm('Are you sure you want All Vehicles and All Routes?');
     }
 
+    if(!request.r){
+    	$("#route-error-display").removeClass("d-none")
+    	return true;
+	}
+	$("#route-error-display").addClass("d-none")
     //go ahead if no confirm needed or if the confirm was a yes
     if (!askConfirm || confirmYes) {
 		// Clear existing layer and draw new objects on map.
@@ -316,6 +355,7 @@ function allVehiclesRequested() {
 function drawAvlData() {
 
     $("#submit").attr("disabled","disabled");
+	$("#exportData").addClass("d-none")
 	$.ajax({
 	  	// The page being requested
 	    url: contextPath + "/reports/avlJsonData.jsp",
@@ -330,13 +370,20 @@ function drawAvlData() {
             $("#submit").removeAttr("disabled");
 	    	vehicleGroup.clearLayers();
 	    	var vehicles = processAvlCallback(resp);
-	    	// connect export to link to csv creation.
-	    	createExport(vehicles);
+	    	if(vehicles.length){
+				// connect export to link to csv creation.
+				createExport(vehicles);
+
+				$("#exportData").removeClass("d-none")
+			}
+
 
 	    	for (i in animations) {
 	    		animations[i].removeIcon();
+
 			}
 	    	animations = {};
+			$("img.leaflet-clickable").remove()
 	    	if (!allVehiclesRequested() && vehicles.length)
 	    		prepareAnimations(vehicles); // only animate first vehicle returned.
 
@@ -363,9 +410,20 @@ function drawRoute(route) {
 
 /* Animation controls */
 
-var busIcon =  L.icon({
-    iconUrl:  contextPath + "/reports/images/bus.png", 
-    iconSize: [25,25]
+var busIcon = L.icon({
+	iconUrl: '/web/maps/images/bus-24.png',
+	iconRetinaUrl: '/web/maps/images/bus-24.png',
+	iconSize: [25, 25],
+	iconAnchor: [13, 13],
+	popupAnchor: [0, -13],
+});
+
+var busBullet = L.icon({
+	iconUrl: '/web/maps/images/bus-bullet.png',
+	iconRetinaUrl: '/web/maps/images/bus-bullet.png',
+	iconSize: [25, 25],
+	iconAnchor: [13, 13],
+	popupAnchor: [0, -13],
 });
 
 var animation = avlAnimation(animationGroup, busIcon, $("#playbackTime")[0]);
@@ -405,24 +463,34 @@ function playAnimations() {
 			animations[i].pause();
 		}
 
+		$(".play-back-popup-btn").html("Hide Other Vehicles");
 		$("#playbackPlay").attr("src", playButton);
 	}
 	else { // need to start it
 		for (i in animations) {
 			animations[i].start();
 		}
+
+			$(".play-back-popup-btn").html("Show Other Vehicles");
+
 		$("#playbackPlay").attr("src", pauseButton);
 	}
 }
 
 function playAnimation(vehicleId) {
 	for (i in animations) {
-		if (i != vehicleId) {
-			animations[i].removeIcon();
+		if (!animation.paused()) {
+			// animations[i].addIcon();
+			animations[i].setOpacityIcon(1);
+		} else{
+			if (i != vehicleId) {
+				// animations[i].removeIcon();
+				animations[i].setOpacityIcon(0.3);
+			}
 		}
 	}
 
-	playAnimations();
+	playAnimations(vehicleId);
 }
 
 $("#playbackNext").on("click", function() {
@@ -461,26 +529,6 @@ $("#playbackRew").on("click", function() {
 });
 
 function scheduleAjax(tripId) {
-	// var form = document.createElement("form");
-	// var agency = document.createElement("input");
-	// var route = document.createElement("input");
-	// var trip = document.createElement("input");
-	//
-	// form.action= "scheduleVertStopsReport.jsp";
-	// form.method = "POST";
-	// agency.name = "a";
-	// agency.value = "1";
-	// route.name= "r";
-	// route.value = routeName;
-	// trip.name = "t";
-	// trip.value = tripId;
-	//
-	// form.appendChild(agency);
-	// form.appendChild(route);
-	// form.appendChild(trip);
-	// document.body.appendChild(form);
-	//
-	// form.submit();
 
 	if ($("#schedule-modal").length == 0) {
 		var containerHeight = $(".leaflet-popup-content").height();

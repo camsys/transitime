@@ -35,34 +35,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.transitclock.api.data.ApiActiveBlocks;
-import org.transitclock.api.data.ApiActiveBlocksRoutes;
-import org.transitclock.api.data.ApiAdherenceSummary;
-import org.transitclock.api.data.ApiAgencies;
-import org.transitclock.api.data.ApiAgency;
-import org.transitclock.api.data.ApiBlock;
-import org.transitclock.api.data.ApiBlocks;
-import org.transitclock.api.data.ApiBlocksTerse;
-import org.transitclock.api.data.ApiCalendars;
-import org.transitclock.api.data.ApiCurrentServerDate;
-import org.transitclock.api.data.ApiDirections;
-import org.transitclock.api.data.ApiHeadsigns;
-import org.transitclock.api.data.ApiIds;
-import org.transitclock.api.data.ApiPredictions;
-import org.transitclock.api.data.ApiRevisionInformation;
-import org.transitclock.api.data.ApiRmiServerStatus;
-import org.transitclock.api.data.ApiRoutes;
-import org.transitclock.api.data.ApiRoutesDetails;
-import org.transitclock.api.data.ApiSchedulesHorizStops;
-import org.transitclock.api.data.ApiSchedulesVertStops;
-import org.transitclock.api.data.ApiServerStatus;
-import org.transitclock.api.data.ApiStopLevels;
-import org.transitclock.api.data.ApiTrip;
-import org.transitclock.api.data.ApiTripPatterns;
-import org.transitclock.api.data.ApiTripWithTravelTimes;
-import org.transitclock.api.data.ApiVehicleConfigs;
-import org.transitclock.api.data.ApiVehicles;
-import org.transitclock.api.data.ApiVehiclesDetails;
+import org.apache.commons.lang3.StringUtils;
+import org.transitclock.api.data.*;
 import org.transitclock.api.predsByLoc.PredsByLoc;
 import org.transitclock.api.utils.StandardParameters;
 import org.transitclock.api.utils.WebUtils;
@@ -169,7 +143,10 @@ public class TransitimeApi {
 					+ " routes and determine which vehicles are the ones generating the predictions. "
 					+ "The other vehicles are labeled as minor so they can be drawn specially in the UI.",required=false) 
 			@QueryParam(value = "s") String stopId,
-			@Parameter(description="Number of predictions to show.", required=false) @QueryParam(value = "numPreds") @DefaultValue("2") int numberPredictions) throws WebApplicationException {
+			@Parameter(description="Number of predictions to show.", required=false)
+			@QueryParam(value = "numPreds") @DefaultValue("2") int numberPredictions,
+			@Parameter(description="if set, formats speed to the specified format (MS,KM,MPH)")
+			@QueryParam(value = "speedFormat") @DefaultValue("MS") String speedFormat) throws WebApplicationException {
 		// Make sure request is valid
 		stdParameters.validate();
 
@@ -198,7 +175,9 @@ public class TransitimeApi {
 			Map<String, UiMode> uiTypesForVehicles = determineUiModesForVehicles(vehicles, stdParameters,
 					routesIdOrShortNames, stopId, numberPredictions);
 
-			ApiVehicles apiVehicles = new ApiVehicles(vehicles, uiTypesForVehicles);
+			SpeedFormat speedFormatEnum = SpeedFormat.valueOf(speedFormat.toUpperCase());
+
+			ApiVehicles apiVehicles = new ApiVehicles(vehicles, uiTypesForVehicles, speedFormatEnum);
 
 			// return ApiVehicles response
 			return stdParameters.createResponse(apiVehicles);
@@ -311,11 +290,11 @@ public class TransitimeApi {
 			@QueryParam(value = "s") String stopId,
 			@Parameter(description=" For when determining which vehicles are generating the"
 					+ "predictions so can label minor vehicles",required=false)@QueryParam(value = "numPreds") 
-			@DefaultValue("3") int numberPredictions
-			,
+			@DefaultValue("3") int numberPredictions,
 			@Parameter(description=" Return only assigned vehicles",required=false)@QueryParam(value = "onlyAssigned") 
-			@DefaultValue("false") boolean onlyAssigned
-			
+			@DefaultValue("false") boolean onlyAssigned,
+		    @Parameter(description="if set, formats speed to the specified format (MS,KM,MPH)")
+		    @QueryParam(value = "speedFormat") @DefaultValue("MS") String speedFormat
 			) throws WebApplicationException {
 		// Make sure request is valid
 		stdParameters.validate();
@@ -345,9 +324,11 @@ public class TransitimeApi {
 			Map<String, UiMode> uiTypesForVehicles = determineUiModesForVehicles(vehicles, stdParameters,
 					routesIdOrShortNames, stopId, numberPredictions);
 
+			SpeedFormat speedFormatEnum = SpeedFormat.valueOf(speedFormat.toUpperCase());
+
 			// Convert IpcVehiclesDetails to ApiVehiclesDetails
 			ApiVehiclesDetails apiVehiclesDetails = new ApiVehiclesDetails(vehicles, stdParameters.getAgencyId(),
-					uiTypesForVehicles,onlyAssigned);
+					uiTypesForVehicles,onlyAssigned, speedFormatEnum);
 
 			// return ApiVehiclesDetails response
 			Response result = null;
@@ -779,7 +760,9 @@ public class TransitimeApi {
 			tags={"base data","headsign"} )
 	public Response getHeadsigns(@BeanParam StandardParameters stdParameters,
 							  @Parameter(description="Specifies the routeId or routeShortName." ,required=true)
-							  @QueryParam(value = "r") String routeIdOrShortName)
+							  @QueryParam(value = "r") String routeIdOrShortName,
+							  @Parameter(description="Optional parameter to format headsigns text" ,required=false)
+							  @QueryParam(value = "formatLabel") @DefaultValue("false") boolean formatLabel)
 			throws WebApplicationException {
 
 		// Make sure request is valid
@@ -796,7 +779,7 @@ public class TransitimeApi {
 
 			// Get specified headsigns
 			List<IpcTripPattern> ipcTripPatterns = inter.getTripPatterns(routeIdOrShortName);
-			headsignsData = new ApiHeadsigns(ipcTripPatterns, agencies.get(0));
+			headsignsData = new ApiHeadsigns(ipcTripPatterns, agencies.get(0), formatLabel);
 
 
 			// Create and return response
@@ -823,7 +806,7 @@ public class TransitimeApi {
 	 *            the trip pattern are marked as being for the UI and can be
 	 *            highlighted. Useful for when want to emphasize in the UI only
 	 *            the stops that are of interest to the user.
-	 * @param direction
+	 * @param directionId
 	 *            optional. If set then only the shape for specified direction
 	 *            is marked as being for the UI. Needed for situations where a
 	 *            single stop is used for both directions of a route and want to
@@ -843,7 +826,7 @@ public class TransitimeApi {
 			+ "and paths such that it can be drawn in a map.",tags= {"base data","route"})
 	public Response getRouteDetails(@BeanParam StandardParameters stdParameters,
 			@Parameter(description="List of routeId or routeShortName. Example: r=1&r=2" ,required=false) 
-  	  @QueryParam(value = "r")  List<String> routeIdsOrShortNames, 
+  	  			@QueryParam(value = "r")  List<String> routeIdsOrShortNames,
 			 @Parameter(description="If set then only the shape for specified direction is marked as being for the UI." ,required=false) 
 			 @QueryParam(value = "d") String directionId,
 			 @Parameter(description="If set then only this stop and the remaining ones on "
@@ -876,8 +859,10 @@ public class TransitimeApi {
 				if (route == null)
 					throw WebUtils.badRequestException("Route for route=" + routeIdOrShortName + " does not exist.");
 
-				ipcRoutes = new ArrayList<IpcRoute>();
+				ipcRoutes = new ArrayList<>();
 				ipcRoutes.add(route);
+			} else if(routeIdsOrShortNames == null || routeIdsOrShortNames.isEmpty() && StringUtils.isNotBlank(stopId)){
+				ipcRoutes = inter.getRoutesForStop(stopId);
 			} else {
 				// Multiple routes specified
 				ipcRoutes = inter.getRoutes(routeIdsOrShortNames);
@@ -932,6 +917,76 @@ public class TransitimeApi {
 			// Create and return ApiDirections response
 			ApiDirections directionsData = new ApiDirections(stopsForRoute);
 			return stdParameters.createResponse(directionsData);
+		} catch (Exception e) {
+			// If problem getting data then return a Bad Request
+			throw WebUtils.badRequestException(e);
+		}
+	}
+
+	/**
+	 * Handles the "stops" command. Returns all stops associated with a route,
+	 * grouped by direction. Useful for creating a UI where user needs to select
+	 * a stop from a list.
+	 *
+	 * @param stdParameters
+	 * @param routeIdsOrShortNames
+	 * @return
+	 * @throws WebApplicationException
+	 */
+	@Path("/command/stopsForRoutes")
+	@GET
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(summary="Retrives bus stops from the server.",
+			description="Returns all stops associated with a route,"+
+					" grouped by direction. Useful for creating a UI where user needs to select" +
+					" a stop from a list.",tags= {"base data","stop"})
+	public Response getStops(@BeanParam StandardParameters stdParameters,
+							 @Parameter(description="if set, retrives only busstops belongind to the route. "
+									 + "It might be routeId or route shrot name.",required=false)
+							 @QueryParam(value = "r")  List<String> routeIdsOrShortNames,
+							 @Parameter(description="if set, includes route and direction information for retrieved stops",required=false)
+								 @QueryParam(value = "directions") @DefaultValue("false")  boolean includeDirections ) throws WebApplicationException {
+
+		// Make sure request is valid
+		stdParameters.validate();
+
+		try {
+
+			List<IpcDirectionsForRoute> stopsForRoutes;
+
+			// Get Vehicle data from server
+			ConfigInterface inter = stdParameters.getConfigInterface();
+
+			if (routeIdsOrShortNames != null && routeIdsOrShortNames.size() == 1) {
+				String routeIdOrShortName = routeIdsOrShortNames.get(0);
+				IpcDirectionsForRoute stops = inter.getStops(routeIdOrShortName);
+
+				// If the stops doesn't exist then throw exception such that
+				// Bad Request with an appropriate message is returned.
+				if (stops == null)
+					throw WebUtils.badRequestException("Route for route=" + routeIdOrShortName + " does not exist.");
+
+				stopsForRoutes = new ArrayList<>();
+				stopsForRoutes.add(stops);
+			} else {
+				// Multiple routes specified
+				stopsForRoutes = inter.getStops(routeIdsOrShortNames);
+			}
+
+			// If the route doesn't exist then throw exception such that
+			// Bad Request with an appropriate message is returned.
+			if (stopsForRoutes == null)
+				throw WebUtils.badRequestException("Stops for Routes do not exist.");
+
+			// Create and return stops response
+			if(includeDirections){
+				ApiRoutesDirections stops = new ApiRoutesDirections(stopsForRoutes);
+				return stdParameters.createResponse(stops);
+			} else {
+				ApiStopsForRoute stops = new ApiStopsForRoute(stopsForRoutes);
+				return stdParameters.createResponse(stops);
+			}
+
 		} catch (Exception e) {
 			// If problem getting data then return a Bad Request
 			throw WebUtils.badRequestException(e);
@@ -1134,7 +1189,9 @@ public class TransitimeApi {
 			@QueryParam(value = "r") List<String> routesIdOrShortNames,
 			@Parameter(description="A block will be active if the time is between the"
 					+ " block start time minus allowableBeforeTimeSecs and the block end time")
-			@QueryParam(value = "t") @DefaultValue("0") int allowableBeforeTimeSecs) throws WebApplicationException {
+			@QueryParam(value = "t") @DefaultValue("0") int allowableBeforeTimeSecs,
+			@Parameter(description="if set, formats speed to the specified format (MS,KM,MPH)")
+			@QueryParam(value = "speedFormat") @DefaultValue("MS") String speedFormat) throws WebApplicationException {
 
 		// Make sure request is valid
 		stdParameters.validate();
@@ -1148,9 +1205,10 @@ public class TransitimeApi {
 					.getActiveBlocks(routesIdOrShortNames,
                             allowableBeforeTimeSecs);
 
+			SpeedFormat speedFormatEnum = SpeedFormat.valueOf(speedFormat.toUpperCase());
 
 			// Create and return ApiBlock response
-			ApiActiveBlocks apiActiveBlocks = new ApiActiveBlocks(activeBlocks, stdParameters.getAgencyId());
+			ApiActiveBlocks apiActiveBlocks = new ApiActiveBlocks(activeBlocks, stdParameters.getAgencyId(), speedFormatEnum);
 			return stdParameters.createResponse(apiActiveBlocks);
 		} catch (Exception e) {
 			// If problem getting data then return a Bad Request
@@ -1171,7 +1229,9 @@ public class TransitimeApi {
 			@QueryParam(value = "r") List<String> routesIdOrShortNames,
 			@Parameter(description="A block will be active if the time is between the block start time minus"
 					+ " allowableBeforeTimeSecs and the block end time")
-			@QueryParam(value = "t") @DefaultValue("0") int allowableBeforeTimeSecs) throws WebApplicationException {
+			@QueryParam(value = "t") @DefaultValue("0") int allowableBeforeTimeSecs,
+		    @Parameter(description="if set, formats speed to the specified format (MS,KM,MPH)")
+		    @QueryParam(value = "speedFormat") @DefaultValue("MS") String speedFormat) throws WebApplicationException {
 
 		// Make sure request is valid
 		stdParameters.validate();
@@ -1183,10 +1243,11 @@ public class TransitimeApi {
 			Collection<IpcActiveBlock> activeBlocks = vehiclesInterface.getActiveBlocks(routesIdOrShortNames,
 					allowableBeforeTimeSecs);
 
+			SpeedFormat speedFormatEnum = SpeedFormat.valueOf(speedFormat.toUpperCase());
 
 			// Create and return ApiBlock response
 			ApiActiveBlocksRoutes apiActiveBlocksRoutes = new ApiActiveBlocksRoutes(activeBlocks,
-					stdParameters.getAgencyId());
+					stdParameters.getAgencyId(), speedFormatEnum);
 			return stdParameters.createResponse(apiActiveBlocksRoutes);
 		} catch (Exception e) {
 			// If problem getting data then return a Bad Request
@@ -1209,7 +1270,11 @@ public class TransitimeApi {
             @QueryParam(value = "r") List<String> routesIdOrShortNames,
             @Parameter(description="A block will be active if the time is between the block start "
             		+ "time minus allowableBeforeTimeSecs and the block end time")
-            @QueryParam(value = "t") @DefaultValue("0") int allowableBeforeTimeSecs)
+            @QueryParam(value = "t") @DefaultValue("0") int allowableBeforeTimeSecs,
+			@Parameter(description="if set, formats speed to the specified format (MS,KM,MPH)")
+			@QueryParam(value = "speedFormat") @DefaultValue("MS") String speedFormat,
+			@Parameter(description="if set, excludes blocks with canceled trips from list of results")
+			@QueryParam(value = "includeCanceledTrips") @DefaultValue("false") boolean includeCanceledTrips)
             throws WebApplicationException {
 
         // Make sure request is valid
@@ -1221,11 +1286,13 @@ public class TransitimeApi {
                     stdParameters.getVehiclesInterface();
             Collection<IpcActiveBlock> activeBlocks = vehiclesInterface
                     .getActiveBlocksWithoutVehicles(routesIdOrShortNames,
-                            allowableBeforeTimeSecs);
+                            allowableBeforeTimeSecs, includeCanceledTrips);
 
-            // Create and return ApiBlock response
+			SpeedFormat speedFormatEnum = SpeedFormat.valueOf(speedFormat.toUpperCase());
+
+			// Create and return ApiBlock response
             ApiActiveBlocksRoutes apiActiveBlocksRoutes = new ApiActiveBlocksRoutes(
-                    activeBlocks, stdParameters.getAgencyId());
+                    activeBlocks, stdParameters.getAgencyId(), speedFormatEnum);
             return stdParameters.createResponse(apiActiveBlocksRoutes);
         } catch (Exception e) {
             // If problem getting data then return a Bad Request
@@ -1247,7 +1314,11 @@ public class TransitimeApi {
             @Parameter(description="if set, retrives only active blocks belongind to the route. It might be routeId or route shrot name.",required=false)
             @QueryParam(value = "r") String routesIdOrShortName,
             @Parameter(description="A block will be active if the time is between the block start time minus allowableBeforeTimeSecs and the block end time")
-            @QueryParam(value = "t") @DefaultValue("0") int allowableBeforeTimeSecs)
+            @QueryParam(value = "t") @DefaultValue("0") int allowableBeforeTimeSecs,
+			@Parameter(description="if set, formats speed to the specified format (MS,KM,MPH)")
+			@QueryParam(value = "speedFormat") @DefaultValue("MS") String speedFormat,
+			@Parameter(description="if set, excludes blocks with canceled trips from list of results")
+			@QueryParam(value = "includeCanceledTrips") @DefaultValue("false") boolean includeCanceledTrips)
             throws WebApplicationException {
 
         // Make sure request is valid
@@ -1259,11 +1330,13 @@ public class TransitimeApi {
                     stdParameters.getVehiclesInterface();
             Collection<IpcActiveBlock> activeBlocks = vehiclesInterface
                     .getActiveBlocksAndVehiclesByRouteId(routesIdOrShortName,
-                            allowableBeforeTimeSecs);
+                            allowableBeforeTimeSecs, includeCanceledTrips);
 
-            // Create and return ApiBlock response
+			SpeedFormat speedFormatEnum = SpeedFormat.valueOf(speedFormat.toUpperCase());
+
+			// Create and return ApiBlock response
             ApiActiveBlocksRoutes apiActiveBlocksRoutes = new ApiActiveBlocksRoutes(
-                    activeBlocks, stdParameters.getAgencyId());
+                    activeBlocks, stdParameters.getAgencyId(), speedFormatEnum);
             return stdParameters.createResponse(apiActiveBlocksRoutes);
         } catch (Exception e) {
             // If problem getting data then return a Bad Request
@@ -1283,7 +1356,11 @@ public class TransitimeApi {
             @Parameter(description="if set, retrives only active blocks belongind to the route name specified.",required=false)
             @QueryParam(value = "r") String routeName,
             @Parameter(description="A block will be active if the time is between the block start time minus allowableBeforeTimeSecs and the block end time")
-            @QueryParam(value = "t") @DefaultValue("0") int allowableBeforeTimeSecs)
+            @QueryParam(value = "t") @DefaultValue("0") int allowableBeforeTimeSecs,
+			@Parameter(description="if set, formats speed to the specified format (MS,KM,MPH)")
+			@QueryParam(value = "speedFormat") @DefaultValue("MS") String speedFormat,
+			@Parameter(description="if set, excludes blocks with canceled trips from list of results")
+			@QueryParam(value = "includeCanceledTrips") @DefaultValue("false") boolean includeCanceledTrips)
             throws WebApplicationException {
    // Make sure request is valid
       stdParameters.validate();
@@ -1294,11 +1371,13 @@ public class TransitimeApi {
                   stdParameters.getVehiclesInterface();
           Collection<IpcActiveBlock> activeBlocks = vehiclesInterface
                   .getActiveBlocksAndVehiclesByRouteName(routeName,
-                          allowableBeforeTimeSecs);
+                          allowableBeforeTimeSecs, includeCanceledTrips);
+
+		  SpeedFormat speedFormatEnum = SpeedFormat.valueOf(speedFormat.toUpperCase());
 
           // Create and return ApiBlock response
           ApiActiveBlocksRoutes apiActiveBlocksRoutes = new ApiActiveBlocksRoutes(
-                  activeBlocks, stdParameters.getAgencyId());
+                  activeBlocks, stdParameters.getAgencyId(), speedFormatEnum);
           return stdParameters.createResponse(apiActiveBlocksRoutes);
       } catch (Exception e) {
           // If problem getting data then return a Bad Request
@@ -1314,8 +1393,8 @@ public class TransitimeApi {
   		+ "Besides specify the amount of vehicles no predictables and the amount of active blocks.", 
   		tags= {"prediction"})
   public Response getVehicleAdherenceSummary(@BeanParam StandardParameters stdParameters,
-      @Parameter(description="The number of seconds early a vehicle has to be before it is considered in the early counter.", required=false) @QueryParam(value = "allowableEarlySec") @DefaultValue("0") int allowableEarlySec,
-      @Parameter(description="The number of seconds early a vehicle has to be before it is considered in the late counter.", required=false) @QueryParam(value = "allowableLateSec") @DefaultValue("0") int allowableLateSec,
+      @Parameter(description="The number of seconds early a vehicle has to be before it is considered in the early counter.") @QueryParam(value = "allowableEarlySec") @DefaultValue("0") int allowableEarlySec,
+      @Parameter(description="The number of seconds early a vehicle has to be before it is considered in the late counter.") @QueryParam(value = "allowableLateSec") @DefaultValue("0") int allowableLateSec,
       @Parameter(description="A block will be active if the time is between the block start time minus allowableBeforeTimeSecs (t) and the block end time")
       @QueryParam(value = "t") @DefaultValue("0") int allowableBeforeTimeSecs) throws WebApplicationException {
 
@@ -1481,7 +1560,10 @@ public class TransitimeApi {
 	description="Retrives a list of all trip patters for the specific routeId or routeShortName."
 			,tags= {"base data","trip"})
 	public Response getTripPatterns(@BeanParam StandardParameters stdParameters,
-			@Parameter(description="Specifies the routeId or routeShortName.",required=true)@QueryParam(value = "r") String routesIdOrShortNames) throws WebApplicationException {
+			@Parameter(description="Specifies the routeId or routeShortName.",required=true) @QueryParam(value = "r") String routesIdOrShortNames,
+			@Parameter(description="Specifies the headsign",required=false) @QueryParam(value = "headsign") String headsign,
+			@Parameter(description="Specifies the directionId",required=false) @QueryParam(value = "directionId") String directionId,
+			@Parameter(description="Specifies whether to show StopPaths",required=false) @DefaultValue("true") @QueryParam(value = "includeStopPaths") boolean includeStopPaths) throws WebApplicationException {
 
 		// Make sure request is valid
 		stdParameters.validate();
@@ -1489,7 +1571,12 @@ public class TransitimeApi {
 		try {
 			// Get block data from server
 			ConfigInterface inter = stdParameters.getConfigInterface();
-			List<IpcTripPattern> ipcTripPatterns = inter.getTripPatterns(routesIdOrShortNames);
+			List<IpcTripPattern> ipcTripPatterns;
+			if(StringUtils.isBlank(headsign)){
+				ipcTripPatterns = inter.getTripPatterns(routesIdOrShortNames);
+			} else{
+				ipcTripPatterns = inter.getTripPatterns(routesIdOrShortNames, headsign, directionId);
+			}
 
 			// If the trip doesn't exist then throw exception such that
 			// Bad Request with an appropriate message is returned.
@@ -1497,7 +1584,7 @@ public class TransitimeApi {
 				throw WebUtils.badRequestException("route=" + routesIdOrShortNames + " does not exist.");
 
 			// Create and return ApiTripPatterns response
-			ApiTripPatterns apiTripPatterns = new ApiTripPatterns(ipcTripPatterns);
+			ApiTripPatterns apiTripPatterns = new ApiTripPatterns(ipcTripPatterns, includeStopPaths);
 			return stdParameters.createResponse(apiTripPatterns);
 		} catch (Exception e) {
 			// If problem getting data then return a Bad Request

@@ -2,6 +2,7 @@ package org.transitclock.ipc.data;
 
 import org.transitclock.core.TemporalDifference;
 import org.transitclock.db.structs.ArrivalDeparture;
+import org.transitclock.ipc.interfaces.ArrivalDepartureSpeed;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import java.io.Serializable;
@@ -12,7 +13,7 @@ import java.util.Date;
  * @author Sean Og Crudden
  *
  */
-public class IpcArrivalDeparture implements Serializable {
+public class IpcArrivalDeparture implements ArrivalDepartureSpeed, Serializable {
 
 	
 	/**
@@ -33,7 +34,7 @@ public class IpcArrivalDeparture implements Serializable {
 	@XmlAttribute
 	private String tripId;
 	@XmlAttribute
-	private transient Date avlTime;
+	private Date avlTime;
 	@XmlAttribute
 	private transient TemporalDifference scheduledAdherence;
 	@XmlAttribute
@@ -47,7 +48,7 @@ public class IpcArrivalDeparture implements Serializable {
 	@XmlAttribute
 	private String directionId;
 	@XmlAttribute
-	private transient int tripIndex;
+	private int tripIndex;
 	@XmlAttribute
 	private int stopPathIndex;
 	@XmlAttribute
@@ -55,7 +56,15 @@ public class IpcArrivalDeparture implements Serializable {
 	@XmlAttribute
 	private Date freqStartTime;
 	@XmlAttribute
-	private transient Long dwellTime;
+	private Long dwellTime;
+	@XmlAttribute
+	private String tripPatternId;
+	@XmlAttribute
+	private Date scheduledDate;
+	@XmlAttribute
+	private String stopPathId;
+	@XmlAttribute
+	private boolean scheduleAdherenceStop;
 
 	protected IpcArrivalDeparture(){}
 
@@ -69,13 +78,17 @@ public class IpcArrivalDeparture implements Serializable {
 		this.isArrival=arrivalDepature.isArrival();
 		this.stopId=arrivalDepature.getStopId();
 		this.stopPathIndex=arrivalDepature.getStopPathIndex();
-		
+
 		this.scheduledAdherence=arrivalDepature.getScheduleAdherence();
 		this.freqStartTime=arrivalDepature.getFreqStartTime();
 		this.directionId=arrivalDepature.getDirectionId();
 		this.blockId=arrivalDepature.getBlockId();
 		this.serviceId=arrivalDepature.getServiceId();
 		this.dwellTime=arrivalDepature.getDwellTime();
+		this.tripPatternId=arrivalDepature.getTripPatternId();
+		this.scheduledDate=arrivalDepature.getScheduledDate();
+		this.stopPathId = arrivalDepature.getStopPathId();
+		this.scheduleAdherenceStop = arrivalDepature.isScheduleAdherenceStop();
 	}
 	
 	
@@ -90,6 +103,7 @@ public class IpcArrivalDeparture implements Serializable {
 	public Date getTime() {
 		return time;
 	}
+	public Date getDate() { return time; }
 	public void setTime(Date time) {
 		this.time = time;
 	}
@@ -160,9 +174,34 @@ public class IpcArrivalDeparture implements Serializable {
 	public void setTripIndex(int tripIndex) {
 		this.tripIndex = tripIndex;
 	}
+
+	public boolean isScheduleAdherenceStop() {
+		return scheduleAdherenceStop;
+	}
+
+	public void setScheduleAdherenceStop(boolean isScheduleAdherenceStop) {
+		this.scheduleAdherenceStop = isScheduleAdherenceStop;
+	}
+
+	public TemporalDifference getScheduleAdherence() {
+		// If there is no schedule time for this stop then there
+		// is no schedule adherence information.
+		if (scheduledDate == null)
+			return null;
+
+		// Return the schedule adherence
+		return new TemporalDifference(scheduledDate.getTime() - time.getTime());
+	}
+
 	public int getStopPathIndex() {
 		return stopPathIndex;
 	}
+
+	@Override
+	public String getStopPathId() {
+		return null;
+	}
+
 	public void setStopPathIndex(int stopPathIndex) {
 		this.stopPathIndex = stopPathIndex;
 	}
@@ -207,6 +246,15 @@ public class IpcArrivalDeparture implements Serializable {
 		this.dwellTime = dwellTime;
 	}
 
+	public String getTripPatternId() {
+		return tripPatternId;
+	}
+
+	public Date getScheduledDate() {
+		return scheduledDate;
+	}
+
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -228,6 +276,9 @@ public class IpcArrivalDeparture implements Serializable {
 		result = prime * result + tripIndex;
 		result = prime * result + ((vehicleId == null) ? 0 : vehicleId.hashCode());
 		result = prime * result + ((dwellTime == null) ? 0 : dwellTime.hashCode());
+		result = prime * result + ((scheduledDate == null) ? 0 : scheduledDate.hashCode());
+		result = prime * result + ((tripPatternId == null) ? 0 : tripPatternId.hashCode());
+		result = prime * result + (scheduleAdherenceStop ? 1231 : 1237);
 		return result;
 	}
 
@@ -313,6 +364,18 @@ public class IpcArrivalDeparture implements Serializable {
 				return false;
 		} else if (!dwellTime.equals(other.dwellTime))
 			return false;
+		if (scheduledDate == null) {
+			if (other.scheduledDate != null)
+				return false;
+		} else if (!scheduledDate.equals(other.scheduledDate))
+			return false;
+		if (tripPatternId == null) {
+			if (other.tripPatternId != null)
+				return false;
+		} else if (!tripPatternId.equals(other.tripPatternId))
+			return false;
+		if (scheduleAdherenceStop != other.scheduleAdherenceStop)
+			return false;
 		return true;
 	}
 
@@ -323,7 +386,9 @@ public class IpcArrivalDeparture implements Serializable {
 				+ avlTime + ", scheduledAdherence=" + scheduledAdherence + ", blockId=" + blockId + ", routeId="
 				+ routeId + ", routeShortName=" + routeShortName + ", serviceId=" + serviceId + ", directionId="
 				+ directionId + ", tripIndex=" + tripIndex + ", stopPathIndex=" + stopPathIndex + ", stopPathLength="
-				+ stopPathLength + ", freqStartTime=" + freqStartTime + (dwellTime != null ? ", dwellTime=" + dwellTime : "") + "]";
+				+ stopPathLength + ", freqStartTime=" + freqStartTime + (dwellTime != null ? ", dwellTime=" + dwellTime : "")
+				+ ", tripPatternId=" + tripPatternId + (scheduledDate != null ? ", scheduledDate=" + scheduledDate : "")
+				+ ", isScheduleAdherenceStop=" + scheduleAdherenceStop + "]";
 	}
 
 

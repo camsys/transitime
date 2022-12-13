@@ -50,7 +50,7 @@ public class ApiDirections {
 
 	public ApiDirections(IpcDirectionsForRoute stopsForRoute) {
 		Collection<IpcDirection> directions = stopsForRoute.getDirections();
-		directionsData = new ArrayList<ApiDirection>(directions.size());
+		directionsData = new ArrayList<>(directions.size());
 		for (IpcDirection direction : directions) {
 			directionsData.add(new ApiDirection(direction));
 		}

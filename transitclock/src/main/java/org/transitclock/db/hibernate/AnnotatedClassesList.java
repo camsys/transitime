@@ -63,6 +63,9 @@ public class AnnotatedClassesList {
 		MonitoringEvent.class,
 		PredictionAccuracy.class,
 		Route.class,
+		RouteDirection.class,
+		RunTimesForRoutes.class,
+		RunTimesForStops.class,
 		Stop.class,
 		StopPath.class,
 		Transfer.class,
@@ -80,6 +83,10 @@ public class AnnotatedClassesList {
 		// For website
 		ApiKey.class,
 		WebAgency.class,
+		// for traffic data
+		TrafficSensor.class,
+		TrafficPath.class,
+		TrafficSensorData.class
 	};
 	
 	/********************** Member Functions **************************/

@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
 import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.StringConfigValue;
-import org.transitclock.core.ServiceUtils;
+import org.transitclock.core.ServiceUtilsImpl;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.*;
@@ -34,6 +34,7 @@ import org.transitclock.utils.MapKey;
 import org.transitclock.utils.Time;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Reads all the configuration data from the database. The data is based on GTFS
@@ -68,6 +69,21 @@ public class DbConfig {
 	// Keyed on serviceId. Submap keyed on blockId
 	private Map<String, Map<String, Block>> blocksByServiceMap = null;
 
+	/**
+	 * For unit tests populate blocksByServiceMap.
+	 * @param serviceId
+	 * @param blockId
+	 * @param block
+	 */
+	public void addBlockToServiceMap(String serviceId, String blockId, Block block) {
+		Map<String, Block> blockMap = blocksByServiceMap.get(serviceId);
+		if (blockMap == null) {
+			blockMap = new HashMap<>();
+			blocksByServiceMap.put(serviceId, blockMap);
+		}
+		blockMap.put(blockId, block);
+	}
+
 	// So can access blocks by service ID and route ID easily
 	private Map<RouteServiceMapKey, List<Block>> blocksByRouteMap = null;
 
@@ -82,6 +98,12 @@ public class DbConfig {
 	
 	// Keyed on routeId
 	private Map<String, List<TripPattern>> tripPatternsByRouteMap;
+
+	// Keyed on tripPatternId
+	private Map<String, TripPattern> tripPatternsByIdMap;
+
+	private Map<String, List<String>> tripIdsByTripPatternMap;
+
 	// For when reading in all trips from db. Keyed on tripId
 	private Map<String, Trip> tripsMap;
 	// For trips that have been read in individually. Keyed on tripId.
@@ -102,11 +124,13 @@ public class DbConfig {
 	private List<CalendarDate> calendarDates;
 	// So can efficiently look up calendar dates
 	private Map<Long, List<CalendarDate>> calendarDatesMap;
+	private Map<String, Calendar> calendarByServiceIdMap;
 	private List<FareAttribute> fareAttributes;
 	private List<FareRule> fareRules;
 	private List<Frequency> frequencies;
 	private List<Transfer> transfers;
 	private List<FeedInfo> feedInfo;
+	private Map<String, Map<String, RouteDirection>> routeDirectionsByRoute;
 
 
 	// Keyed by stop_id.
@@ -405,15 +429,22 @@ public class DbConfig {
 		// Return the created map
 		return map;
 	}
-	
+
+	private static Map<String, TripPattern> putTripPatternsIntoMap(List<TripPattern> tripPatterns){
+		Map<String, TripPattern> tripPatternMap = tripPatterns.stream()
+				.collect(Collectors.toMap(TripPattern::getId, tripPattern -> tripPattern));
+
+		return tripPatternMap;
+	}
+
+
 	/**
 	 * Converts trip patterns into map keyed on route ID
-	 * 
+	 *
 	 * @param tripPatterns
 	 * @return
 	 */
-	private static Map<String, List<TripPattern>> putTripPatternsIntoMap(
-			List<TripPattern> tripPatterns) {
+	private static Map<String, List<TripPattern>> putTripPatternsIntoRouteMap(List<TripPattern> tripPatterns) {
 		Map<String, List<TripPattern>> map =
 				new HashMap<String, List<TripPattern>>();
 		for (TripPattern tripPattern : tripPatterns) {
@@ -427,30 +458,6 @@ public class DbConfig {
 		}
 
 		return map;
-	}
-
-	/**
-	 * Reads in trips patterns from db and puts them into a map
-	 * 
-	 * @return trip patterns map, keyed by route ID
-	 */
-	private Map<String, List<TripPattern>> putTripPatternsInfoRouteMap() {
-			IntervalTimer timer = new IntervalTimer();
-			logger.debug("About to load trip patterns for all routes...");
-
-			// Use the global session so that don't need to read in any
-			// trip patterns that have already been read in as part of
-			// reading in block assignments. This makes reading of the
-			// trip pattern data much faster.
-			List<TripPattern> tripPatterns =
-					TripPattern.getTripPatterns(globalSession, configRev);
-			Map<String, List<TripPattern>> theTripPatternsByRouteMap = 
-					putTripPatternsIntoMap(tripPatterns);
-
-			logger.debug("Reading trip patterns for all routes took {} msec",
-					timer.elapsedMsec());
-			
-			return theTripPatternsByRouteMap;
 	}
 	
 	/**
@@ -475,6 +482,49 @@ public class DbConfig {
 		return tripPatternsByRouteMap.get(routeId);
 	}
 
+	public TripPattern getTripPatternForId(String tripPatternId) {
+		// If haven't read in the trip pattern data yet, do so now and cache it
+		if (tripPatternsByIdMap == null) {
+			logger.error("tripPatternsByIdMap not set when "
+					+ "getTripPatternForId() called. Exiting!");
+			System.exit(-1);
+		}
+
+		// Return cached trip pattern data
+		return tripPatternsByIdMap.get(tripPatternId);
+	}
+
+	/**
+	 * Returns the list of trip patterns associated with the specified route and headsign.
+	 * Reads the trip patterns from the database and stores them in cache so
+	 * that subsequent calls get them directly from the cache. The first time
+	 * this is called it can take a few seconds. Therefore this is not done at
+	 * startup since want startup to be quick.
+	 *
+	 * @param routeId
+	 * @return List of TripPatterns for the route, or null if no such route
+	 */
+	public List<TripPattern> getTripPatternsForRouteAndHeadSign(String routeId, String headSign) {
+		// If haven't read in the trip pattern data yet, do so now and cache it
+		if (tripPatternsByRouteMap == null) {
+			logger.error("tripPatternsByRouteMap not set when "
+					+ "getTripPatternsForRoute() called. Exiting!");
+			System.exit(-1);
+		}
+
+		// Return cached trip pattern data
+		return tripPatternsByRouteMap.get(routeId).stream()
+				.filter(tp -> tp.getHeadsign().equalsIgnoreCase(headSign))
+				.collect(Collectors.toList());
+	}
+
+	public List<String> getTripIdsForTripPattern(String tripPatternId){
+		if(tripIdsByTripPatternMap == null){
+			getTrips();
+		}
+		return tripIdsByTripPatternMap.get(tripPatternId);
+	}
+
 	/**
 	 * Returns cached map of all Trips. Can be slow first time accessed because
 	 * it can take a while to read in all trips including all sub-data.
@@ -497,6 +547,16 @@ public class DbConfig {
 				// reading in block assignments. This makes reading of the
 				// trip pattern data much faster.
 				tripsMap = Trip.getTrips(globalSession, configRev);
+				tripIdsByTripPatternMap = new HashMap<>();
+				for(Map.Entry<String, Trip> tripEntry: tripsMap.entrySet()){
+					String tripPatternId = tripEntry.getValue().getTripPattern().getId();
+					List<String> tripIdsForTripPattern = tripIdsByTripPatternMap.get(tripPatternId);
+					if(tripIdsForTripPattern == null) {
+						tripIdsForTripPattern = new ArrayList<>();
+						tripIdsByTripPatternMap.put(tripPatternId, tripIdsForTripPattern);
+					}
+					tripIdsForTripPattern.add(tripEntry.getKey());
+				}
 			}
 			logger.debug("Reading trips took {} msec", timer.elapsedMsec());
 		}
@@ -761,6 +821,12 @@ public class DbConfig {
 
 		timer = new IntervalTimer();
 		blocks = Block.getBlocks(globalSession, configRev);
+		for (Block block : blocks) {
+			for (Trip trip : block.getTrips()) {
+				// build up internal cache now to avoid lazy-load lag
+				individualTripsMap.put(trip.getId(), trip);
+			}
+		}
 		configRevisions = ConfigRevision.getConfigRevisions(globalSession, configRev);
 		blocksByServiceMap = putBlocksIntoMap(blocks);
 		blocksByRouteMap = putBlocksIntoMapByRoute(blocks);
@@ -772,7 +838,11 @@ public class DbConfig {
 		routesByRouteShortNameMap = putRoutesIntoMapByRouteShortName(routes);
 		logger.debug("Reading routes took {} msec", timer.elapsedMsec());
 
-		tripPatternsByRouteMap = putTripPatternsInfoRouteMap();
+		timer = new IntervalTimer();
+		List<TripPattern> tripPatterns = TripPattern.getTripPatterns(globalSession, configRev);
+		tripPatternsByRouteMap = putTripPatternsIntoRouteMap(tripPatterns);
+		tripPatternsByIdMap = putTripPatternsIntoMap(tripPatterns);
+		logger.debug("Reading trip patterns took {} msec", timer.elapsedMsec());
 		
 		timer = new IntervalTimer();
 		List<Stop> stopsList = Stop.getStops(globalSession, configRev);
@@ -785,8 +855,17 @@ public class DbConfig {
 		agencies = Agency.getAgencies(globalSession, configRev);
 		calendars = Calendar.getCalendars(globalSession, configRev);
 		calendarDates = CalendarDate.getCalendarDates(globalSession, configRev);
+
+		calendarByServiceIdMap = new HashMap<>();
+		for (Calendar calendar : calendars) {
+			if(calendarByServiceIdMap.get(calendar.getServiceId()) == null){
+				calendarByServiceIdMap.put(calendar.getServiceId(), calendar);
+			} else{
+				logger.warn("Duplicate Service Id {} in Calendar", calendar.getServiceId());
+			}
+		}
 		
-		calendarDatesMap = new HashMap<Long, List<CalendarDate>>();
+		calendarDatesMap = new HashMap<>();
 		for (CalendarDate calendarDate : calendarDates) {
 			Long time = calendarDate.getTime();
 			List<CalendarDate> calendarDatesForDate = calendarDatesMap.get(time);
@@ -804,6 +883,19 @@ public class DbConfig {
 		transfers = Transfer.getTransfers(globalSession, configRev);
 		feedInfo = FeedInfo.getFeedInfo(globalSession, configRev);
 
+
+		List<RouteDirection> routeDirections =  RouteDirection.getRouteDirection(globalSession, configRev);
+		routeDirectionsByRoute = new HashMap<>();
+
+		for(RouteDirection routeDirection : routeDirections){
+			Map<String, RouteDirection> routeDirectionByDirection =
+					routeDirectionsByRoute.get(routeDirection.getRouteShortName());
+			if(routeDirectionByDirection == null){
+				routeDirectionByDirection = new HashMap<>();
+				routeDirectionsByRoute.put(routeDirection.getRouteShortName(), routeDirectionByDirection);
+			}
+			routeDirectionByDirection.put(routeDirection.getDirectionId(),routeDirection);
+		}
 
 		logger.debug("Reading everything else took {} msec",
 				timer.elapsedMsec());
@@ -1003,7 +1095,7 @@ public class DbConfig {
 	 */
 	public List<Calendar> getCurrentCalendars() {
 		// Get list of currently active calendars
-		ServiceUtils serviceUtils = Core.getInstance().getServiceUtils();
+		ServiceUtilsImpl serviceUtils = Core.getInstance().getServiceUtils();
 		List<Calendar> calendarList =
 				serviceUtils.getCurrentCalendars(Core.getInstance().getSystemTime());
 		return calendarList;
@@ -1068,7 +1160,11 @@ public class DbConfig {
 		}
 		return serviceIds;
 	}
-	
+
+	public Calendar getCalendarByServiceId(String serviceId) {
+		return calendarByServiceIdMap.get(serviceId);
+	}
+
 	/**
 	 * There can be multiple agencies but usually there will be just one. For
 	 * getting timezone and such want to be able to easily access the main
@@ -1082,6 +1178,17 @@ public class DbConfig {
 
 	public List<Agency> getAgencies() {
 		return Collections.unmodifiableList(agencies);
+	}
+
+	public String getDirectionName(String routeShortName, String directionId){
+		Map<String, RouteDirection> routeDirectionByDirectionId = routeDirectionsByRoute.get(routeShortName);
+		if(routeDirectionByDirectionId != null){
+			RouteDirection routeDirection = routeDirectionByDirectionId.get(directionId);
+			if(routeDirection != null){
+				return routeDirection.getDirectionName();
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -1172,5 +1279,6 @@ public class DbConfig {
 		outputCollection("Frequencies", dbConfig.frequencies);
 		outputCollection("Transfers", dbConfig.transfers);
 		outputCollection("FeedInfo", dbConfig.feedInfo);
+		outputCollection("RouteDirection", dbConfig.routeDirectionsByRoute.values());
 	}
 }

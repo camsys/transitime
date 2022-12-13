@@ -16,8 +16,11 @@
  */
 package org.transitclock.applications;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.time.DateUtils;
+import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,22 +28,27 @@ import org.transitclock.config.ConfigFileReader;
 import org.transitclock.config.StringConfigValue;
 import org.transitclock.configData.AgencyConfig;
 import org.transitclock.configData.CoreConfig;
-import org.transitclock.core.ServiceUtils;
+import org.transitclock.core.ServiceUtilsImpl;
 import org.transitclock.core.TimeoutHandlerModule;
 import org.transitclock.core.dataCache.CacheTask;
+import org.transitclock.core.dataCache.DwellTimeModelCacheFactory;
 import org.transitclock.core.dataCache.ParallelProcessor;
 import org.transitclock.core.dataCache.PredictionDataCache;
 import org.transitclock.core.dataCache.StopArrivalDepartureCacheFactory;
 import org.transitclock.core.dataCache.TripDataHistoryCacheFactory;
 import org.transitclock.core.dataCache.VehicleDataCache;
 import org.transitclock.core.dataCache.ehcache.CacheManagerFactory;
+import org.transitclock.core.dataCache.ehcache.StopArrivalDepartureCache;
 import org.transitclock.core.dataCache.frequency.FrequencyBasedHistoricalAverageCache;
 import org.transitclock.core.dataCache.scheduled.ScheduleBasedHistoricalAverageCache;
+import org.transitclock.core.predictiongenerator.scheduled.traveltime.kalman.TrafficManager;
 import org.transitclock.db.hibernate.DataDbLogger;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ActiveRevisions;
 import org.transitclock.db.structs.Agency;
+import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.gtfs.DbConfig;
+import org.transitclock.guice.modules.ReportingModule;
 import org.transitclock.ipc.servers.*;
 import org.transitclock.modules.Module;
 import org.transitclock.monitoring.PidFile;
@@ -48,6 +56,7 @@ import org.transitclock.utils.SettableSystemTime;
 import org.transitclock.utils.SystemCurrentTime;
 import org.transitclock.utils.SystemTime;
 import org.transitclock.utils.Time;
+import org.transitclock.utils.threading.NamedThreadFactory;
 
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
@@ -56,6 +65,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
+import static org.transitclock.core.dataCache.StopArrivalDepartureCacheInterface.createArrivalDeparturesCriteria;
 
 /**
  * The main class for running a Transitime Core real-time data processing
@@ -76,8 +91,8 @@ public class Core {
 
 	private final TimeoutHandlerModule timeoutHandlerModule;
 
-	private final ServiceUtils service;
-	private final Time time;
+	private final ServiceUtilsImpl service;
+	private Time time;
 
 	// So that can access the current time, even when in playback mode
 	private SystemTime systemTime = new SystemCurrentTime();
@@ -179,7 +194,7 @@ public class Core {
 		timeoutHandlerModule = new TimeoutHandlerModule(AgencyConfig.getAgencyId());
 		timeoutHandlerModule.start();
 
-		service = new ServiceUtils(configData);
+		service = new ServiceUtilsImpl(configData);
 		time = new Time(configData);
 	}
 
@@ -218,15 +233,31 @@ public class Core {
 	}
 
 	/**
+	 * For testing access.  Not to be used in production!
+	 * @param agencyId
+	 * @return
+	 */
+	synchronized public static Core createTestCore(String agencyId) {
+		Core core = new Core(agencyId);
+		Core.singleton = core;
+		return core;
+	}
+	/**
 	 * For obtaining singleton Core object.
 	 * Synchronized to prevent race conditions if starting lots of optional modules.
 	 *
 	 * @returns the Core singleton object for this application, or null if it
 	 *          could not be created
 	 */
-	public synchronized static Core getInstance() {
-		if (Core.singleton == null)
-			createCore();
+	public static Core getInstance() {
+		if (singleton == null) {
+			// only synchronize if we have to!
+			synchronized (cacheReloadStartTimeStr) {
+				if (singleton == null) {
+					createCore();
+				}
+			}
+		}
 
 		return singleton;
 	}
@@ -254,7 +285,7 @@ public class Core {
 	 * Returns the ServiceUtils object that can be reused for efficiency.
 	 * @return
 	 */
-	public ServiceUtils getServiceUtils() {
+	public ServiceUtilsImpl getServiceUtils() {
 		return service;
 	}
 
@@ -266,6 +297,13 @@ public class Core {
 	 */
 	public Time getTime() {
 		return time;
+	}
+
+	/**
+	 * unit test access, otherwise this is constructed internally.
+	 */
+	public void setTime(Time time) {
+		this.time = time;
 	}
 
 	/**
@@ -405,7 +443,10 @@ public class Core {
 		CacheQueryServer.start(agencyId);
 		PredictionAnalysisServer.start(agencyId);
 		HoldingTimeServer.start(agencyId);
-		ReportingServer.start(agencyId);
+
+		Injector injector = Guice.createInjector(new ReportingModule());
+		ReportingServer reportingServer = injector.getInstance(ReportingServer.class);
+		reportingServer.start(agencyId);
 	}
 	
 	static private void populateCaches() throws Exception
@@ -416,53 +457,84 @@ public class Core {
 
 		if(cacheReloadStartTimeStr.getValue().length()>0&&cacheReloadEndTimeStr.getValue().length()>0)
 		{
+			Criteria criteria = session.createCriteria(ArrivalDeparture.class);
+			List<ArrivalDeparture> results = StopArrivalDepartureCache.createArrivalDeparturesCriteria(criteria,
+							new Date(Time.parse(cacheReloadStartTimeStr.getValue()).getTime()),
+							new Date(Time.parse(cacheReloadEndTimeStr.getValue()).getTime()));
+
 			if(TripDataHistoryCacheFactory.getInstance()!=null)
 			{
 				logger.info("Populating TripDataHistoryCache cache for period {} to {}",cacheReloadStartTimeStr.getValue(),cacheReloadEndTimeStr.getValue());
-				TripDataHistoryCacheFactory.getInstance().populateCacheFromDb(session, new Date(Time.parse(cacheReloadStartTimeStr.getValue()).getTime()), new 		Date(Time.parse(cacheReloadEndTimeStr.getValue()).getTime()));
+				TripDataHistoryCacheFactory.getInstance().populateCacheFromDb(results);
 			}
 			
 			if(FrequencyBasedHistoricalAverageCache.getInstance()!=null)
 			{
 				logger.info("Populating FrequencyBasedHistoricalAverageCache cache for period {} to {}",cacheReloadStartTimeStr.getValue(),cacheReloadEndTimeStr.getValue());
-				FrequencyBasedHistoricalAverageCache.getInstance().populateCacheFromDb(session, new Date(Time.parse(cacheReloadStartTimeStr.getValue()).getTime()), new Date(Time.parse(cacheReloadEndTimeStr.getValue()).getTime()));
+				FrequencyBasedHistoricalAverageCache.getInstance().populateCacheFromDb(results);
 			}
 			
 			if(StopArrivalDepartureCacheFactory.getInstance()!=null)
 			{
 				logger.info("Populating StopArrivalDepartureCache cache for period {} to {}",cacheReloadStartTimeStr.getValue(),cacheReloadEndTimeStr.getValue());
-				StopArrivalDepartureCacheFactory.getInstance().populateCacheFromDb(session, new Date(Time.parse(cacheReloadStartTimeStr.getValue()).getTime()), new Date(Time.parse(cacheReloadEndTimeStr.getValue()).getTime()));
+				StopArrivalDepartureCacheFactory.getInstance().populateCacheFromDb(results);
+			}
+
+			if (TrafficManager.getInstance() != null) {
+				TrafficManager.getInstance().populateCacheFromDb(session, new Date(Time.parse(cacheReloadStartTimeStr.getValue()).getTime()), new Date(Time.parse(cacheReloadEndTimeStr.getValue()).getTime()));
 			}
 		}else
 		{
 			ParallelProcessor pp = new ParallelProcessor();
 			pp.startup();
+
+			int threads = ParallelProcessor.parallelThreads.getValue();
+			// Create a cache loading thread pool for loading data
+			// concurrently from the database
+			NamedThreadFactory cacheLoaderThreadFactory = new NamedThreadFactory(
+							"CacheLoader");
+			ScheduledExecutorService executor = Executors.newScheduledThreadPool(threads,
+							cacheLoaderThreadFactory);
+
 			for(int i=0;i<CoreConfig.getDaysPopulateHistoricalCache();i++)
 			{
 				Date startDate=DateUtils.addDays(endDate, -1);
+				logger.info("ParallelProcessor generating cache tasks for  {} to {}", startDate, endDate);
+
+				ScheduledFuture<?> futureInput = executor.schedule(pp.asyncQuery(startDate, endDate), 1, TimeUnit.SECONDS);
 
 				if(TripDataHistoryCacheFactory.getInstance()!=null)
 				{
-					CacheTask ct = new CacheTask(startDate, endDate, CacheTask.Type.TripDataHistoryCacheFactory);
+					CacheTask ct = new CacheTask(startDate, endDate, CacheTask.Type.TripDataHistoryCacheFactory, futureInput);
 					pp.enqueue(ct);
 				}
 
-				// Only need to populate two days worth of stop arrival departure cache
-				if(i < 2 && StopArrivalDepartureCacheFactory.getInstance()!=null)
+				// new: need stop arrivals history for kalman dwell time
+				if(StopArrivalDepartureCacheFactory.getInstance()!=null)
 				{
-					CacheTask ct = new CacheTask(startDate, endDate, CacheTask.Type.StopArrivalDepartureCacheFactory);
+					CacheTask ct = new CacheTask(startDate, endDate, CacheTask.Type.StopArrivalDepartureCacheFactory, futureInput);
 					pp.enqueue(ct);
 				}
 
 				if(FrequencyBasedHistoricalAverageCache.getInstance()!=null)
 				{
-					CacheTask ct = new CacheTask(startDate, endDate, CacheTask.Type.FrequencyBasedHistoricalAverageCache);
+					CacheTask ct = new CacheTask(startDate, endDate, CacheTask.Type.FrequencyBasedHistoricalAverageCache, futureInput);
 					pp.enqueue(ct);
 				}
 
 				if(ScheduleBasedHistoricalAverageCache.getInstance()!=null)
 				{
-					CacheTask ct = new CacheTask(startDate, endDate, CacheTask.Type.ScheduleBasedHistoricalAverageCache);
+					CacheTask ct = new CacheTask(startDate, endDate, CacheTask.Type.ScheduleBasedHistoricalAverageCache, futureInput);
+					pp.enqueue(ct);
+				}
+
+				if(DwellTimeModelCacheFactory.getInstance() != null) {
+					CacheTask ct = new CacheTask(startDate, endDate, CacheTask.Type.DwellTimeModelCacheFactory, futureInput);
+					pp.enqueue(ct);
+				}
+
+				if (i < 5 && TrafficManager.getInstance() != null && TrafficManager.getInstance().isEnabled()) {
+					CacheTask ct = new CacheTask(startDate, endDate, CacheTask.Type.TrafficDataHistoryCache, futureInput);
 					pp.enqueue(ct);
 				}
 
@@ -471,7 +543,7 @@ public class Core {
 			// don't continue until caches are ready!
 			while (!pp.isDone()) {
 				try {
-					logger.info("waiting on caching to complete with {} in run queue, {} in wait queue ", pp.getRunQueueSize(), pp.getWaitQueueSize() );
+					logger.info("waiting on caching to complete with {} in run queue, {} in wait queue; {} running ", pp.getRunQueueSize(), pp.getWaitQueueSize(), pp.getDebugInfo() );
 					Thread.sleep(10 * 1000);
 				} catch (InterruptedException ie) {
 					return;
@@ -509,7 +581,11 @@ public class Core {
 
 			// For making sure logger configured properly
 			outputLoggerStatus();
-			
+
+			// populate caches needs core!
+			// load now before its lazy-loaded under contention
+			createCore();
+
 			if (CoreConfig.getFillHistoricalCaches()){
 				try {
 					populateCaches();								
@@ -535,9 +611,7 @@ public class Core {
 		            }
 		    }));
 			
-			// Initialize the core now
-			createCore();
-			
+
 			// Start any optional modules.
 			List<String> optionalModuleNames = CoreConfig.getOptionalModules();
 			if (optionalModuleNames.size() > 0) {

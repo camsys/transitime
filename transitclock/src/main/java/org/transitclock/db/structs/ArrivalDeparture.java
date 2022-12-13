@@ -30,6 +30,8 @@ import org.transitclock.configData.DbSetupConfig;
 import org.transitclock.core.ServiceType;
 import org.transitclock.core.TemporalDifference;
 import org.transitclock.db.hibernate.HibernateUtils;
+import org.transitclock.db.query.ArrivalDepartureQuery;
+import org.transitclock.ipc.interfaces.ArrivalDepartureSpeed;
 import org.transitclock.logging.Markers;
 import org.transitclock.utils.Geo;
 import org.transitclock.utils.IntervalTimer;
@@ -68,8 +70,12 @@ import java.util.*;
                    @Index(name="ArrivalsDeparturesRouteTimeIndex", 
                       columnList="routeShortName, time" ),
 			       @Index(name="ArrivalsDeparturesTripPatternIdIndex",
-					   columnList="tripPatternId" )} )
-public class ArrivalDeparture implements Lifecycle, Serializable  {
+					   columnList="tripPatternId" ),
+			       @Index(name="ArrivalsDeparturesScheduledTimeIndex",
+					   columnList="scheduledTime" ),
+				   @Index(name="ArrivalsDeparturesTimePointIndex",
+					   columnList="scheduleAdherenceStop" )} )
+public class ArrivalDeparture implements Lifecycle, Serializable, ArrivalDepartureSpeed {
 	
 	@Id 
 	@Column(length=HibernateUtils.DEFAULT_ID_SIZE)
@@ -203,6 +209,9 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 	@Column(length=2*HibernateUtils.DEFAULT_ID_SIZE)
 	private String stopPathId;
 
+	@Column
+	private final boolean scheduleAdherenceStop;
+
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumns(
 		{
@@ -257,7 +266,7 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 	 */
 	protected ArrivalDeparture(int configRev, String vehicleId, Date time, Date avlTime, Block block,
 							   int tripIndex, int stopPathIndex, boolean isArrival, Date freqStartTime, Long dwellTime,
-							   String stopPathId) {
+							   String stopPathId, boolean scheduleAdherenceStop) {
 		this.vehicleId = vehicleId;
 		this.time = time;
 		this.avlTime = avlTime;
@@ -269,13 +278,21 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 		this.freqStartTime = freqStartTime;
 		this.dwellTime = dwellTime;
 		this.stopPathId = stopPathId;
+		this.scheduleAdherenceStop = scheduleAdherenceStop;
 		
 		// Some useful convenience variables
 
 		if(block!=null)
 		{
 			Trip trip = block.getTrip(tripIndex);
+			if(trip == null){
+				System.out.println("Empty Trip");
+				System.out.println(tripIndex);
+			}
 			StopPath stopPath = trip.getStopPath(stopPathIndex);
+			if(stopPath == null){
+				System.out.println("Stop Path Empty");
+			}
 			this.tripPatternId = stopPath.getTripPatternId();
 			String stopId = stopPath.getStopId();
 			// Determine and store stop order
@@ -294,17 +311,14 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 			Date scheduledEpochTime = null;
 			if (!trip.isNoSchedule()) {
 				ScheduleTime scheduleTime = trip.getScheduleTime(stopPathIndex);
-				if (stopPath.isLastStopInTrip() && scheduleTime.getArrivalTime() != null
-						&& isArrival) {
-					long epochTime = Core.getInstance().getTime()
-							.getEpochTime(scheduleTime.getArrivalTime(), time);
-					scheduledEpochTime = new Date(epochTime);
-				} else if (!stopPath.isLastStopInTrip()
-						&& scheduleTime.getDepartureTime() != null && !isArrival) {
-					long epochTime = Core.getInstance().getTime()
-							.getEpochTime(scheduleTime.getDepartureTime(), time);
-					scheduledEpochTime = new Date(epochTime);
+				Integer scheduleTimeSec;
+				if(!isArrival){
+					scheduleTimeSec = scheduleTime.getTime();
+				} else {
+					scheduleTimeSec = scheduleTime.getArrivalOrDepartureTime();
 				}
+				long epochTime = Core.getInstance().getTime().getEpochTime(scheduleTimeSec, time);
+				scheduledEpochTime = new Date(epochTime);
 
 			}
 			this.scheduledTime = scheduledEpochTime;
@@ -333,10 +347,10 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 	}
 	protected ArrivalDeparture(String vehicleId, Date time, Date avlTime, Block block,
 							   int tripIndex, int stopPathIndex, boolean isArrival, Date freqStartTime, Long dwellTime,
-							   String stopPathId) {
+							   String stopPathId, boolean scheduleAdherenceStop) {
 		
 		this(Core.getInstance().getDbConfig().getConfigRev(),vehicleId, time, avlTime, block, 
-				tripIndex, stopPathIndex, isArrival, freqStartTime, dwellTime, stopPathId);
+				tripIndex, stopPathIndex, isArrival, freqStartTime, dwellTime, stopPathId, scheduleAdherenceStop);
 	}
 	public Date getFreqStartTime() {
 		return freqStartTime;
@@ -369,6 +383,7 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 		this.dwellTime = null;
 		this.tripPatternId = null;
 		this.stopPathId = null;
+		this.scheduleAdherenceStop = false;
 	}
 
 	/**
@@ -485,6 +500,7 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 		result =
 				prime * result
 						+ ((stopPathId == null) ? 0 : stopPathId.hashCode());
+		result = prime * result + (scheduleAdherenceStop ? 1231 : 1237);
 		return result;
 	}
 
@@ -593,38 +609,42 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 				return false;
 		} else if (!stopPathId.equals(other.stopPathId))
 			return false;
+		if (scheduleAdherenceStop != other.scheduleAdherenceStop)
+			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return (isArrival ? "Arrival  " : "Departure") + " [" 
-				+ "vehicleId=" + vehicleId 
-				// + ", isArrival=" + isArrival
+		return (isArrival ? "Arrival  " : "Departure") + " ["
+				+ "vehicleId=" + vehicleId
 				+ ", time=" + Time.dateTimeStrMsec(time)
-				+ ", route="	+ routeId 
+				+ ", route="	+ routeId
 				+ ", rteName=" + routeShortName
 				+ ", directionId=" + directionId
-				+ ", stop=" + stopId 
+				+ ", stop=" + stopId
 				+ ", gtfsStopSeq=" + gtfsStopSeq
 				+ ", stopIdx=" + stopPathIndex
 				+ ", stopPathId=" + stopPathId
 				+ ", freqStartTime=" + freqStartTime
 				+ ", stopOrder=" + stopOrder
-				+ ", avlTime=" + Time.timeStrMsec(avlTime)
+				+  (avlTime != null ?
+				 		", avlTime=" + Time.timeStrMsec(avlTime) : "")
 				+ ", trip=" + tripId
 				+ ", tripIdx=" + tripIndex
 				+ ", tripPatternId=" + tripPatternId
-				+ ", block=" + blockId 
+				+ ", block=" + blockId
 				+ ", srv=" + serviceId
 				+ ", cfg=" + configRev
-				+ ", pathLnth=" + Geo.distanceFormat(stopPathLength)
-				+ (scheduledTime != null ? 
+				+ (stopPathLength != Float.NaN ?
+				 		", pathLnth=" + Geo.distanceFormat(stopPathLength) : "")
+				+ (scheduledTime != null ?
 						", schedTime=" + Time.timeStr(scheduledTime) : "")
-				+ (scheduledTime != null ? 
+				+ (scheduledTime != null ?
 						", schedAdh=" + new TemporalDifference(
 								scheduledTime.getTime() - time.getTime()) : "")
 				+ (dwellTime != null ? ", dwellTime=" + dwellTime : "")
+				+ ", isScheduleAdherenceStop=" + scheduleAdherenceStop
 				+ "]";
 	}
 	
@@ -1012,7 +1032,7 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 					"WHERE " +
 					getArrivalDepartureTimeWhere(beginDate, endDate, beginTime, endTime) +
 					getRouteWhere(routeShortName) +
-					getTripPatternWhere(startStop, endStop) +
+					getTripPatternWhere(null) +
 					getScheduledTimesWhere(scheduledTimesOnly) +
 					getTimePointsWhere(timePointsOnly) +
 					getServiceTypeWhere(serviceType) +
@@ -1024,6 +1044,69 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 
 		try {
 			Query query = session.createQuery(hql);
+
+			List<ArrivalDeparture> results = query.list();
+
+			logger.debug("Getting arrival/departures from database took {} msec",
+					timer.elapsedMsec());
+
+			return results;
+
+		} catch (HibernateException e) {
+			// Log error to the Core logger
+			Core.getLogger().error("Unable to retrieve arrival departures", e);
+			return null;
+		} finally {
+			// Clean things up. Not sure if this absolutely needed nor if
+			// it might actually be detrimental and slow things down.
+			session.close();
+		}
+	}
+
+
+	/**
+	 * Reads the arrivals/departures for the timespan and routeId specified
+	 * Can specify whether you want to retrieve the data from a readOnly db
+	 *
+	 * @param adQuery {@link org.transitclock.db.query.ArrivalDepartureQuery}
+	 * @return List<ArrivalDeparture>
+	 */
+	public static List<ArrivalDeparture> getArrivalsDeparturesFromDb(ArrivalDepartureQuery adQuery) throws Exception {
+		IntervalTimer timer = new IntervalTimer();
+
+		// Get the database session. This is supposed to be pretty light weight
+		Session session = HibernateUtils.getSession(adQuery.isReadOnly());
+
+		// Create the query. Table name is case sensitive and needs to be the
+		// class name instead of the name of the db table.
+
+		String hql = "SELECT " +
+				"ad " +
+				"FROM " +
+				"ArrivalDeparture ad " +
+				getServiceTypeJoin(adQuery.getServiceType()) +
+				getStopsJoin(adQuery.isIncludeStop()) +
+				getTripsJoin(adQuery.getHeadsign(), adQuery.isIncludeTrip()) +
+				getStopPathsJoin(adQuery.isIncludeStopPath()) +
+				"WHERE " +
+				getArrivalDepartureTimeWhere(adQuery.getBeginDate(), adQuery.getEndDate(), adQuery.getBeginTime(), adQuery.getEndTime()) +
+				getRouteWhere(adQuery.getRouteShortName()) +
+				getTripPatternWhere(adQuery.getTripPatternId()) +
+				getTripIdsWhere(adQuery.getTripIds()) +
+				getScheduledTimesWhere(adQuery.isScheduledTimesOnly()) +
+				getTimePointsWhere(adQuery.isTimePointsOnly()) +
+				getServiceTypeWhere(adQuery.getServiceType()) +
+				getTripsWhere(adQuery.getHeadsign(), adQuery.isIncludeTrip()) +
+				getStopsWhere(adQuery.isIncludeStop()) +
+				getStopPathsWhere(adQuery.isIncludeStopPath()) +
+				getDwellTimesWhere(adQuery.isDwellTimeOnly()) +
+				"ORDER BY ad.time, ad.stopPathIndex, ad.isArrival DESC";
+
+		try {
+			Query query = session.createQuery(hql);
+			if(adQuery.getTripIds() != null) {
+				query.setParameterList("tripIds", adQuery.getTripIds());
+			}
 
 			List<ArrivalDeparture> results = query.list();
 
@@ -1095,40 +1178,61 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 	public static String getArrivalDepartureTimeWhere(LocalDate beginDate, LocalDate endDate, LocalTime beginTime, LocalTime endTime) {
 		String hql = "";
 
-		List<LocalDate> dates = new ArrayList<>();
-		while (!beginDate.isAfter(endDate)) {
-			dates.add(beginDate);
-			beginDate = beginDate.plusDays(1);
-		}
-
-		for(int i=0; i < dates.size(); i++){
-			if(i == 0){
-				hql += " (";
-
-			} else {
-				hql += " OR ";
+		if(beginTime != null && endTime != null) {
+			List<LocalDate> dates = new ArrayList<>();
+			while (!beginDate.isAfter(endDate)) {
+				dates.add(beginDate);
+				beginDate = beginDate.plusDays(1);
 			}
-			LocalDateTime startDateTime = LocalDateTime.of(dates.get(i), beginTime);
-			LocalDateTime endDateTime = LocalDateTime.of(dates.get(i), endTime);
+
+			for (int i = 0; i < dates.size(); i++) {
+				if (i == 0) {
+					hql += " (";
+
+				} else {
+					hql += " OR ";
+				}
+				LocalDateTime startDateTime = LocalDateTime.of(dates.get(i), beginTime);
+				LocalDateTime endDateTime = LocalDateTime.of(dates.get(i), endTime);
+				hql += String.format(" ad.time between '%s' AND '%s' ",
+						startDateTime.format(isoDateTimeFormat), endDateTime.format(isoDateTimeFormat));
+				if (i == dates.size() - 1) {
+					hql += ") ";
+				}
+			}
+		}
+		else if(!beginDate.isAfter(endDate)) {
+			LocalDateTime startDateTime = beginDate.atStartOfDay();
+			LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 			hql += String.format(" ad.time between '%s' AND '%s' ",
 					startDateTime.format(isoDateTimeFormat), endDateTime.format(isoDateTimeFormat));
-			if(i == dates.size() -1){
-				hql += ") ";
-			}
+		}
+		else{
+			LocalDateTime startDateTime = beginDate.atStartOfDay();
+			LocalDateTime endDateTime = beginDate.atTime(LocalTime.MAX);
+			hql += String.format(" ad.time between '%s' AND '%s' ",
+					startDateTime.format(isoDateTimeFormat), endDateTime.format(isoDateTimeFormat));
 		}
 		return hql;
 	}
 
 	private static String getRouteWhere(String routeShortName){
-		if(routeShortName !=null) {
+		if(StringUtils.isNotBlank(routeShortName) && routeShortName !=null) {
 			return String.format("AND ad.routeShortName = '%s' ", routeShortName);
 		}
 		return "";
 	}
 
-	private static String getTripPatternWhere(String startStop, String endStop){
-		if(StringUtils.isNotBlank(startStop) && StringUtils.isNotBlank(endStop)) {
-			return String.format("AND ad.tripPatternId LIKE 'shape_%%_%s_to_%s_%%' ", startStop, endStop);
+	private static String getTripPatternWhere(String tripPatternId){
+		if(StringUtils.isNotBlank(tripPatternId)) {
+			return String.format("AND ad.tripPatternId = '%s' ", tripPatternId);
+		}
+		return "";
+	}
+
+	private static String getTripIdsWhere(Set<String> tripIds){
+		if(tripIds != null) {
+			return "AND ad.tripId IN (:tripIds)";
 		}
 		return "";
 	}
@@ -1142,7 +1246,7 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 
 	private static String getTimePointsWhere(boolean timePointsOnly){
 		if(timePointsOnly){
-			return "AND ad.configRev = sp.configRev AND ad.stopId = sp.stopId AND ad.tripPatternId = sp.tripPatternId AND sp.scheduleAdherenceStop = true ";
+			return "AND ad.scheduleAdherenceStop = true ";
 		}
 		return "";
 	}
@@ -1361,6 +1465,12 @@ public class ArrivalDeparture implements Lifecycle, Serializable  {
 
 	public String getStopPathId() {
 		return stopPathId;
+	}
+
+	public boolean isScheduleAdherenceStop() { return scheduleAdherenceStop; }
+
+	public String getTripPatternId() {
+		return tripPatternId;
 	}
 
 	public Stop getStopFromDb() {

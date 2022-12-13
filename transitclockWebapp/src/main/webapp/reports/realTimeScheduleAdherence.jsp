@@ -2,114 +2,119 @@
          pageEncoding="ISO-8859-1"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <%@page import="org.transitclock.web.WebConfigParams"%>
+<%
+    String agencyId = request.getParameter("a");
+    if (agencyId == null || agencyId.isEmpty()) {
+        response.getWriter().write("You must specify agency in query string (e.g. ?a=mbta)");
+        return;
+    }
+%>
 <html>
 <head>
     <%@include file="/template/includes.jsp" %>
     <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
     <title>Real-time Operations</title>
 
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.css" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.3/leaflet.js"></script>
+    <link rel="stylesheet" href="//unpkg.com/leaflet@0.7.3/dist/leaflet.css" />
+    <script src="//unpkg.com/leaflet@0.7.3/dist/leaflet.js"></script>
+    <script src="<%= request.getContextPath() %>/javascript/jquery-dateFormat.min.js"></script>
 
     <script src="<%= request.getContextPath() %>/maps/javascript/leafletRotatedMarker.js"></script>
     <script src="<%= request.getContextPath() %>/maps/javascript/mapUiOptions.js"></script>
 
+    <!-- Load in Select2 files so can create fancy selectors -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/js/select2.min.js"></script>
+
     <link rel="stylesheet" href="<%= request.getContextPath() %>/maps/css/mapUi.css" />
 
-    <link href="params/reportParams.css" rel="stylesheet"/>
-    <style>
 
-        label {
-            text-align: left;
-            width: auto;
-        }
-
-        #title {
-            margin-top: 40px;
-            margin-bottom: 10px;
-            margin-right: 10px;
-            font-weight: normal;
-            text-align: center;
-            background: #019932;
-            color: white;
-            padding: 8px;
-            font-size: 24px;
-            width: -webkit-fill-available;
-            display: inline-block !important;
-        }
-
-        #paramsSidebar {
-            width: 20%;
-            height: 100%;
-            margin-left: 10px;
-            float:left;
-            border-right: 1px solid black;
-        }
-
-        #paramsFields {
-            flex-flow: column;
-            width: 90%;
-            max-width: 30vw;
-        }
-
-        #links {
-            margin-top: 200px;
-        }
-
-        #links div {
-            margin-bottom: 30px;
-        }
-
-        html, body, #map {
-            height: 100%; width: 100%; padding: 0px; margin: 0px;
-        }
-
-    </style>
     <%--        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>--%>
-
-    <!-- Load in Select2 files so can create fancy route selector -->
-    <link href="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css" rel="stylesheet" />
-    <script src="//cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/js/select2.min.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <link rel="stylesheet" href="<%= request.getContextPath() %>/css/page-panels.css">
+    <title>TransitClock Map</title>
 </head>
-<body>
-    <%@include file="/template/header.jsp" %>
-    <div id="paramsSidebar">
-        <div id="title" style="text-align: left; font-size:x-large">
+<body class="real-time-live-map">
+<%@include file="/template/header.jsp" %>
+<div class="panel split">
+    <div class="left-panel">
+        <h4 class="page-title">
             Schedule Adherence
-        </div>
+        </h4>
+        <form class="row" novalidate>
 
-        <div id="paramsFields">
-            <%-- For passing agency param to the report --%>
-            <input type="hidden" name="a" value="<%= request.getParameter("a")%>">
 
-            <jsp:include page="params/routeAllOrSingle.jsp" />
+            <div class="row mb-0">
+                <label class="col-sm-12 col-form-label">Search</label>
+            </div>
 
-            <div id="search" style="margin-top: 20px;">
-                Search
-                <br>
-                <div class="param">
-                    <input type="text" id="vehiclesSearch" placeholder="Vehicles" name="vehiclesSearch">
-                    <button type="submit" id="vehiclesSubmit" onclick="getAndProcessSchAdhData($('#route').val(), $('#vehiclesSearch').val())">Show vehicle</button>
+            <div class="row">
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" id="search-realpage" placeholder="Vehicle">
+                </div>
+                <div class="col-sm-3 pad-left-0">
+                    <button class="btn btn-primary submit-button "  type="button" value="show" onclick="showVehicle()">Show</button>
                 </div>
             </div>
-        </div>
-        <div id="links">
-            <div id="liveMapLink">
-                <a href="realTimeLiveMap.jsp?a=1">Live Map View >></a>
-            </div>
-            <div id="dispatcherLink">
-                <a href="realTimeDispatcher.jsp?a=1">Dispatcher View >></a>
-            </div>
-        </div>
-    </div>
 
-    <div id="mainPage" style="width: 79%; height: 100%; display: inline-block;">
-        <div id="map"></div>
+            <div class="row">
+                <label class="col-sm-12 col-form-label">Routes</label>
+                <input type="hidden" name="isAllRoutesDisabled"  class="isAllRoutesDisabled" value="true">
+                <input type="hidden" name="a" value="<%= request.getParameter("a")%>">
+                <jsp:include page="params/routeMultipleNoLabel.jsp" />
+            </div>
+
+        </form>
+        <div class="list-group">
+            <a  class="list-group-item list-group-item-action secondary-btn"
+                href="realTimeLiveMap.jsp?a=<%= agencyId %>" >
+                Live Map View
+            </a>
+            <button  class="list-group-item list-group-item-action">
+
+                Schedule Adherence View
+            </button>
+
+            <a  class="list-group-item list-group-item-action secondary-btn"
+                href="realTimeDispatcher.jsp?a=<%= agencyId %>" >
+                Dispatcher View
+            </a>
+        </div>
     </div>
+    <div class="right-panel">
+        <div id="map"></div>
+
+        <div class="map-legend-icons leaflet-popup-content ">
+            <div class="card">
+<%--                <div class="card-header header-theme">
+                    <b>Schedule Marker Legend</b>
+                </div>--%>
+
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge bg-green rounded-pill"> &nbsp;</span>
+                            = &nbsp; On Time
+                        </li>
+                        <li class="list-group-item d-flex align-items-center">
+                            <span class="badge bg-yellow rounded-pill">&nbsp;</span>
+                            = &nbsp; Late
+                        </li>
+                        <li class="list-group-item d-flex  align-items-center">
+                            <span class="badge bg-red rounded-pill">&nbsp;</span>
+                            = &nbsp; Early
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+</div>
 
 <script>
-
-    $("#route").attr("style", "width: 200px");
 
     var routeOptions = {
         color: '#0080FF',
@@ -119,7 +124,7 @@
     };
 
     var vehiclePopupOptions = {
-        offset: L.point(0,-2),
+        offset: L.point(0, -2),
         closeButton: false
     };
 
@@ -128,19 +133,66 @@
     // Global so can keep track and delete all vehicles at once
     var vehicleLayer;
 
+    function formatRoute (route) {
+        if (!route.id || route.id == " ") {
+            return route.text;
+        }
+        return route.id;
+    }
+
+    function showVehicle(){
+        getAndProcessSchAdhData($('#route').val(), $('#search-realpage').val())
+    }
+    function selectUnSelectCallBack(e){
+
+        var configuredTitle = $( "#route" ).attr("title");
+
+        $( "#select2-route-container" ).tooltip({ content: configuredTitle,
+            position: { my: "left+10 center", at: "right center" } });
+
+        var selectedDataList = $("#route").select2("data");
+        var selectedRouteId = "";
+        var selectedRouteValues = "";
+        $(selectedDataList).each(function(index, eachList){
+            selectedRouteId += "r=" + eachList.id + ($(selectedDataList).length-1 === index ? "": "&");
+            selectedRouteValues += eachList.id + ($(selectedDataList).length-1 === index ? "": "&");
+        });
+
+        if (selectedRouteId.trim() != "") {
+            var url = apiUrlPrefix + "/command/routesDetails?" + selectedRouteId;
+            $.getJSON(url, routeConfigCallback);
+        }   else  if(routeFeatureGroup && map){
+            map.removeLayer(routeFeatureGroup);
+        }
+        getAndProcessSchAdhData(selectedRouteValues, $("#vehiclesSearch").val())
+    }
+
+
     $.getJSON(apiUrlPrefix + "/command/routes?keepDuplicates=true",
-        function(routes) {
+        function (routes) {
             // Generate list of routes for the selector
             var selectorData = [{id: '', text: 'Select Route'}];
             for (var i in routes.routes) {
                 var route = routes.routes[i];
-                selectorData.push({id: route.id, text: route.name})
+                selectorData.push({id: route.shortName, text: route.name})
             }
 
             $("#route").select2({
-                data: selectorData
-            }).on("select2:select", function (e) {
-                getAndProcessSchAdhData($("#route").val(), $("#vehiclesSearch").val())});
+                data : selectorData,
+                placeholder: "Select Routes",
+                templateSelection: formatRoute
+            })
+                // Need to reset tooltip after selector is used. Sheesh!
+                .on("select2:select", selectUnSelectCallBack)
+                .on("select2:unselect", selectUnSelectCallBack);
+
+
+            /*  $("#route").select2({
+                 data: selectorData
+             }).on("select2:select", function (e) {
+                 $.getJSON(apiUrlPrefix + "/command/routesDetails", routeConfigCallback);
+                 getAndProcessSchAdhData($("#route").val(), $("#vehiclesSearch").val())
+             }); */
         }
     );
 
@@ -149,17 +201,22 @@
      * schedule adherence.
      */
     function getVehiclePopupContent(vehicle) {
-        var content =
-            "<b>Vehicle:</b> " + vehicle.id
-            + "<br/><b>Route:</b> " + vehicle.routeName;
-        if (vehicle.headsign)
-            content += "<br/><b>To:</b> " + vehicle.headsign;
-        if (vehicle.schAdhStr)
-            content += "<br/><b>SchAhd:</b> " + vehicle.schAdhStr;
-        if (vehicle.block)
-            content += "<br/><b>Block:</b> " + vehicle.block;
-        if (vehicle.driver)
-            content += "<br/><b>Driver:</b> " + vehicle.driver;
+        var content = '<div class="card"><div class="card-header header-theme">';
+        content +=  "<b>Vehicle:</b> " + vehicle.id +"</div>";
+
+        content +=  "<div class='card-body'><div class='vehicle-item'><b >Route:</b> <div class='vehicle-value'> " + vehicle.routeName+"</div></div>";
+
+            content += "<div class='vehicle-item'><b>To:</b> <div class='vehicle-value'>" + (vehicle.headsign || 'N/A' )+"</div></div>";
+
+            content += "<div class='vehicle-item'><b>SchAhd:</b> <div class='vehicle-value'>" + (vehicle.schAdhStr  || 'N/A' )+"</div></div>";
+
+            content += "<div class='vehicle-item'><b>Block:</b> <div class='vehicle-value'>" + ( vehicle.block  || 'N/A' )+"</div></div>";
+
+            content += "<div class='vehicle-item'><b>Trip:</b> <div class='vehicle-value'>" + (vehicle.tripId  || 'N/A' )+"</div></div>";
+
+            content += "<div class='vehicle-item'><b>Driver:</b> <div class='vehicle-value'>" + (vehicle.driver  || 'N/A')+"</div></div>";
+
+        content += "</div></div></div>";
 
         return content;
     }
@@ -168,10 +225,24 @@
      * Reads in and processes schedule adherence data
      */
     function getAndProcessSchAdhData(routeId, vehicleId) {
+
+        var selectedDataList = [];
+
+        if( $("#route").val() != null ) {
+            selectedDataList =  $("#route").select2("data");
+        }
+
+
+        var selectedRouteId = "";
+        // var selectedRouteValues = "";
+        $(selectedDataList).each(function(index, eachList){
+            selectedRouteId += "&r=" + eachList.id + ($(selectedDataList).length-1 === index ? "": "&");
+        });
+
         // Do API call to get schedule adherence data
-        $.getJSON(apiUrlPrefix + "/command/vehiclesDetails?onlyAssigned=true", {r: routeId},
+        $.getJSON(apiUrlPrefix + "/command/vehiclesDetails?onlyAssigned=true"+ selectedRouteId,
             // Process data
-            function(jsonData) {
+            function (jsonData) {
                 var newVehicleLayer = L.featureGroup();
 
                 // Add new vehicles
@@ -204,13 +275,13 @@
                     var fillOpacity;
                     if (vehicle.schAdh < lateTime) {
                         // Vehicle is late
-                        radius = 5 - (Math.max(maxLate, vehicle.schAdh) - lateTime)/msecPerRadiusPixels;
+                        radius = 5 - (Math.max(maxLate, vehicle.schAdh) - lateTime) / msecPerRadiusPixels;
                         fillColor = '#E6D83E';
                         fillOpacity = 0.5;
                     } else if (vehicle.schAdh > earlyTime) {
                         // Vehicle is early. Since early is worse make radius
                         // of larger by using msecPerRadiusPixels/2
-                        radius = 5 + (Math.min(maxEarly, vehicle.schAdh) - earlyTime)/(msecPerRadiusPixels/2);
+                        radius = 5 + (Math.min(maxEarly, vehicle.schAdh) - earlyTime) / (msecPerRadiusPixels / 2);
                         fillColor = '#E34B71';
                         fillOpacity = 0.5;
                     } else {
@@ -245,11 +316,11 @@
                     vehicleMarker.vehicle = vehicle;
 
                     // Create popup window for vehicle when clicked on
-                    vehicleMarker.on('click', function(e) {
+                    vehicleMarker.on('click', function (e) {
                         openVehiclePopup(this);
                     });
 
-                    if (vehicleId.trim() != "" && vehicle.id == vehicleId) {
+                    if (vehicleId && vehicleId.trim() != "" && vehicle.id == vehicleId) {
                         openVehiclePopup(vehicleMarker);
                     }
 
@@ -271,28 +342,45 @@
     /**
      * Reads in route data obtained via AJAX and draws route on map.
      */
+    var routeFeatureGroup = null;
     function routeConfigCallback(routeData, status) {
         // So can make sure routes are drawn below the stops
-        var routeFeatureGroup = L.featureGroup();
+
+        if(routeFeatureGroup && map){
+            map.removeLayer(routeFeatureGroup);
+        }
+        routeFeatureGroup = L.featureGroup();
+        var locsToFit = [];
+
+        var routeOptions2 = JSON.parse(JSON.stringify((routeOptions)));
+        routeOptions2.weight = 6;
+        routeOptions2.color = "#1887fc ";
+        routeOptions2.fillOpacity = 0.6;
+
 
         // For each route
-        for (var r=0; r<routeData.routes.length; ++r) {
+        for (var r = 0; r < routeData.routes.length; ++r) {
             // Draw the paths for the route
             var route = routeData.routes[r];
-            for (var i=0; i<route.shape.length; ++i) {
+            for (var i = 0; i < route.shape.length; ++i) {
                 var shape = route.shape[i];
                 var latLngs = [];
-                for (var j=0; j<shape.loc.length; ++j) {
+                for (var j = 0; j < shape.loc.length; ++j) {
                     var loc = shape.loc[j];
                     latLngs.push(L.latLng(loc.lat, loc.lon));
+                    locsToFit.push(L.latLng(loc.lat, loc.lon));
                 }
-                var polyline = L.polyline(latLngs, routeOptions);
+                var polyline = L.polyline(latLngs, routeOptions2);
                 routeFeatureGroup.addLayer(polyline);
             }
         }
 
         // Add all of the paths and stops to the map at once via the FeatureGroup
         routeFeatureGroup.addTo(map);
+
+        if (locsToFit.length > 0) {
+            map.fitBounds(locsToFit);
+        }
 
         // It can happen that vehicles get drawn before the route paths.
         // In this case need call bringToBack() on the paths so that
@@ -312,8 +400,8 @@
 
         L.tileLayer(mapTileUrl, {
             // Specifying a shorter version of attribution. Original really too long.
-            //attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
-            attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> &amp; <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery ©<%= WebConfigParams.getMapTileCopyright() %>',
+            //attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery ? <a href="http://mapbox.com">Mapbox</a>',
+            attribution: '&copy; <a href="http://openstreetmap.org">OpenStreetMap</a> &amp; <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery ?<%= WebConfigParams.getMapTileCopyright() %>',
             maxZoom: 19
         }).addTo(map);
 
@@ -325,21 +413,23 @@
 
         // Set map bounds to the agency extent
         $.getJSON(apiUrlPrefix + "/command/agencyGroup",
-            function(agencies) {
+            function (agencies) {
                 // Fit the map initially to the agency
                 var e = agencies.agency[0].extent;
                 map.fitBounds([[e.minLat, e.minLon], [e.maxLat, e.maxLon]]);
             });
 
         // Get route config data and draw all routes
-        $.getJSON(apiUrlPrefix + "/command/routesDetails", routeConfigCallback);
+        // $.getJSON(apiUrlPrefix + "/command/routesDetails", routeConfigCallback);
 
         // Start showing schedule adherence data and update every 10 seconds.
         // Updating every is more than is truly useful since won't get significant
         // change every 10 seconds, but it shows that the map is live and is
         // really cool.
         getAndProcessSchAdhData($("#route").val(), $("#vehiclesSearch").val());
-        setInterval(function() {getAndProcessSchAdhData($("#route").val(), $("#vehiclesSearch").val())}, 10000);
+        setInterval(function () {
+            getAndProcessSchAdhData($("#route").val(), $("#vehiclesSearch").val())
+        }, 10000);
     }
 
     function openVehiclePopup(vehicleMarker) {
@@ -352,12 +442,16 @@
             .setLatLng(latlng)
             .setContent(content).openOn(map);
     }
+
     /**
      * When page finishes loading then create map
      */
-    $( document ).ready(function() {
+    $(document).ready(function () {
         createMap('<%= WebConfigParams.getMapTileUrl() %>',
             '<%= WebConfigParams.getMapTileCopyright() %>');
     });
 
 </script>
+
+
+</body>

@@ -15,16 +15,30 @@ import java.util.List;
  *
  */
 public interface ReportingInterface extends Remote {
-    List<IpcArrivalDepartureScheduleAdherence> getArrivalsDeparturesForOtp(LocalDate beginDate, LocalDate endDate,
-                                                                             LocalTime beginTime, LocalTime endTime,
-                                                                             String routeIdOrShortName, ServiceType serviceType,
-                                                                             boolean timePointsOnly, String headsign) throws Exception;
+    IpcPrescriptiveRunTimes getPrescriptiveRunTimes(LocalTime beginTime,
+                                                    LocalTime endTime,
+                                                    String routeIdOrShortName,
+                                                    String headsign,
+                                                    String directionId,
+                                                    String tripPatternId,
+                                                    ServiceType serviceType,
+                                                    boolean readOnly) throws Exception;
+
+
+    List<IpcStopTime> getPrescriptiveRunTimesSchedule(LocalTime beginTime,
+                                                      LocalTime endTime,
+                                                      String routeIdOrShortName,
+                                                      String headsign,
+                                                      String directionId,
+                                                      String tripPatternId,
+                                                      ServiceType serviceType,
+                                                      boolean readOnly) throws Exception;
 
     List<IpcArrivalDepartureScheduleAdherence> getArrivalsDeparturesForOtp(LocalDate beginDate, LocalDate endDate,
-                                                                             LocalTime beginTime, LocalTime endTime,
-                                                                             String routeId, ServiceType serviceType,
-                                                                             boolean timePointsOnly, String headsign,
-                                                                             boolean readOnly) throws Exception;
+                                                                           LocalTime beginTime, LocalTime endTime,
+                                                                           String routeId, ServiceType serviceType,
+                                                                           boolean timePointsOnly, String headsign,
+                                                                           boolean readOnly) throws Exception;
 
     List<IpcStopWithDwellTime> getStopsWithAvgDwellTimes(LocalDate beginDate, LocalDate endDate,
                                                          LocalTime beginTime, LocalTime endTime, String routeIdOrShortName,
@@ -43,15 +57,21 @@ public interface ReportingInterface extends Remote {
 
     IpcRunTime getRunTimeSummary(LocalDate beginDate, LocalDate endDate,
                            LocalTime beginTime, LocalTime endTime,
-                           String routeIdOrShortName, String headsign,
-                           String startStop, String endStop,
-                           ServiceType serviceType, boolean timePointsOnly,
-                           boolean currentTripsOnly, boolean readOnly) throws Exception;
+                           String routeIdOrShortName, String headsign, String directionId,
+                           String tripPatternId, ServiceType serviceType, boolean readOnly) throws Exception;
 
-    List<IpcRunTimeForTrip> getRunTimeForTrips(LocalDate beginDate, LocalDate endDate,
+    IpcRunTimeForTripsAndDistribution getRunTimeForTrips(LocalDate beginDate, LocalDate endDate,
                                   LocalTime beginTime, LocalTime endTime,
                                   String routeIdOrShortName, String headsign,
-                                  String startStop, String endStop,
-                                  ServiceType serviceType, boolean timePointsOnly,
-                                  boolean currentTripsOnly, boolean readOnly) throws Exception;
+                                  String tripPatternId, String directionId, ServiceType serviceType,
+                                  boolean timePointsOnly, boolean readOnly) throws Exception;
+
+    List<IpcRunTimeForStopPath> getRunTimeForStopPaths(LocalDate beginDate, LocalDate endDate,
+                                                   LocalTime beginTime, LocalTime endTime,
+                                                   String routeIdOrShortName, String tripId, ServiceType serviceType,
+                                                   boolean timePointsOnly, boolean readOnly) throws Exception;
+
+    List<IpcRunTimeForRoute> getRunTimeForRoutes(LocalDate beginDate, LocalDate endDate,
+                                                        LocalTime beginTime, LocalTime endTime, ServiceType serviceType,
+                                                        Integer earlyThreshold, Integer lateThreshold, boolean readOnly) throws Exception;
 }

@@ -76,7 +76,12 @@ public interface ConfigInterface extends Remote {
 	 * @throws RemoteException
 	 */
 	public List<IpcRoute> getRoutes(List<String> routeIdsOrShortNames) throws RemoteException;
-	
+
+	/* (non-Javadoc)
+	 * @see org.transitclock.ipc.interfaces.ConfigInterface#getRoutesForStop(java.lang.String)
+	 */
+	public List<IpcRoute> getRoutesForStop(String stopId) throws RemoteException;
+
 	/**
 	 * Returns stops for each direction for a route.
 	 * 
@@ -89,7 +94,13 @@ public interface ConfigInterface extends Remote {
 	 */
 	public IpcDirectionsForRoute getStops(String routeIdOrShortName)  
 			throws RemoteException;
-	
+
+	/* (non-Javadoc)
+	 * @see org.transitclock.ipc.interfaces.ConfigInterface#getStops(java.util.List)
+	 */
+	List<IpcDirectionsForRoute> getStops(List<String> routeIdOrShortNames)
+			throws RemoteException;
+
 	/**
 	 * Returns block info for specified blockId and serviceId. Includes all trip
 	 * and trip pattern info associated with the block.
@@ -145,8 +156,11 @@ public interface ConfigInterface extends Remote {
 	 */
 	public List<IpcSchedule> getSchedules(String routeIdOrShortName)
 			throws RemoteException;
-	
-	/**
+
+    public List<IpcTripPattern> getTripPatterns(String routeIdOrShortName, String headSign, String directionId)
+            throws RemoteException;
+
+    /**
 	 * Returns list of Agency objects containing data from GTFS agency.txt file
 	 * @return
 	 * @throws RemoteException

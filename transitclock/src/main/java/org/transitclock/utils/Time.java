@@ -16,7 +16,10 @@
  */
 package org.transitclock.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.transitclock.config.BooleanConfigValue;
+import org.transitclock.core.PredictionGeneratorDefaultImpl;
 import org.transitclock.db.structs.Agency;
 import org.transitclock.gtfs.DbConfig;
 
@@ -24,6 +27,11 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -140,8 +148,7 @@ public class Time {
 	private static final DateFormat timeFormat24Msec =
 			new SimpleDateFormat("HH:mm:ss.SSS z");
 
-	private static final DateFormat timeFormat24MsecNoTimeZone =
-			new SimpleDateFormat("HH:mm:ss.SSS");
+	private static final DateTimeFormatter timeFormat24MsecNoTimeZone = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
 
 	// Sun, 06 Nov 1994 08:49:37 GMT  ; RFC 822, updated by RFC 1123
 	private static final DateFormat httpFormat =
@@ -167,6 +174,8 @@ public class Time {
 
 	// Have a shared calendar so don't have to keep creating one
 	private Calendar calendar;
+
+	private static final Logger logger = LoggerFactory.getLogger(Time.class);
 
 	private static BooleanConfigValue useMonthDayYearFormat =
 			new BooleanConfigValue(
@@ -453,6 +462,44 @@ public class Time {
 			// Get the results
 			return epochTime;
 		}
+	}
+
+	/**
+	 * Converts secondsIntoDay into an epoch time.
+	 *
+	 * @param secondsIntoDay
+	 *            To be converted into epoch time
+	 * @param referenceDate
+	 *            The approximate epoch time so that can handle times before and
+	 *            after midnight.
+	 * @return epoch time
+	 */
+	public long getTripStartDate(int secondsIntoDay, Date referenceDate) {
+			// Determine seconds, minutes, and hours
+			int minutesIntoDay = secondsIntoDay / 60;
+			int hoursIntoDay = minutesIntoDay / 60;
+
+			long hourAdjustment = 4 * MS_PER_HOUR;
+			long minuteAdjustment = 5 * MS_PER_MIN;
+
+		long referenceDateTime = referenceDate.getTime();
+
+			// Handles cases where reference date is rolling over past midnight and seconds into day is < 4:00 or >= 24:00
+
+			//	If trip start time is greater than or equal to 20:00 then subtract hourAdjustment hours from referenceDate.
+			//	The idea behind this is that if the referenceDate goes past midnight, we can still get the correct
+			//	start date by subtracting those hours hours.
+			// Start from 20 instead of 24 to handle case where trip leaves past midnight but was scheduled to leave before midnight
+			if(hoursIntoDay >=20){
+				referenceDateTime -= hourAdjustment;
+			}
+			// Handles case where reference date is before midnight and seconds into do for future stops is low
+			else if(hoursIntoDay < 4){
+				referenceDateTime += hourAdjustment;
+			}
+
+			// Get the results
+			return referenceDateTime;
 	}
 
 	/**
@@ -945,7 +992,12 @@ public class Time {
 	 * @return
 	 */
 	public static String timeStrMsecNoTimeZone(long epochTime) {
-		return timeFormat24MsecNoTimeZone.format(epochTime);
+		try {
+			return Instant.ofEpochMilli(epochTime).atZone(ZoneId.systemDefault()).format(timeFormat24MsecNoTimeZone);
+		} catch(Exception e){
+			logger.error("Unable to convert epoch time {} to formatted time", epochTime, e);
+			return null;
+		}
 	}
 
 	/**
@@ -956,7 +1008,12 @@ public class Time {
 	 * @return
 	 */
 	public static String timeStrMsecNoTimeZone(Date epochTime) {
-		return timeFormat24MsecNoTimeZone.format(epochTime);
+		try {
+			return LocalDateTime.ofInstant(epochTime.toInstant(), ZoneId.systemDefault()).format(timeFormat24MsecNoTimeZone);
+		} catch(Exception e){
+			logger.error("Unable to convert epoch time {} to formatted time", epochTime, e);
+			return null;
+		}
 	}
 
 	/**

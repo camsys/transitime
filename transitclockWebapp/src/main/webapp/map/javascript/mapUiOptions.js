@@ -21,7 +21,7 @@ var stopOptions = {
     radius: 4,
     weight: 2,
     fillColor: '#006600',
-    fillOpacity: 0.6,
+    fillOpacity: 1,
 };
 
 var firstStopOptions = {
@@ -30,7 +30,7 @@ var firstStopOptions = {
     radius: 7,
     weight: 2,
     fillColor: '#ccffcc',
-    fillOpacity: 0.9,		
+    fillOpacity: 1,
 }
 
 var minorStopOptions = {
@@ -39,15 +39,15 @@ var minorStopOptions = {
     radius: 3,
     weight: 2,
     fillColor: '#006600',
-    fillOpacity: 0.2,
+    fillOpacity: 1,
 };
 
 var busIcon = L.icon({
     iconUrl: 'images/bus-24.png',
     iconRetinaUrl: 'images/bus-24@2x.png',
-    iconSize: [24, 24],
-    iconAnchor: [13, 12],
-    popupAnchor: [0, -12],
+    iconSize: [25, 25],
+    iconAnchor: [13, 13],
+    popupAnchor: [0, -13],
 });
 
 var streetcarIcon = L.icon({
@@ -104,21 +104,21 @@ var minorVehicleMarkerOptions = {
 var vehicleMarkerBackgroundOptions = {
     radius: 12,
     weight: 0,
-    fillColor: '#ffffff',
+    fillColor: '#1e3f78',
     fillOpacity: 1.0,				
 };
 
 var secondaryVehicleMarkerBackgroundOptions = {
     radius: 12,
     weight: 0,
-    fillColor: '#ffffff',
+    fillColor: '#1e3f78',
     fillOpacity: 0.80,				
 };
 
 var minorVehicleMarkerBackgroundOptions = {
     radius: 12,
     weight: 0,
-    fillColor: '#ffffff',
+    fillColor: '#1e3f78',
     fillOpacity: 0.3,				
 };
 

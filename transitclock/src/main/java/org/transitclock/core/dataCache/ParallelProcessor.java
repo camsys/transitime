@@ -1,14 +1,21 @@
 package org.transitclock.core.dataCache;
 
 
+import org.hibernate.Criteria;
+import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.config.IntegerConfigValue;
+import org.transitclock.core.dataCache.ehcache.StopArrivalDepartureCache;
+import org.transitclock.db.hibernate.HibernateUtils;
+import org.transitclock.db.structs.ArrivalDeparture;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
 
 /**
  * Processor for managing a thread queue of parallel active work.  Currently used for
@@ -17,8 +24,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class ParallelProcessor {
 
     public static IntegerConfigValue parallelThreads = new IntegerConfigValue("transitclock.core.parallelThreads",
-            -1,
-            "Number of threads to run in parallel for cache loading.  -1 is use all cpus, 1 is no parallelism at all");
+            Runtime.getRuntime().availableProcessors(),
+            "Number of threads to run in parallel for cache loading.  Default uses all cpu, 1 is no parallelism at all");
     private static final Logger logger = LoggerFactory
             .getLogger(ParallelProcessor.class);
 
@@ -87,7 +94,6 @@ public class ParallelProcessor {
     public void startup() {
         startTime = System.currentTimeMillis();
         startRunThread();
-        startPruneThread();
     }
 
     private void startRunThread() {
@@ -95,48 +101,25 @@ public class ParallelProcessor {
         new Thread(rt).start();
     }
 
-    private void startPruneThread() {
-        PruneThread pt = new PruneThread(this);
-        new Thread(pt).start();
+
+    private void remove(TaskWrapper tw) {
+        runQueue.remove(tw);
     }
 
+    public String getDebugInfo() {
+        TaskWrapper taskWrapper = runQueue.peek();
+        if (taskWrapper != null)
+            return taskWrapper.task.toString();
+        return "(none)";
+    }
 
     /**
-     * Remove complete jobs from the run queue.
+     * asynchronously retrieve list of ArrivalDepartures from database via a background thread.
      */
-    public static class PruneThread implements Runnable {
-        private ParallelProcessor pp;
-        public PruneThread(ParallelProcessor pp) {
-            this.pp = pp;
-        }
-
-        public void run() {
-            while (!pp.shutDown) {
-                TaskWrapper taskWrapper = pp.runQueue.peek();
-                if (taskWrapper != null) {
-                    while (!taskWrapper.started || !taskWrapper.done) {
-                        try {
-                            logger.debug("waiting on task {} to complete", taskWrapper.taskNumber);
-                            Thread.sleep(1000);
-                        } catch (InterruptedException ie) {
-                            pp.shutDown = true;
-                            return;
-                        }
-                    }
-                    pp.runQueue.poll();
-                    logger.debug("task complete with {} more in queue", pp.runQueue.size());
-
-                }
-                try {
-                    logger.debug("no task to prune");
-                    Thread.sleep(1000);
-                } catch (InterruptedException ie) {
-                    pp.shutDown = true;
-                    return;
-                }
-            }
-        }
+    public Callable<List<ArrivalDeparture>> asyncQuery(Date startDate, Date endDate) {
+        return new QueryThread(startDate, endDate);
     }
+
 
     /**
      * add waiting jobs to the run queue, launching them in a new thread
@@ -149,12 +132,13 @@ public class ParallelProcessor {
         }
 
         public void run() {
+            Thread.currentThread().setName("Parallel Processor Run Thread");
             int taskCount = 0;
             while (!pp.shutDown) {
 
                 if (!pp.list.isEmpty()) {
                     ParallelTask toRun = pp.list.remove(0);
-                    TaskWrapper tw = new TaskWrapper(toRun, taskCount);
+                    TaskWrapper tw = new TaskWrapper(pp, toRun, taskCount);
                     boolean success = false;
                     while (!success) {
                         success = pp.runQueue.offer(tw);
@@ -187,17 +171,20 @@ public class ParallelProcessor {
      * Wrapper around the task that can be safely run as a thread.
      */
     public static class TaskWrapper implements Runnable {
+        private ParallelProcessor pp;
         private ParallelTask task;
         private int taskNumber;
         private boolean started = false;
         private boolean done = false;
 
-        public TaskWrapper(ParallelTask task, int taskNumber) {
+        public TaskWrapper(ParallelProcessor pp, ParallelTask task, int taskNumber) {
+            this.pp = pp;
             this.task = task;
             this.taskNumber = taskNumber;
         }
 
         public void run() {
+            Thread.currentThread().setName(task.toString() + "-" + taskNumber);
             logger.debug("starting task {}", taskNumber);
             started = true;
             try {
@@ -207,7 +194,26 @@ public class ParallelProcessor {
             } finally {
                 logger.debug("completing task {}", taskNumber);
                 done = true;
+                pp.remove(this);
             }
+        }
+    }
+
+    public static class QueryThread implements Callable<List<ArrivalDeparture>> {
+
+        private Date startDate;
+        private Date endDate;
+        public QueryThread(Date startDate, Date endDate) {
+            this.startDate = startDate;
+            this.endDate = endDate;
+        }
+
+        @Override
+        public List<ArrivalDeparture> call() throws Exception {
+            Session session = HibernateUtils.getSession();
+            Criteria criteria = session.createCriteria(ArrivalDeparture.class);
+            List<ArrivalDeparture> results = StopArrivalDepartureCache.createArrivalDeparturesCriteria(criteria, startDate, endDate);
+            return results;
         }
     }
 }

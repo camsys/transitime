@@ -21,10 +21,16 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.applications.Core;
 import org.transitclock.config.StringConfigValue;
+import org.transitclock.core.blockAssigner.BlockAssigner;
 import org.transitclock.db.structs.AvlReport;
+import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.Trip;
 import org.transitclock.feed.gtfsRt.GtfsRtVehiclePositionsReader;
+import org.transitclock.gtfs.DbConfig;
 import org.transitclock.modules.Module;
+import org.transitclock.monitoring.MonitoringService;
 
 import java.util.Collection;
 
@@ -79,8 +85,9 @@ public class GtfsRealtimeModule extends PollUrlAvlModule {
 	protected void getAndProcessData() {
 	  
 	  String[] urls = getGtfsRealtimeURI().split(",");
-	  
-	  
+
+		int assignments = 0;
+		int records = 0;
 	  for (String urlStr : urls) {
   	  try {
     	  logger.info("reading {}", urlStr);
@@ -88,7 +95,11 @@ public class GtfsRealtimeModule extends PollUrlAvlModule {
     				.getAvlReports(urlStr);
     		logger.info("read complete");
     		for (AvlReport avlReport : avlReports) {
+    			initalizeAvlReport(avlReport);
     			processAvlReport(avlReport);
+    			records++;
+    			if (avlReport.getAssignmentId() != null)
+						assignments++;
     		}
     		logger.info("processed {} reports for feed {}", avlReports.size(), urlStr);
   	  } catch (Exception any) {
@@ -96,7 +107,34 @@ public class GtfsRealtimeModule extends PollUrlAvlModule {
   	  }
   		
 	  }
+	  MonitoringService.getInstance().averageMetric("PredictionAvlInputRecords", records);
+		MonitoringService.getInstance().averageMetric("PredictionAvlInputAssignments", assignments);
 		
+	}
+
+	// ensure hibernate lazy loading is complete before moving object to another thread
+	private void initalizeAvlReport(AvlReport avlReport) {
+		AvlReport.AssignmentType assignmentType = avlReport.getAssignmentType();
+		if (assignmentType == AvlReport.AssignmentType.TRIP_ID) {
+			DbConfig dbConfig = Core.getInstance().getDbConfig();
+			Trip trip = getTrip(dbConfig, avlReport.getAssignmentId());
+							getTripWithServiceIdSuffix(dbConfig, avlReport.getAssignmentId());
+			if (trip == null) return;
+			Block block = trip.getBlock();
+			if (block != null)
+				block.initialize();
+		}
+	}
+
+	private Trip getTrip(DbConfig config, String assignmentId) {
+		if (config.getServiceIdSuffix()) {
+			return getTripWithServiceIdSuffix(config, assignmentId);
+		}
+		return config.getTrip(assignmentId);
+	}
+
+	private Trip getTripWithServiceIdSuffix(DbConfig config, String assignmentId) {
+		return BlockAssigner.getInstance().getTripWithServiceIdSuffix(config, assignmentId);
 	}
 
 	/* (non-Javadoc)

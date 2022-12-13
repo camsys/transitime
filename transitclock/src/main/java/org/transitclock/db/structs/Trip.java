@@ -22,7 +22,9 @@ import java.util.*;
 
 import javax.persistence.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.CallbackException;
+import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -36,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
 import org.transitclock.db.hibernate.HibernateUtils;
+import org.transitclock.db.query.TripQuery;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.gtfs.TitleFormatter;
 import org.transitclock.gtfs.gtfsStructs.GtfsTrip;
@@ -118,7 +121,8 @@ public class Trip implements Lifecycle, Serializable {
 	
 	// Contains schedule time for each stop as obtained from GTFS 
 	// stop_times.txt file. Useful for determining schedule adherence.
-	@ElementCollection
+	// load EAGERly for AvlExecutor parallel execution
+	@ElementCollection(fetch = FetchType.LAZY)
   @OrderColumn
 	private final List<ScheduleTime> scheduledTimesList =
 			new ArrayList<ScheduleTime>();
@@ -873,7 +877,15 @@ public class Trip implements Lifecycle, Serializable {
 		}
 		return route;
 	}
-	
+
+	/**
+	 * Setter for unit tests.
+	 * @param route
+	 */
+	public void setRoute(Route route) {
+		this.route = route;
+	}
+
 	/**
 	 * Returns route name. Gets it from the Core database configuration. If Core
 	 * database configuration not available such as when processing GTFS data
@@ -1194,11 +1206,13 @@ public class Trip implements Lifecycle, Serializable {
     return count;
   }
 
-	public static List<Trip> getTripsFromDb(String routeShortName, String headsign, Set<Integer> configRevs, boolean readOnly) {
+	public static List<Trip> getTripsFromDb(TripQuery tripQuery) {
 		IntervalTimer timer = new IntervalTimer();
 
 		// Get the database session. This is supposed to be pretty light weight
-		Session session = HibernateUtils.getSession(readOnly);
+		Session session = HibernateUtils.getSession(tripQuery.isReadOnly());
+
+		Map<String, Object> parameterNameAndValues = new HashMap<>();
 
 		// Create the query. Table name is case sensitive and needs to be the
 		// class name instead of the name of the db table.
@@ -1208,14 +1222,19 @@ public class Trip implements Lifecycle, Serializable {
 				"FROM " +
 				"Trip t " +
 				"WHERE t.routeShortName = :routeShortName " +
-				"AND t.headsign = :headsign " +
 				"AND t.configRev IN (:configRevs) " +
+				getHeadsignWhere(tripQuery, parameterNameAndValues) +
+				getDirectionWhere(tripQuery, parameterNameAndValues) +
+				getStartTimeWhere(tripQuery, parameterNameAndValues) +
 				"ORDER BY t.startTime";
 		try {
+			parameterNameAndValues.put("routeShortName", tripQuery.getRouteShortName());
+			parameterNameAndValues.put("configRevs", tripQuery.getConfigRevs());
+
 			Query query = session.createQuery(hql);
-			query.setString("routeShortName", routeShortName);
-			query.setString("headsign", headsign);
-			query.setParameterList("configRevs", configRevs);
+			for (Map.Entry<String, Object> e : parameterNameAndValues.entrySet()) {
+				query.setParameter(e.getKey(), e.getValue());
+			}
 
 			List<Trip> results = query.list();
 
@@ -1235,6 +1254,40 @@ public class Trip implements Lifecycle, Serializable {
 		}
 	}
 
+
+
+	private static String getHeadsignWhere(TripQuery tripQuery, Map<String, Object> parameterNameAndValues){
+		if(StringUtils.isNotBlank(tripQuery.getHeadsign())){
+			parameterNameAndValues.put("headsign", tripQuery.getHeadsign());
+			return  "AND t.headsign = :headsign ";
+		}
+		return "";
+	}
+
+	private static String getDirectionWhere(TripQuery tripQuery, Map<String, Object> parameterNameAndValues){
+		if(StringUtils.isNotBlank(tripQuery.getDirection())){
+			parameterNameAndValues.put("directionId", tripQuery.getDirection());
+			return "AND t.directionId = :directionId ";
+		}
+		return "";
+	}
+
+	private static String getStartTimeWhere(TripQuery tripQuery, Map<String, Object> parameterNameAndValues){
+  		String startTime = "";
+  		if(tripQuery.getFirstStartTime() != null
+				&& (tripQuery.getLastStartTime() == null || tripQuery.getFirstStartTime() < tripQuery.getLastStartTime())){
+			parameterNameAndValues.put("firstStartTime", tripQuery.getFirstStartTime());
+			startTime += "AND t.startTime >= :firstStartTime ";
+		}
+		if(tripQuery.getLastStartTime() != null
+				&& (tripQuery.getFirstStartTime() == null || tripQuery.getFirstStartTime() < tripQuery.getLastStartTime())){
+			parameterNameAndValues.put("lastStartTime", tripQuery.getLastStartTime());
+			startTime += "AND t.startTime <= :lastStartTime ";
+		}
+		return startTime;
+	}
+
+
 	/**
 	 * Assumes only one block for Trip.
 	 * TODO - Fix this to return
@@ -1253,6 +1306,41 @@ public class Trip implements Lifecycle, Serializable {
 		} finally {
 			session.close();
 		}
+	}
+
+	/**
+	 * Force any lazy-loaded objects to be loaded now before moving to another thread.
+	 */
+	public void initialize() {
+		try {
+			if (!Hibernate.isInitialized(getScheduleTimes())) {
+				Hibernate.initialize(getScheduleTimes());
+			}
+		} catch (Throwable t) {
+			logger.error("unable to load schedule times for trip {}", this, t);
+		}
+		try {
+			if (!Hibernate.isInitialized(getTripPattern())) {
+				Hibernate.initialize(getTripPattern());
+			}
+		} catch (Throwable t) {
+			logger.error("unable to load trip pattern for trip {}", this, t);
+		}
+		try {
+			if (!Hibernate.isInitialized(getTravelTimes())) {
+				Hibernate.initialize(getTravelTimes());
+			}
+		} catch (Throwable t) {
+			logger.error("unable to load travel times for trip {}", this, t);
+		}
+		try {
+			if (getTravelTimes() != null && !Hibernate.isInitialized(getTravelTimes().getTravelTimesForStopPaths())) {
+				Hibernate.initialize(getTravelTimes().getTravelTimesForStopPaths());
+			}
+		} catch (Throwable t) {
+			logger.error("unable to load stop path travel times for trip {}", this, t);
+		}
+
 	}
 
 }

@@ -2,14 +2,15 @@ package org.transitclock.core.dataCache;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Order;
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
 import org.transitclock.applications.Core;
 import org.transitclock.db.structs.Arrival;
 import org.transitclock.db.structs.ArrivalDeparture;
@@ -22,21 +23,29 @@ import org.transitclock.utils.Time;
 
 public abstract class StopArrivalDepartureCacheInterface {
 
-	abstract  public  List<IpcArrivalDeparture> getStopHistory(StopArrivalDepartureCacheKey key);
-
-	abstract  public StopArrivalDepartureCacheKey putArrivalDeparture(ArrivalDeparture arrivalDeparture);
-
 	private static final Logger logger = LoggerFactory.getLogger(StopArrivalDepartureCacheInterface.class);
 
-	public void populateCacheFromDb(Session session, Date startDate, Date endDate) {
-		Criteria criteria = session.createCriteria(ArrivalDeparture.class);
+	abstract public List<IpcArrivalDeparture> getStopHistory(StopArrivalDepartureCacheKey key);
 
-		List<ArrivalDeparture> results = createArrivalDeparturesCriteria(criteria, startDate, endDate);
-		for (ArrivalDeparture result : results) {
-			this.putArrivalDeparture(result);
-			//TODO might be better with its own populateCacheFromdb
-			DwellTimeModelCacheFactory.getInstance().addSample(result);
+	abstract public StopArrivalDepartureCacheKey putArrivalDeparture(ArrivalDeparture arrivalDeparture);
+
+	abstract public void populateCacheFromDb(List<ArrivalDeparture> results);
+	abstract protected void putAll(Map<StopArrivalDepartureCacheKey, StopEvents> map);
+	abstract public StopArrivalDepartureCacheKey putArrivalDepartureInMemory(Map<StopArrivalDepartureCacheKey, StopEvents> map,
+																																					 ArrivalDeparture arrivalDeparture);
+
+	public void defaultPopulateCacheFromDb(List<ArrivalDeparture> results) {
+		Map<StopArrivalDepartureCacheKey, StopEvents> map = new HashMap();
+		try {
+			for (ArrivalDeparture result : results) {
+				putArrivalDepartureInMemory(map, result);
+				//TODO might be better with its own populateCacheFromdb
+				DwellTimeModelCacheFactory.getInstance().addSample(result);
+			}
+		} catch (Throwable t) {
+			logger.error("StopArrivalDepartureCacheInterface failed with {}", t, t);
 		}
+		this.putAll(map);
 	}
 
 	/**
@@ -111,6 +120,16 @@ public abstract class StopArrivalDepartureCacheInterface {
 						.list();
 		if (!StopArrivalDepartureCacheFactory.enableSmoothinng()) return results;
 		return smoothArrivalDepartures(results);
+	}
+
+	public static List<ArrivalDeparture> createArrivalDeparturesReverseCriteria(Criteria criteria, Date startDate, Date endDate) {
+		@SuppressWarnings("unchecked")
+		List<ArrivalDeparture> results = criteria.add(Restrictions.between("time", startDate, endDate))
+						.addOrder(Order.asc("tripId"))
+						.addOrder(Order.desc("stopPathIndex"))
+						.addOrder(Order.asc("isArrival"))
+						.list();
+		return results;
 	}
 
 	/**
@@ -204,19 +223,27 @@ public abstract class StopArrivalDepartureCacheInterface {
 							tripIndex,
 							ad.getStopPathIndex(),
 							ad.getFreqStartTime(),
-							null /* stopPathId not present */);
+							null /* stopPathId not present */,
+							ad.isScheduleAdherenceStop());
 			return a;
 		}
-		Departure d = new Departure(ad.getVehicleId(),
-						ad.getTime(),
-						ad.getAvlTime(),
-						block,
-						tripIndex,
-						ad.getStopPathIndex(),
-						ad.getFreqStartTime(),
-						ad.getDwellTime(),
-						null /* stopPathId not present */);
+		Departure d = null;
+		try {
+			d = new Departure(ad.getVehicleId(),
+					ad.getTime(),
+					ad.getAvlTime(),
+					block,
+					tripIndex,
+					ad.getStopPathIndex(),
+					ad.getFreqStartTime(),
+					ad.getDwellTime(),
+					null, /* stopPathId not present */
+					ad.isScheduleAdherenceStop());
+		} catch(Exception e){
+			e.printStackTrace();
+		}
 		return d;
 	}
+
 
 }

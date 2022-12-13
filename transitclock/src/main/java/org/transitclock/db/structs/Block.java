@@ -116,11 +116,9 @@ public final class Block implements Serializable {
 	// Use CascadeType.SAVE_UPDATE so that when the TripPattern is stored   
 	// the Paths are automatically stored.
 	//
-	// Use FetchType.LAZY so that don't read in all trip data at once since
-	// that in turn reads in trip pattern and travel time info, which can
-	// be voluminous and therefore slow. The trips will be read in when
-	// getTrips() is called.
-	@ManyToMany(fetch=FetchType.LAZY)
+	// Fetch EAGERly to avoid AVLExecutor threading issues
+	// take the hit to load blocks on startup for later concurrency/throughput
+	@ManyToMany(fetch=FetchType.EAGER)
 	@JoinTable(name="Block_to_Trip_joinTable")
 	@OrderColumn(name="listIndex")
 	@Cascade({CascadeType.SAVE_UPDATE})
@@ -1336,7 +1334,56 @@ public final class Block implements Serializable {
 	public boolean shouldBeExclusive() {
 		return CoreConfig.exclusiveBlockAssignments();
 	}
-	
+
+	private transient boolean initialized = false;
+	/**
+	 * force any lazy loaded objects to load now before moving to another thread
+	 */
+	public void initialize() {
+		if (!initialized) {
+			for (Trip unloadedTrip : getTrips()) {
+				unloadedTrip.initialize();
+			}
+			initialized = true;
+		}
+	}
+
+	public static class BlockLoader implements Runnable {
+
+		private List<String> serviceIds;
+		private int configRev;
+		private boolean finished = false;
+		private List<Block> blocks;
+
+		public BlockLoader(List<String> serviceIds, int configRev) {
+			this.serviceIds = serviceIds;
+			this.configRev = configRev;
+		}
+
+		@Override
+		public void run() {
+			try {
+				// when in a seperate thread you need a distinct session
+				Session session = HibernateUtils.getSession();
+				String hql = "FROM Blocks b "
+								+ "WHERE b.configRev = :configRev and b.serviceId in (";
+				for (String s : serviceIds) {
+					hql += "'" + s + "', ";
+				}
+				// remove last trailing comma
+				hql = hql.substring(0, hql.length()-2);
+				hql += ")";
+				logger.info("executing {}", hql);
+				Query query = session.createQuery(hql);
+				query.setInteger("configRev", configRev);
+
+				blocks = query.list();
+
+			} finally {
+				finished = true;
+			}
+		}
+	}
 	/**
 	 * For debugging
 	 * 

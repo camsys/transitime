@@ -9,9 +9,49 @@ function avlAnimation(map, icon, clock) {
 		lastTime, lineDone, paused, durations, sprite, positions, end;
 	
 	var ready = false;
-	
+
+
 	// create icon for animation and initialize values
 	// positions is an array of position values: { lat, lon, timestamp }
+	function popupData(data){
+		var avl = data;
+		var labels = ["Vehicle", "GPS Time", "Time Proc", "Lat/Lon", "Speed", "Heading", "Assignment ID", "Route", "Headsign", "Schedule Adherence", "OTP", "Headway Adherence"],
+			keys = ["vehicleId", "time", "timeProcessed", "latlon", "niceSpeed", "heading", "assignmentId", "routeShortName", "headsign", "schedAdh", "otp", "headway"];
+
+		var content = $("<div />").attr("class","card");
+		content.append('<div class="card-header header-theme">Vehicle</div>')
+		var table = $("<div />").attr("class", "card-body");
+
+		for (var i = 0; i < labels.length; i++) {
+			var label = $("<b />").text(labels[i] + ": ");
+			var value = $("<div />").attr("class", "vehicle-value").text('N/A');
+			if(avl[keys[i]]){
+				value = $("<div />").attr("class", "vehicle-value").text(avl[keys[i]]);
+			}
+
+
+			table.append( $("<div />").attr("class", "vehicle-item").append(label, value) )
+		}
+
+		// Links to schedule and google maps for vehicle
+		var links = $("<div />")
+
+		var mapsLink = 'http://google.com/maps?q=loc:' + avl.lat + ',' + avl.lon
+
+		links.append( $("<a data-toggle='modal' href='#schedule-modal' class='list-group-item list-group-item-action secondary-btn' onclick='scheduleAjax(" + avl['tripId'] + "); return false;'>Schedule</a>"))
+		// links.append( $("<div style='border-left:2px solid black;height:20px;display:inline-block;vertical-align:middle'></div>"))
+		links.append( $("<a href=" + mapsLink + " target='_blank' class='list-group-item list-group-item-action secondary-btn' >View Location in Google Maps</a>"))
+
+		var links2 = $("<div />")
+
+		links2.append( $("<a href='#'  id='" + avl.vehicleId + "' onclick='playAnimation(" + avl.vehicleId + ")' class='list-group-item list-group-item-action play-back-popup-btn' >Hide Other Vehicles</a>"))
+
+		content.append(table)
+		content.append(links)
+		content.append(links2)
+		return content;
+	}
+
 	function animation(data) {
 		
 		positions = data
@@ -33,20 +73,86 @@ function avlAnimation(map, icon, clock) {
 		for (var i = 0; i < positions.length - 1; i++)
 			durations.push(positions[i+1].timestamp - positions[i].timestamp);
 
-		var popupContent = $("<div />");
+		/*var content = $("<div />").attr("class","card");
+		content.append('<div class="card-header header-theme">Vehicle</div>')
+
+
+
+
+		var label = $("<b />").text("Id: ");
+		var value = $("<div />").attr("class", "vehicle-value").text(data[0].vehicleId);
+
+		var table = $("<div />").attr("class", "card-body");
+		table.append( $("<div />").attr("class", "vehicle-item").append(label, value) )
+
+		var links = $("<div />")
+
+		links.append( $("<a href='#'  id='" + data[0].vehicleId + "' onclick='playAnimation(" + data[0].vehicleId + ")' class='list-group-item list-group-item-action play-back-popup-btn' >Hide Other Vehicles</a>"))
+
+
+		content.append(table)
+		content.append(links)
+*/
+		var content = popupData(data[0]);
+		/* var popupContent = $("<div />");
 		var popupTable = $("<table />").attr("class", "popupTable");
 
 		var vehicleIdLabel = $("<td />").attr("class", "popupTableLabel").text("Vehicle ID: ");
 		var vehicleIdValue = $("<td />").text(data[0].vehicleId);
 		var playbackLink = $("<td><a href='#' onclick='playAnimation(" + data[0].vehicleId + ")'>Playback</a></td>");
+
 		popupTable.append( $("<tr />").append(vehicleIdLabel, vehicleIdValue) );
 		popupTable.append( $("<tr />").append(playbackLink));
-		popupContent.append(popupTable);
-		
-		sprite = L.marker(positions[0], {icon: icon}).bindPopup(popupContent[0]).addTo(map);
+		popupContent.append(popupTable); */
+
+		// Add a arrow to indicate the heading of the vehicle
+		var headingArrow = L.rotatedMarker(positions[0])
+			.setIcon(arrowIcon).addTo(map);
+
+		headingArrow.options.angle = data[0].heading;
+		headingArrow.setLatLng(positions[0]);
+		// If heading is NaN then don't show arrow at all
+		if (isNaN(parseFloat(data[0].heading))) {
+			headingArrow.setOpacity(0.0);
+		}
+
+    var vehicleBackground = L.circleMarker(positions[0],
+			getVehicleMarkerBackgroundOptions(data[0])).addTo(
+			map);
+		//console.log('positions[currentIndex].heading', positions[0].heading)
+
+		sprite = L.marker(positions[0], {icon: icon}).bindPopup(content[0]).addTo(map);
+		sprite.headingArrow = headingArrow;
+		sprite.background = vehicleBackground;
+		sprite.setZIndexOffset(400)
 		clock.textContent = parseTime(elapsedTime);
+
+
+
 	}
-	
+
+	/**
+	 * Determines options for drawing the vehicle background circle based on uiType
+	 */
+	function getVehicleMarkerBackgroundOptions(vehicleData) {
+		// Handle unassigned vehicles
+		var vehicleMarkerBackgroundOptions = {
+			radius: 13,
+			weight: 0,
+			fillColor: '#1E3F78',
+			fillOpacity: 0.5,
+		};
+
+		if (vehicleData.otp === "on-time")
+			vehicleMarkerBackgroundOptions.fillColor = '#37E627';
+		else if (vehicleData.otp === "early")
+			vehicleMarkerBackgroundOptions.fillColor = '#E34B71';
+		else if (vehicleData.otp === "late")
+			vehicleMarkerBackgroundOptions.fillColor = '#E6D83E'
+
+		return vehicleMarkerBackgroundOptions;
+	}
+
 	function tick() {
 		var now = Date.now(),
 			delta = now - lastTime;
@@ -69,14 +175,32 @@ function avlAnimation(map, icon, clock) {
 				paused = true;
 				return;
 			}
-			
+			//console.log('positions[currentIndex].heading', positions[currentIndex].heading)
 			sprite.setLatLng(positions[currentIndex])
+			sprite.headingArrow.options.angle = positions[currentIndex].heading;
+			sprite.headingArrow.setLatLng(positions[currentIndex]);
+			sprite.headingArrow.update();
+
+			sprite._popup.setContent(popupData(positions[currentIndex])[0]);
+			sprite.background.setLatLng(positions[currentIndex])
+			sprite.background.options.fillColor= getVehicleMarkerBackgroundOptions(positions[currentIndex]).fillColor;
+			sprite.background._updateStyle();
+
 			sprite.update()
 			elapsedTime = positions[currentIndex].timestamp
 		}
 		else {
 			var pos = interpolatePosition(positions[currentIndex], positions[currentIndex+1], durations[currentIndex], lineDone)
 			sprite.setLatLng(pos)
+			//console.log('positions[currentIndex].heading', positions[currentIndex].heading)
+			sprite.headingArrow.options.angle = positions[currentIndex].heading;
+			sprite.headingArrow.setLatLng(pos);
+			sprite._popup.setContent(popupData(positions[currentIndex])[0]);
+			sprite.headingArrow.update();
+
+			sprite.background.setLatLng(pos);
+			sprite.background.options.fillColor= getVehicleMarkerBackgroundOptions(positions[currentIndex]).fillColor;
+			sprite.background._updateStyle()
 			sprite.update()
 			
 		}
@@ -144,19 +268,42 @@ function avlAnimation(map, icon, clock) {
 			nextIndex++;
 		}
 		updateToIndex(nextIndex);
-		console.log(nextIndex)
+		//console.log(nextIndex)
 	}
 
 
 	// clean up icon
     animation.removeIcon = function() {
         // remove old sprite.
-        if (sprite)
-            map.removeLayer(sprite);
+        if (sprite){
+			map.removeLayer(sprite.headingArrow);
+			map.removeLayer(sprite);
+		}
+
     }
+
+	// clean up icon
+	animation.setOpacityIcon = function(value) {
+		// remove old sprite.
+		if (sprite){
+			sprite.setOpacity(value);
+			sprite.headingArrow.setOpacity(value);
+		}
+		if(value === 1){
+			// sprite.setZIndexOffset(400)
+			sprite._zIndex = 400
+		} else{
+			// sprite.setZIndexOffset(200)
+			sprite._zIndex = 200
+		}
+
+		sprite.update();
+
+	}
 
     animation.addIcon = function() {
 		map.addLayer(sprite);
+		map.addLayer(sprite.headingArrow);
 	}
 		
 	function updateToIndex(i) {
@@ -173,6 +320,16 @@ function avlAnimation(map, icon, clock) {
 		// update GUI if tick won't.
 		if (paused) {
 			sprite.setLatLng(avl);
+
+			sprite.headingArrow.options.angle = positions[currentIndex].heading;
+			//console.log('positions[currentIndex].heading', positions[currentIndex].heading)
+			sprite.headingArrow.setLatLng(avl);
+			sprite.headingArrow.update();
+
+			sprite.background.setLatLng(positions[currentIndex])
+			sprite.background.options.fillColor= getVehicleMarkerBackgroundOptions(positions[currentIndex]).fillColor;
+			sprite.background._updateStyle();
+
 			sprite.update();
 			clock.textContent = parseTime(elapsedTime);
 		}

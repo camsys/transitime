@@ -12,15 +12,16 @@ public class TripEvents implements Serializable {
 	private static final long serialVersionUID = -510989387398784934L;
 	
 	
-	public List <IpcArrivalDeparture> events = null;
+	public List<IpcArrivalDeparture> events = new ArrayList<>();
 
 	public List<IpcArrivalDeparture> getEvents() {
 		return events;
 	}
 
-	public void setEvents(List<IpcArrivalDeparture> events) {
-		this.events = events;
-		Collections.sort(this.events, new IpcArrivalDepartureComparator());
+	public TripEvents addUnsafe(IpcArrivalDeparture event) {
+		events.add(event);
+		// don't sort, call sort later
+		return this;
 	}
 
 	@Override
@@ -52,20 +53,28 @@ public class TripEvents implements Serializable {
 		super();		
 	}
 
-	public TripEvents(List<IpcArrivalDeparture> events) {
+	/**
+	 * make immuntable for Thread safe usage
+	 * @param event
+	 */
+	public TripEvents(IpcArrivalDeparture event) {
 		super();
-		this.events = events;
-		Collections.sort(this.events, new IpcArrivalDepartureComparator());
+		this.events.add(event);
 	}
-	
-	public void addEvent(IpcArrivalDeparture event)
-	{
-		if(this.events==null)
-		{
-			events=new ArrayList<IpcArrivalDeparture>();
-		}
-		events.add(event);
+
+	public TripEvents(List<IpcArrivalDeparture> events, IpcArrivalDeparture newEvent) {
+		super();
+		this.events.addAll(events);
+		this.events.add(newEvent);
 		Collections.sort(this.events, new IpcArrivalDepartureComparator());
 	}
 
+
+	public TripEvents copyAdd(IpcArrivalDeparture additional) {
+		return new TripEvents(this.events, additional);
+	}
+
+	public void sort() {
+		Collections.sort(this.events, new IpcArrivalDepartureComparator());
+	}
 }
