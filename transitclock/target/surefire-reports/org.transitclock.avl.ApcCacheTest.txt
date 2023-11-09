@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: org.transitclock.avl.ApcCacheTest
--------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.443 sec - in org.transitclock.avl.ApcCacheTest

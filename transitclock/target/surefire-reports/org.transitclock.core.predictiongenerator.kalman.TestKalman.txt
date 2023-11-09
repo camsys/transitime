@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: org.transitclock.core.predictiongenerator.kalman.TestKalman
--------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.108 sec - in org.transitclock.core.predictiongenerator.kalman.TestKalman

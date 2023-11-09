@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: org.transitclock.custom.aws.ApcSqsClientModuleIntegrationTest
--------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.1 sec - in org.transitclock.custom.aws.ApcSqsClientModuleIntegrationTest
