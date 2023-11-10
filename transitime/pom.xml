@@ -68,6 +68,12 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>com.bmw-carit</groupId>
+			<artifactId>barefoot</artifactId>
+			<version>0.1.5</version>
+		</dependency>
+
 		<!-- Database related, including c3p0 production quality connector. Note:
 			have found that can have problems if don't use similar versions. Can have
 			trouble finding the c3p0 connection pooler for example if use old hibernate-core
@@ -262,6 +268,11 @@
 			<artifactId>javax.servlet-api</artifactId>
 			<version>3.0.1</version>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>TheTransitClock</groupId>
+			<artifactId>transitclockCore</artifactId>
+			<version>2.0.54.8-int-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 

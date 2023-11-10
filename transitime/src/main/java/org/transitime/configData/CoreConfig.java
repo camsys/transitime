@@ -49,6 +49,13 @@ public class CoreConfig {
 	private static IntegerConfigValue daysPopulateHistoricalCache =
 			new IntegerConfigValue("transitime.cache.daysPopulateHistoricalCache", 4,
 					"How many days data to read in to populate historical cache on start up.");
+	public static BooleanConfigValue useDefaultSpatialMatcher =
+			new BooleanConfigValue("transitclock.cache.core.useDefaultSpatialMatcher", false,
+					"Set to true to use default matcher");
+
+	public static BooleanConfigValue useBarefootSpatialMatcher =
+			new BooleanConfigValue("transitclock.cache.core.useBarefootSpatialMatcher", true,
+					"Set to true to use default matcher");
 	/**
 	 * When in playback mode or some other situations don't want to store
 	 * generated data such as arrivals/departures, events, and such to the

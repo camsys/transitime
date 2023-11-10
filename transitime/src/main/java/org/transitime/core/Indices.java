@@ -17,6 +17,7 @@
 package org.transitime.core;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import org.transitime.applications.Core;
 import org.transitime.db.structs.Block;
@@ -590,6 +591,11 @@ public class Indices implements Serializable {
 
 	public int getSegmentIndex() {
 		return segmentIndex;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(block, segmentIndex, stopPathIndex, tripIndex);
 	}
 
 }

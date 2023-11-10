@@ -85,6 +85,8 @@ public class VehicleState {
 	
 	// For keeping track if vehicle delayed
 	private boolean isDelayed = false;
+
+	MapMatcher mapMatcher = null;
 	
 	private static final Logger logger = 
 			LoggerFactory.getLogger(VehicleState.class);
@@ -125,7 +127,18 @@ public class VehicleState {
 		this.assignmentMethod = assignmentMethod;
 		this.assignmentId = assignmentId;
 		this.predictable = predictable;
-		this.assignmentTime = getAvlReport().getDate();		
+		this.assignmentTime = getAvlReport().getDate();
+		this.mapMatcher=(MapMatcher) MapMatcherFactory.getInstance();
+		mapMatcher.setMatcher(block, assignmentTime);
+
+	}
+
+	public SpatialMatch getMapMatchedSpatialMatch()
+	{
+		if(mapMatcher!=null)
+			return mapMatcher.getSpatialMatch(getAvlReport());
+		else
+			return null;
 	}
 	
 	/**
