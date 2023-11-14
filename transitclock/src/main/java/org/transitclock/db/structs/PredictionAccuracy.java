@@ -245,6 +245,9 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 		result =
 				prime * result
 						+ ((vehicleId == null) ? 0 : vehicleId.hashCode());
+		result =
+				prime * result
+						+ ((gtfsStopSeq == null) ? 0 : gtfsStopSeq.hashCode());
 		return result;
 	}
 
@@ -315,6 +318,11 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 			if (other.vehicleId != null)
 				return false;
 		} else if (!vehicleId.equals(other.vehicleId))
+			return false;
+		if (gtfsStopSeq == null) {
+			if (other.gtfsStopSeq != null)
+				return false;
+		} else if (!gtfsStopSeq.equals(other.gtfsStopSeq))
 			return false;
 		return true;
 	}
