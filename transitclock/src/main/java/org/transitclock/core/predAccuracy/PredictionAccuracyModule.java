@@ -474,7 +474,7 @@ public class PredictionAccuracyModule extends Module {
 											pred.isAffectedByWaitStop(),
 											"TransitClock",
 													pred.getTravelTime().getValue(), pred.getDwelLTime().getValue(),
-													null);
+													null, pred.getGtfsStopSeq());
 							storePrediction(accuracyPred);
 							predictionsFound = true;
 						}
@@ -601,7 +601,7 @@ public class PredictionAccuracyModule extends Module {
 				pred.getRouteId(), pred.getDirectionId(), pred.getStopId(),
 				pred.getTripId(), arrivalDepartureTime,
 				pred.getPredictedTime(), pred.getPredictionReadTime(),
-				pred.getSource(), pred.getVehicleId(), pred.isAffectedByWaitStop(), pred.getTravelTime(), pred.getDwellTime());
+				pred.getSource(), pred.getVehicleId(), pred.isAffectedByWaitStop(), pred.getTravelTime(), pred.getDwellTime(), pred.getGtfsStopSeq());
 		
 		// Add the prediction accuracy object to the db logger so that
 		// it gets written to database

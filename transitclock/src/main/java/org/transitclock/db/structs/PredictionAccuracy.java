@@ -129,6 +129,9 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 	@Column
 	private final int dwellTimeAlgorithm;
 
+	@Column
+	private final Integer gtfsStopSeq;
+
 
 	private static final long serialVersionUID = -6900411351649946447L;
 
@@ -152,7 +155,7 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 														String stopId, String tripId, Date arrivalDepartureTime,
 														Date predictedTime, Date predictionReadTime,
 														String predictionSource, String vehicleId,
-														Boolean affectedByWaitStop, Algorithm travelTime, Algorithm dwellTime) {
+														Boolean affectedByWaitStop, Algorithm travelTime, Algorithm dwellTime, Integer gtfsStopSeq) {
 		super();
 		this.routeId = routeId;
 		
@@ -171,6 +174,7 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 		this.affectedByWaitStop = affectedByWaitStop;
 		this.travelTimeAlgorithm=travelTime.getValue();
 		this.dwellTimeAlgorithm=dwellTime.getValue();
+		this.gtfsStopSeq=gtfsStopSeq;
 	}
 
 	/**
@@ -193,6 +197,7 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 		this.affectedByWaitStop = null;
 		this.travelTimeAlgorithm = Algorithm.UNKNOWN.getValue();
 		this.dwellTimeAlgorithm = Algorithm.UNKNOWN.getValue();
+		this.gtfsStopSeq = null;
 	}
 
 	@Override
@@ -330,6 +335,7 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 				+ ", predictionSource=" + predictionSource 
 				+ ", vehicleId=" + vehicleId
 				+ ", affectedByWaitStop=" + affectedByWaitStop
+				+ ", gtfsStopSeq=" + gtfsStopSeq
 				+ "]";
 	}
 
@@ -384,6 +390,10 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 	public Algorithm getTravelTime() { return Algorithm.fromValue(travelTimeAlgorithm); }
 
 	public Algorithm getDwellTime() { return Algorithm.fromValue(dwellTimeAlgorithm); }
+
+	public Integer getGtfsStopSequence() {
+		return gtfsStopSeq;
+	}
 
 	/**
 	 * True if the prediction is based on scheduled departure time, false if
