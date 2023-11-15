@@ -48,7 +48,6 @@ public class PredAccuracyPrediction {
 	private final String source;
 	private final int travelTimeAlgorithm;
 	private final int dwellTimeAlgorithm;
-
 	private final Integer gtfsStopSeq;
 
 	/********************** Member Functions **************************/
@@ -95,6 +94,27 @@ public class PredAccuracyPrediction {
 		this.travelTimeAlgorithm = travelTimeAlgorithm;
 		this.dwellTimeAlgorithm = dwellTimeAlgorithm;
 		this.gtfsStopSeq = gtfsStopSeq;
+	}
+
+	public PredAccuracyPrediction(String routeId, String directionId,
+								  String stopId, String tripId, String vehicleId, Date predictedTime,
+								  Date predictionReadTime, boolean isArrival,
+								  Boolean affectedByWaitStop, String source, int travelTimeAlgorithm, int dwellTimeAlgorithm, String scheduledTime) {
+		super();
+		this.routeId = routeId;
+		this.directionId = directionId;
+		this.stopId = stopId;
+		this.tripId = tripId;
+		this.vehicleId = vehicleId;
+		this.predictedTime = predictedTime;
+		this.predictionReadTime = predictionReadTime;
+		this.isArrival = isArrival;
+		this.affectedByWaitStop = affectedByWaitStop;
+		this.source = source;
+		this.scheduledTime = scheduledTime;
+		this.travelTimeAlgorithm = travelTimeAlgorithm;
+		this.dwellTimeAlgorithm = dwellTimeAlgorithm;
+		this.gtfsStopSeq = null;
 	}
 	
 	public int getAlgorithm() {
