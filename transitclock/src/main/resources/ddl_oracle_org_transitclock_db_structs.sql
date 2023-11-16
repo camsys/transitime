@@ -63,6 +63,7 @@
         freqStartTime timestamp,
         routeId varchar2(60 char),
         routeShortName varchar2(60 char),
+        scheduleAdherenceStop number(1,0),
         scheduledTime timestamp,
         serviceId varchar2(60 char),
         stopOrder number(10,0),
@@ -194,13 +195,13 @@
     );
 
     create table Headway (
-        id number(19,0) not null,
+        creationTime timestamp not null,
         average double precision,
         coefficientOfVariation double precision,
         configRev number(10,0),
-        creationTime timestamp,
         firstDeparture timestamp,
         headway double precision,
+        id number(19,0) not null,
         numVehicles number(10,0),
         otherVehicleId varchar2(60 char),
         routeId varchar2(60 char),
@@ -210,7 +211,7 @@
         tripId varchar2(60 char),
         variance double precision,
         vehicleId varchar2(60 char),
-        primary key (id)
+        primary key (creationTime)
     );
 
     create table HoldingTimes (
@@ -242,6 +243,7 @@
         serviceId varchar2(255 char),
         stopPathIndex number(10,0),
         tripId varchar2(60 char),
+        type number(10,0),
         primary key (vehicleId, avlTime)
     );
 
@@ -269,6 +271,7 @@
         affectedByWaitStop number(1,0),
         arrivalDepartureTime timestamp,
         directionId varchar2(60 char),
+        dwellTimeAlgorithm number(10,0),
         predictedTime timestamp,
         predictionAccuracyMsecs number(10,0),
         predictionReadTime timestamp,
@@ -276,6 +279,7 @@
         routeId varchar2(60 char),
         routeShortName varchar2(60 char),
         stopId varchar2(60 char),
+        travelTimeAlgorithm number(10,0),
         tripId varchar2(60 char),
         vehicleId varchar2(60 char),
         primary key (id)
@@ -320,6 +324,14 @@
         primary key (id)
     );
 
+    create table RouteDirections (
+        routeShortName varchar2(255 char) not null,
+        directionId varchar2(60 char) not null,
+        configRev number(10,0) not null,
+        directionName varchar2(255 char),
+        primary key (routeShortName, directionId, configRev)
+    );
+
     create table Routes (
         id varchar2(60 char) not null,
         configRev number(10,0) not null,
@@ -338,6 +350,46 @@
         textColor varchar2(10 char),
         type varchar2(2 char),
         primary key (id, configRev)
+    );
+
+    create table RunTimesForRoutes (
+        vehicleId varchar2(60 char) not null,
+        tripId varchar2(60 char) not null,
+        startTime timestamp not null,
+        configRev number(10,0) not null,
+        actualLastStopPathIndex number(10,0),
+        directionId varchar2(60 char),
+        dwellTime number(19,0),
+        endTime timestamp,
+        expectedLastStopPathIndex number(10,0),
+        headsign varchar2(255 char),
+        nextTripStartTime number(10,0),
+        routeShortName varchar2(60 char),
+        scheduledEndTime number(10,0),
+        scheduledStartTime number(10,0),
+        serviceId varchar2(60 char),
+        serviceType varchar2(8 char),
+        startStopPathIndex number(10,0),
+        tripPatternId varchar2(120 char),
+        primary key (vehicleId, tripId, startTime, configRev)
+    );
+
+    create table RunTimesForStops (
+        time timestamp not null,
+        stopPathIndex number(10,0) not null,
+        dwellTime number(19,0),
+        lastStop number(1,0),
+        prevStopDepartureTime timestamp,
+        scheduledPrevStopArrivalTime number(10,0),
+        scheduledTime number(10,0),
+        speed double precision,
+        stopPathId varchar2(120 char),
+        timePoint number(1,0),
+        vehicleId varchar2(60 char) not null,
+        tripId varchar2(60 char) not null,
+        startTime timestamp not null,
+        configRev number(10,0) not null,
+        primary key (time, stopPathIndex, vehicleId, tripId, startTime, configRev)
     );
 
     create table StopPathPredictions (
@@ -520,6 +572,7 @@
         startTime number(10,0) not null,
         configRev number(10,0) not null,
         blockId varchar2(60 char),
+        boardingType number(10,0),
         directionId varchar2(60 char),
         endTime number(10,0),
         exactTimesHeadway number(1,0),
@@ -529,21 +582,26 @@
         routeShortName varchar2(60 char),
         serviceId varchar2(60 char),
         shapeId varchar2(60 char),
+        tripPattern_id varchar2(255 char),
         tripShortName varchar2(60 char),
         travelTimes_id number(10,0),
-        tripPattern_id varchar2(120 char),
         tripPattern_configRev number(10,0),
         primary key (tripId, startTime, configRev)
     );
 
     create table VehicleConfigs (
         id varchar2(60 char) not null,
+        bikeCapacity number(10,0),
         capacity number(10,0),
         crushCapacity number(10,0),
         description varchar2(255 char),
+        doorCount number(10,0),
+        doorWidth varchar2(255 char),
+        lowFloor number(10,0),
         nonPassengerVehicle number(1,0),
         trackerId varchar2(60 char),
         type number(10,0),
+        wheelchairAccess varchar2(255 char),
         primary key (id)
     );
 
@@ -592,6 +650,10 @@
 
     create index ArrivalsDeparturesTripPatternIdIndex on ArrivalsDepartures (tripPatternId);
 
+    create index ArrivalsDeparturesScheduledTimeIndex on ArrivalsDepartures (scheduledTime);
+
+    create index ArrivalsDeparturesTimePointIndex on ArrivalsDepartures (scheduleAdherenceStop);
+
     create index AvlReportsTimeIndex on AvlReports (time);
 
     create index HeadwayIndex on Headway (creationTime);
@@ -610,6 +672,14 @@
 
     create index PredictionTimeIndex on Predictions (creationTime);
 
+    create index RunTimesForRoutesRouteNameIndex on RunTimesForRoutes (routeShortName);
+
+    create index RunTimesForRoutesServiceTypeIndex on RunTimesForRoutes (serviceType);
+
+    create index RunTimesForRoutesTripPatternIndex on RunTimesForRoutes (tripPatternId);
+
+    create index RunTimesForRoutesDirectionIdIndex on RunTimesForRoutes (directionId);
+
     create index StopPathPredictionTimeIndex on StopPathPredictions (tripId, stopPathIndex);
 
     alter table TrafficPath_to_StopPath_joinTable 
@@ -620,9 +690,13 @@
     alter table TripPattern_to_Path_joinTable 
         add constraint UK_s0gaw8iv60vc17a5ltryqwg27  unique (stopPaths_tripPatternId, stopPaths_stopPathId, stopPaths_configRev);
 
+    create index TripPatternsRouteShortNameIndex on TripPatterns (routeShortName);
+
     create index VehicleEventsTimeIndex on VehicleEvents (time);
 
     create index VehicleStateAvlTimeIndex on VehicleStates (avlTime);
+
+    create index VehicleStateRouteIndex on VehicleStates (routeShortName);
 
     alter table ApcReport 
         add constraint FK_7mdrruyxl0sdxx2w8rflofniq 
@@ -648,6 +722,11 @@
         add constraint FK_kobr9qxbawdjnf5fced46rfpo 
         foreign key (blocks_serviceId, blocks_configRev, blocks_blockId) 
         references Blocks;
+
+    alter table RunTimesForStops 
+        add constraint FK_fayp9uwwtk5b9o1ev1fv1is7g 
+        foreign key (vehicleId, tripId, startTime, configRev) 
+        references RunTimesForRoutes;
 
     alter table StopPath_locations 
         add constraint FK_sdjt3vtd3w0cl07p0doob6khi 
