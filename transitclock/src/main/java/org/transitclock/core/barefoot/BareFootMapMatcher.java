@@ -1,11 +1,11 @@
 package org.transitclock.core.barefoot;
 
-import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections4.map.PassiveExpiringMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.transitclock.configData.CoreConfig;
 import org.transitclock.core.MapMatcher;
 import org.transitclock.core.SpatialMatch;
 import org.transitclock.db.structs.AvlReport;
@@ -24,46 +24,58 @@ import com.bmwcarit.barefoot.spatial.Geography;
 import com.bmwcarit.barefoot.spatial.SpatialOperator;
 import com.bmwcarit.barefoot.topology.Dijkstra;
 import com.esri.core.geometry.Point;
+import org.transitclock.db.structs.Trip;
 import org.transitclock.utils.Geo;
-import org.transitclock.core.SpatialMatch;
 
+/**
+ * Loads BaseRoad into BareFoot and returns the best spatial match.
+ */
 public class BareFootMapMatcher implements MapMatcher {
 
+    // constructing a RoadReader is expensive so cache it
+    private static Map<Trip, TransitClockRoadReader> cache = new PassiveExpiringMap<>(4 * 60 * 60 * 1000); // 4 hours
     private RoadMap barefootMap = null;
 
     private Matcher barefootMatcher = null;
 
     private MatcherKState barefootState = null;
 
-    private Block block = null;
-
+    private Trip trip = null;
     private int tripIndex = -1;
 
-    private static SpatialOperator spatial = new Geography();
+    private static SpatialOperator spatialOperator = new Geography();
+    private boolean isInitialized = false;
 
     private static final Logger logger = LoggerFactory.getLogger(BareFootMapMatcher.class);
 
     @Override
-    public void setMatcher(Block block, Date assignmentTime) {
-
-        if (block != null) {
-
-            this.block = block;
-
-            tripIndex = block.activeTripIndex(assignmentTime, 0);
-
-            TransitClockRoadReader roadReader = new TransitClockRoadReader(block, tripIndex);
-
-            barefootMap = RoadMap.Load(roadReader);
-
+    public void intialize(Trip trip) {
+        if (trip != null) {
+            long start = System.currentTimeMillis();
+            this.trip = trip;
+            Block block = trip.getBlock();
+            tripIndex = block.getTripIndex(trip);
+            TransitClockRoadReader roadReader = cache.get(trip);
+            if (roadReader == null) {
+                roadReader = new TransitClockRoadReader(trip);
+                barefootMap = RoadMap.Load(roadReader);
+                logger.info("cache miss");
+                cache.put(trip, roadReader);
+            } else {
+                logger.info("cache hit");
+                // should we ensure roadReader is in a good state?
+            }
+            logger.debug("reader load in {}", (System.currentTimeMillis() - start));
             barefootMap.construct();
-
+            logger.debug("reader construct in {}", (System.currentTimeMillis() - start));
             barefootMatcher = new Matcher(barefootMap, new Dijkstra<Road, RoadPoint>(), new TimePriority(),
                     new Geography());
-
             barefootMatcher.shortenTurns(false);
-
             barefootState = new MatcherKState();
+            isInitialized = true;
+            logger.debug("init complete in {}", (System.currentTimeMillis() - start));
+        } else {
+            logger.debug("nothing to do");
         }
     }
 
@@ -93,18 +105,25 @@ public class BareFootMapMatcher implements MapMatcher {
                 ReferenceId refId = ReferenceId.deconstructRefId(estimate.point().edge().base().refid());
 
                 logger.debug(
-                        "Vehicle {} assigned to {} is {} metres from GPS coordindates on {}. Probability is {} and Sequence probabilty is {}.",
+                        "Vehicle {} assigned to {} is {} metres from GPS coordinates on {}. Probability is {} and Sequence probability is {}.",
                         avlReport.getVehicleId(), avlReport.getAssignmentId(),
                         Geo.distance(location, avlReport.getLocation()), refId, estimate.filtprob(),
                         estimate.seqprob());
 
-                return new SpatialMatch(avlReport.getTime(), block, tripIndex, refId.getStopPathIndex(),
-                        refId.getSegmentIndex(), 0, spatial.intercept(estimate.point().edge().geometry(), point)
-                        * spatial.length(estimate.point().edge().geometry()), SpatialMatch.MatchType.BAREFOOT);
+                return new SpatialMatch(avlReport.getTime(), trip.getBlock(), tripIndex, refId.getStopPathIndex(),
+                        refId.getSegmentIndex(), 0, spatialOperator.intercept(estimate.point().edge().geometry(), point)
+                        * spatialOperator.length(estimate.point().edge().geometry()), SpatialMatch.MatchType.BAREFOOT);
 
             }
         }
         return null;
     }
 
+    public boolean isInitialized() {
+        return isInitialized;
+    }
+
+    public boolean isTrip(Trip trip) {
+        return this.trip.equals(trip);
+    }
 }

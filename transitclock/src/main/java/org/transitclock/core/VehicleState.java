@@ -18,11 +18,13 @@ package org.transitclock.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.applications.Core;
 import org.transitclock.configData.CoreConfig;
 import org.transitclock.core.blockAssigner.BlockAssigner;
 import org.transitclock.core.dataCache.VehicleStateManager;
 import org.transitclock.db.structs.*;
 import org.transitclock.db.structs.AvlReport.AssignmentType;
+import org.transitclock.gtfs.DbConfig;
 import org.transitclock.ipc.data.IpcPrediction;
 import org.transitclock.utils.StringUtils;
 import org.transitclock.utils.Time;
@@ -95,7 +97,15 @@ public class VehicleState {
 	//Used for schedPred AVL. Identify if trip is canceled.
 	private boolean isCanceled;
 
-	MapMatcher mapMatcher = null;
+	private MapMatcher mapMatcher = null;
+
+	public MapMatcher getMapMatcher() {
+		return mapMatcher;
+	}
+
+	public void setMapMatcher(MapMatcher m) {
+		mapMatcher = m;
+	}
 
 	public Headway getHeadway() {
 		return headway;
@@ -159,17 +169,25 @@ public class VehicleState {
 		this.assignmentId = assignmentId;
 		this.predictable = predictable;
 		this.assignmentTime = getAvlReport().getDate();
-		this.mapMatcher=(MapMatcher) MapMatcherFactory.getInstance();
-		mapMatcher.setMatcher(block, assignmentTime);
+		if (this.block == null) return; // nothing to do
+		if (CoreConfig.useBarefootSpatialMatcher.getValue()) {
+			this.mapMatcher = MapMatcherFactory.getMapMatcher();
 
-	}
-
-	public SpatialMatch getMapMatchedSpatialMatch()
-	{
-		if(mapMatcher!=null)
-			return mapMatcher.getSpatialMatch(getAvlReport());
-		else
-			return null;
+			// if not a trip assignment, simply index into the active trip as its unspecified
+			if (!AssignmentType.TRIP_ID.equals(getAvlReport().getAssignmentType())) {
+				int tripIndex = block.activeTripIndex(assignmentTime, 0);
+				mapMatcher.intialize(block.getTrip(tripIndex));
+			} else {
+				// we have a trip specified, use that
+				DbConfig config = Core.getInstance().getDbConfig();
+				Trip tripWithSuffix = BlockAssigner.getInstance().getTripWithServiceIdSuffix(config, getAvlReport().getAssignmentId());
+				if (tripWithSuffix == null) {
+					mapMatcher.intialize(block.getTrip(getAvlReport().getAssignmentId()));
+				} else {
+					mapMatcher.intialize(tripWithSuffix);
+				}
+			}
+		}
 	}
 
 	/**

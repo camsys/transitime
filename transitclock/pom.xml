@@ -170,6 +170,12 @@
 			<artifactId>commons-lang3</artifactId>
 			<version>3.3.2</version>
 		</dependency>
+		<!-- expiring maps -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.4</version>
+		</dependency>
 		<!-- For processing XML files, such as for AVL feeds -->
 		<dependency>
 			<groupId>org.jdom</groupId>

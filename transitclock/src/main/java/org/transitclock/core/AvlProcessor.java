@@ -438,8 +438,9 @@ public class AvlProcessor {
 			spatialMatches.addAll(SpatialMatcher
 					.getSpatialMatches(vehicleState));
 
-		if(CoreConfig.useBarefootSpatialMatcher.getValue())
-			spatialMatches.add(vehicleState.getMapMatchedSpatialMatch());
+		if(CoreConfig.useBarefootSpatialMatcher.getValue()) {
+			spatialMatches.addAll(SpatialMatcher.getBarefootSpatialMatches(vehicleState));
+		}
 		logger.debug("For vehicleId={} found the following {} spatial "
 				+ "matches: {}", vehicleState.getVehicleId(),
 				spatialMatches.size(), spatialMatches);
@@ -735,7 +736,7 @@ public class AvlProcessor {
 
 			// Get the potential spatial matches
 			List<SpatialMatch> spatialMatchesForBlock = SpatialMatcher
-					.getSpatialMatches(vehicleState.getAvlReport(),
+					.getSpatialMatches(vehicleState, vehicleState.getAvlReport(),
 							block, potentialTrips, MatchingType.AUTO_ASSIGNING_MATCHING);
 
 			// Add appropriate spatial matches to list
@@ -796,7 +797,7 @@ public class AvlProcessor {
 		// if it pretty far off.
 		List<Trip> potentialTrips = block.getTripsCurrentlyActive(avlReport);
 		List<SpatialMatch> spatialMatches =
-				SpatialMatcher.getSpatialMatches(vehicleState.getAvlReport(),
+				SpatialMatcher.getSpatialMatches(vehicleState, vehicleState.getAvlReport(),
 						block, potentialTrips, MatchingType.STANDARD_MATCHING);
 		logger.debug("For vehicleId={} and blockId={} spatial matches={}",
 				avlReport.getVehicleId(), block.getId(), spatialMatches);

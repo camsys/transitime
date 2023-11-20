@@ -30,7 +30,6 @@ import org.transitclock.configData.AvlConfig;
 import org.transitclock.configData.CoreConfig;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.db.structs.Block;
-import org.transitclock.db.structs.Extent;
 import org.transitclock.db.structs.Location;
 import org.transitclock.db.structs.Route;
 import org.transitclock.db.structs.StopPath;
@@ -73,7 +72,8 @@ public class SpatialMatcher {
 	private static final Logger logger = 
 			LoggerFactory.getLogger(SpatialMatcher.class);
 
-	private static BooleanConfigValue spatialMatchToLayoversAllowedForAutoAssignment=new BooleanConfigValue("transitclock.core.spatialMatchToLayoversAllowedForAutoAssignment", false, "Allow auto assigner consider spatial matches to layovers. Experimental.");
+	private static BooleanConfigValue spatialMatchToLayoversAllowedForAutoAssignment
+					= new BooleanConfigValue("transitclock.core.spatialMatchToLayoversAllowedForAutoAssignment", false, "Allow auto assigner consider spatial matches to layovers. Experimental.");
 	/********************** Member Functions **************************/
 
 	/**
@@ -114,8 +114,38 @@ public class SpatialMatcher {
 	 * @return List of potential SpatialMatches. Can be empty but will not be
 	 *         null.
 	 */
-	private List<SpatialMatch> getSpatialMatchesForTrip(AvlReport avlReport,
-			Trip trip, MatchingType matchingType) {
+	private List<SpatialMatch> getSpatialMatchesForTrip(VehicleState vehicleState,
+					AvlReport avlReport,
+																											Trip trip, MatchingType matchingType) {
+		if (CoreConfig.useBarefootSpatialMatcher.getValue()) {
+			return getSpatialMatchesForTripViaBarefootMatching(vehicleState, avlReport, trip, matchingType);
+		}
+		return getSpatialMatchesForTripViaDefaultMatching(avlReport, trip, matchingType);
+	}
+
+	private List<SpatialMatch> getSpatialMatchesForTripViaBarefootMatching(VehicleState vehicleState,
+																																				 AvlReport avlReport,
+																																				 Trip trip, MatchingType matchingType) {
+		// here is where we hook up Barefoot
+		MapMatcher mapMatcher = vehicleState.getMapMatcher();
+		if (mapMatcher == null) {
+			mapMatcher = MapMatcherFactory.getMapMatcher();
+			vehicleState.setMapMatcher(mapMatcher);
+		}
+		if (!mapMatcher.isInitialized() || mapMatcher.isTrip(trip)) {
+			mapMatcher.intialize(trip);
+		} else {
+			logger.debug("re-using state of mapMatcher");
+		}
+		List<SpatialMatch> matches = new ArrayList<>();
+		SpatialMatch spatialMatch = mapMatcher.getSpatialMatch(avlReport);
+		if (spatialMatch != null)
+			matches.add(spatialMatch);
+		return matches;
+	}
+
+	private List<SpatialMatch> getSpatialMatchesForTripViaDefaultMatching(AvlReport avlReport,
+																																				Trip trip, MatchingType matchingType) {
 		Block block = trip.getBlock();
 		
 		// The matches to be returned
@@ -228,7 +258,7 @@ public class SpatialMatcher {
 		
 		// Determine matches for the previous AvlReport
 		List<SpatialMatch> spatialMatchesForPreviousReport =
-				(new SpatialMatcher()).getSpatialMatchesForTrip(
+				(new SpatialMatcher()).getSpatialMatchesForTrip(vehicleState,
 						previousAvlReport, trip, matchingType);
 
 		// There can be multiple matches, but only look at first 
@@ -278,6 +308,7 @@ public class SpatialMatcher {
 	 * @return non-null possibly empty list of spatial matches
 	 */
 	public static List<SpatialMatch> getSpatialMatches(
+			VehicleState vehicleState,
 			AvlReport avlReport,
 			Block block, List<Trip> tripsToInvestigate,
 			MatchingType matchingType) {
@@ -329,7 +360,7 @@ public class SpatialMatcher {
 				// Haven't already examined this trip pattern for spatial
 				// matches so do so now.
 				List<SpatialMatch> spatialMatchesForTrip =
-						(new SpatialMatcher()).getSpatialMatchesForTrip(
+						(new SpatialMatcher()).getSpatialMatchesForTrip(vehicleState,
 								avlReport, trip, matchingType);
 				
 				// Use these spatial matches for the trip
@@ -393,11 +424,11 @@ public class SpatialMatcher {
 	 * @return non-null possibly empty list of spatial matches
 	 */
 	public static List<SpatialMatch> getSpatialMatchesForAutoAssigning(
-			AvlReport avlReport, Block block,
+			VehicleState vehicleState, AvlReport avlReport, Block block,
 			List<Trip> tripsToInvestigate) {
 		// Get all the spatial matches
 		List<SpatialMatch> allSpatialMatches =
-				getSpatialMatches(avlReport, block, tripsToInvestigate,
+				getSpatialMatches(vehicleState, avlReport, block, tripsToInvestigate,
 						MatchingType.AUTO_ASSIGNING_MATCHING);
 
 		// Filter out the ones that are layovers
@@ -723,20 +754,36 @@ public class SpatialMatcher {
 			smallestDistanceSpatialMatch = spatialMatch;
 		}
 	}
-	
-	/**
-	 * Starts at the previous match and goes from that point forward through the
-	 * block assignment looking for the best spatial matches. Intended for when
-	 * have a predictable vehicle already matched to an assignment and then get
-	 * a new AVL report that needs to be matched.
-	 * 
-	 * @param vehicleState
-	 *            the previous vehicle state
-	 * @return list of possible spatial matches. If no spatial matches then
-	 *         returns empty list (as opposed to null)
-	 */
+
+
 	public static List<SpatialMatch>
-			getSpatialMatches(VehicleState vehicleState) {
+	getSpatialMatches(VehicleState vehicleState) {
+		if(CoreConfig.useDefaultSpatialMatcher.getValue())
+			return getBarefootSpatialMatches(vehicleState);
+		return getDefaultSpatialMatches(vehicleState);
+	}
+
+	public static List<SpatialMatch> getBarefootSpatialMatches(VehicleState vehicleState) {
+		SpatialMatch spatialMatch = vehicleState.getMapMatcher().getSpatialMatch(vehicleState.getAvlReport());
+		List<SpatialMatch> matches = new ArrayList<>();
+		if (spatialMatch != null)
+			matches.add(spatialMatch);
+		return matches;
+	}
+
+		/**
+     * Starts at the previous match and goes from that point forward through the
+     * block assignment looking for the best spatial matches. Intended for when
+     * have a predictable vehicle already matched to an assignment and then get
+     * a new AVL report that needs to be matched.
+     *
+     * @param vehicleState
+     *            the previous vehicle state
+     * @return list of possible spatial matches. If no spatial matches then
+     *         returns empty list (as opposed to null)
+     */
+	public static List<SpatialMatch>
+			getDefaultSpatialMatches(VehicleState vehicleState) {
 		// Some convenience variables
 		TemporalMatch previousMatch = vehicleState.getMatch();
 		SpatialMatcher spatialMatcher = new SpatialMatcher();

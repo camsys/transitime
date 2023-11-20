@@ -2,12 +2,14 @@ package org.transitclock.core.barefoot;
 
 import java.util.Objects;
 
+/**
+ * Encapsulate stopPathIndex and a segmentIndex of a TTC Indices.
+ */
 public class ReferenceId {
-    int stopPathIndex;
-    int segmentIndex;
-    static long mutiplier=1000;
+    private int stopPathIndex;
+    private int segmentIndex;
+
     public ReferenceId(int stopPathIndex, int segmentIndex) {
-        super();
         this.stopPathIndex = stopPathIndex;
         this.segmentIndex = segmentIndex;
     }
@@ -24,15 +26,20 @@ public class ReferenceId {
     public void setSegmentIndex(int segmentIndex) {
         this.segmentIndex = segmentIndex;
     }
-    static ReferenceId deconstructRefId(long refId)
+    public static ReferenceId deconstructRefId(long refId)
     {
-        int segmentIndex=(int) Math.floorDiv(refId,mutiplier);
-        int stopPathIndex=(int) Math.floorMod(refId,mutiplier);
+        // decode two ints from a long
+        // https://stackoverflow.com/questions/12772939/java-storing-two-ints-in-a-long
+        int stopPathIndex = (int)(refId >> 32);
+        int segmentIndex = (int)refId;
         return new ReferenceId(stopPathIndex, segmentIndex);
     }
-    long getRefId()
+
+    public long getRefId()
     {
-        return  stopPathIndex+segmentIndex*mutiplier;
+        // encode two ints into a long
+        // https://stackoverflow.com/questions/12772939/java-storing-two-ints-in-a-long
+        return  (((long)segmentIndex) << 32) | (stopPathIndex & 0xffffffffL);
     }
 
     @Override

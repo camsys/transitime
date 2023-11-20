@@ -253,7 +253,7 @@ public class AutoBlockAssigner {
 		AvlReport avlReport = getAvlReport();
 		List<Trip> potentialTrips = block.getTripsCurrentlyActive(avlReport);
 		List<SpatialMatch> spatialMatches = SpatialMatcher
-				.getSpatialMatchesForAutoAssigning(getAvlReport(),
+				.getSpatialMatchesForAutoAssigning(vehicleState, getAvlReport(),
 						block, potentialTrips);
 		if (spatialMatches.isEmpty())
 			return null;
@@ -262,7 +262,7 @@ public class AutoBlockAssigner {
 		// that can make sure that it too matches the assignment.
 		AvlReport previousAvlReport = getPreviousAvlReport();
 		List<SpatialMatch> prevSpatialMatches = SpatialMatcher
-				.getSpatialMatchesForAutoAssigning(previousAvlReport,
+				.getSpatialMatchesForAutoAssigning(vehicleState, previousAvlReport,
 						block, potentialTrips);
 		if (prevSpatialMatches.isEmpty())
 			return null;
@@ -409,7 +409,7 @@ public class AutoBlockAssigner {
 		// ignore it since layover matches are far too flexible to really be 
 		// considered a spatial match
 		List<SpatialMatch> newSpatialMatches = SpatialMatcher
-				.getSpatialMatchesForAutoAssigning(avlReport,
+				.getSpatialMatchesForAutoAssigning(vehicleState, avlReport,
 						block, tripsNeedToInvestigate);
 		
 		// Add newly discovered matches to the cache and to the list of spatial
@@ -485,7 +485,7 @@ public class AutoBlockAssigner {
 
 		// Get and return the spatial matches
 		List<SpatialMatch> spatialMatches = SpatialMatcher
-				.getSpatialMatchesForAutoAssigning(avlReport,
+				.getSpatialMatchesForAutoAssigning(vehicleState, avlReport,
 						block, activeTrips);
 		return spatialMatches;
 	}

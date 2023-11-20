@@ -17,6 +17,8 @@
 
 package org.transitclock.core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.transitclock.config.StringConfigValue;
 import org.transitclock.utils.ClassInstantiator;
 
@@ -28,6 +30,7 @@ import org.transitclock.utils.ClassInstantiator;
  */
 public class MapMatcherFactory {
 
+    private static final Logger logger = LoggerFactory.getLogger(MapMatcherFactory.class);
     // The name of the class to instantiate
     private static StringConfigValue className =
             new StringConfigValue("transitclock.core.mapMatcherClass",
@@ -36,15 +39,12 @@ public class MapMatcherFactory {
 
     /********************** Member Functions **************************/
 
-    public static MapMatcher getInstance() {
-
-
+    public static MapMatcher getMapMatcher() {
         try {
             return ClassInstantiator.instantiate(className.getValue(),
                     MapMatcher.class);
         } catch (Exception e) {
-
-            e.printStackTrace();
+            logger.error("provided configuration could not be instantiated: {}", className.getValue(), e);
         }
         return null;
     }

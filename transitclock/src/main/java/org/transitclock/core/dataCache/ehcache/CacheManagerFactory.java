@@ -27,11 +27,16 @@ public class CacheManagerFactory {
 	public static CacheManager getInstance() {
 															
 		if (singleton == null) {
-			URL xmlConfigUrl = getConfigPath();
-			XmlConfiguration xmlConfig = new XmlConfiguration(xmlConfigUrl);
-			
-			singleton = CacheManagerBuilder.newCacheManager(xmlConfig);
-			singleton.init();				
+			synchronized (ehcacheConfigFile) {
+				// check if another thread beat us here
+				if (singleton == null) {
+					URL xmlConfigUrl = getConfigPath();
+					XmlConfiguration xmlConfig = new XmlConfiguration(xmlConfigUrl);
+
+					singleton = CacheManagerBuilder.newCacheManager(xmlConfig);
+					singleton.init();
+				}
+			}
 		}
 		
 		return singleton;

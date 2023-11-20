@@ -2,16 +2,15 @@ package org.transitclock.core.barefoot;
 
 import java.util.HashSet;
 
+import com.bmwcarit.barefoot.road.BaseRoad;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
-import org.transitclock.configData.CoreConfig;
 import org.transitclock.core.Indices;
 import org.transitclock.db.structs.Block;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.db.structs.VectorWithHeading;
 
-import com.bmwcarit.barefoot.road.BaseRoad;
 import com.bmwcarit.barefoot.road.RoadReader;
 import com.bmwcarit.barefoot.spatial.Geography;
 import com.bmwcarit.barefoot.spatial.SpatialOperator;
@@ -21,22 +20,28 @@ import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polygon;
 import com.esri.core.geometry.Polyline;
 
+/**
+ * Translates a GTFS shape into a Barefoot IndiciesRoad, a BaseRoad subclass
+ */
 public class TransitClockRoadReader implements RoadReader {
-    Trip trip = null;
 
-    Indices indices = null;
+    // while this could be configurable, we set it to a logical maximum
+    private static float MAX_SPEED = 60F; // or 134 mph
+    private static short ROAD_TYPE = 1; // we don't distinguish road types, they are all shapes to us
+    private static float PRIORITY = 1F; // we don't distinquish priority
 
-    int tripIndex = -1;
+    private final Indices indices;
 
-    long segmentCounter = 0;
+    private long segmentCounter = 0;
+
     private static final Logger logger =
             LoggerFactory.getLogger(TransitClockRoadReader.class);
 
-    private static SpatialOperator spatial = new Geography();
+    private static SpatialOperator spatialOperator = new Geography();
 
-    public TransitClockRoadReader(Block block, int tripIndex) {
-
-        trip = block.getTrip(tripIndex);
+    public TransitClockRoadReader(Trip trip) {
+        Block block = trip.getBlock();
+        int tripIndex = block.getTripIndex(trip);;
         indices = new Indices(block, tripIndex, 0, 0);
     }
 
@@ -65,42 +70,32 @@ public class TransitClockRoadReader implements RoadReader {
 
         polyLine.addSegment(polyLineSegment, false);
 
-        ReferenceId refId=new ReferenceId(indices.getStopPathIndex(),indices.getSegmentIndex());
+        ReferenceId refId = new ReferenceId(indices.getStopPathIndex(), indices.getSegmentIndex());
 
-        return new BaseRoad(indices.hashCode(), segmentCounter, segmentCounter++, refId.getRefId(), true, (short) 1, 1F, 60F, 60F, (float)spatial.length(polyLine),
+        return new BaseRoad(indices.hashCode(), segmentCounter, segmentCounter++, refId.getRefId(), true,
+                ROAD_TYPE, PRIORITY, MAX_SPEED, MAX_SPEED, (float)spatialOperator.length(polyLine),
                 polyLine);
     }
 
-
-
     @Override
     public boolean isOpen() {
-        // TODO Auto-generated method stub
+        // force the process to start over so we don't maintain the internal state
         return false;
     }
 
-
-
     @Override
     public void open() throws SourceException {
-        // TODO Auto-generated method stub
-
+        // this is a no-op as we have the block in internal state
     }
-
-
 
     @Override
     public void open(Polygon polygon, HashSet<Short> exclusion) throws SourceException {
-        // TODO Auto-generated method stub
-
+        // this is a no-op with the note that polygon/exclusions are not supported
     }
-
-
 
     @Override
     public void close() throws SourceException {
-        // TODO Auto-generated method stub
-
+        // a no-op, nothing to cleanup
     }
 
 }
