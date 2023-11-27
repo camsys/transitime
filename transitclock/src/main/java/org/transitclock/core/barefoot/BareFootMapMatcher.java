@@ -66,7 +66,9 @@ public class BareFootMapMatcher implements MapMatcher {
                 // should we ensure roadReader is in a good state?
             }
             logger.debug("reader load in {}", (System.currentTimeMillis() - start));
-            barefootMap.construct();
+            if (barefootMap != null){
+                barefootMap.construct();
+            }
             logger.debug("reader construct in {}", (System.currentTimeMillis() - start));
             barefootMatcher = new Matcher(barefootMap, new Dijkstra<Road, RoadPoint>(), new TimePriority(),
                     new Geography());
@@ -81,17 +83,17 @@ public class BareFootMapMatcher implements MapMatcher {
 
     @Override
     public SpatialMatch getSpatialMatch(AvlReport avlReport) {
-
         if (barefootState != null) {
             Point point = new Point();
             point.setX(avlReport.getLon());
             point.setY(avlReport.getLat());
             MatcherSample sample = new MatcherSample(avlReport.getTime(), point);
 
-            Set<MatcherCandidate> result = barefootMatcher.execute(barefootState.vector(), barefootState.sample(),
-                    sample);
-
-            barefootState.update(result, sample);
+            if (barefootState.vector() != null && barefootState.sample() != null){
+                Set<MatcherCandidate> result = barefootMatcher.execute(barefootState.vector(), barefootState.sample(),
+                        sample);
+                barefootState.update(result, sample);
+            }
 
             MatcherCandidate estimate = barefootState.estimate();
 

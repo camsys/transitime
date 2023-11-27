@@ -650,7 +650,9 @@ public class SpatialMatch {
 		for (int segIndex=0; segIndex<segmentIndex; ++segIndex) {
 			Vector v = block.getSegmentVector(tripIndex, stopPathIndex,
 					segIndex);
-			distance += v.length();
+			if (v != null) {
+				distance += v.length();
+			}
 		}
 		distance += distanceAlongSegment;
 		return distance;
