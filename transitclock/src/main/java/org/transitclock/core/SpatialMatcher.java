@@ -758,7 +758,7 @@ public class SpatialMatcher {
 
 	public static List<SpatialMatch>
 	getSpatialMatches(VehicleState vehicleState) {
-		if(CoreConfig.useDefaultSpatialMatcher.getValue())
+		if(CoreConfig.useBarefootSpatialMatcher.getValue())
 			return getBarefootSpatialMatches(vehicleState);
 		return getDefaultSpatialMatches(vehicleState);
 	}
