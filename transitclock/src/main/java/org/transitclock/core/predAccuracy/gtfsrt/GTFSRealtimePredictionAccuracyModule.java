@@ -60,7 +60,13 @@ public class GTFSRealtimePredictionAccuracyModule extends PredictionAccuracyModu
 
 	/********************** Config Params **************************/
 
+	private static final BooleanConfigValue processArrivals = new BooleanConfigValue(
+					"transitclock.predAccuracy.processArrivals", true,
+					"Whether to process arrivals in gtfs-rt prediction accuracy module.");
 
+	private static final BooleanConfigValue processDepartures = new BooleanConfigValue(
+					"transitclock.predAccuracy.processDepartures", true,
+					"Whether to process departures in gtfs-rt prediction accuracy module.");
 	private static final StringConfigValue gtfsTripUpdateUrl = new StringConfigValue(
 			"transitclock.predAccuracy.gtfsTripUpdateUrl", "http://127.0.0.1:8091/trip-updates",
 			"URL to access gtfs-rt trip updates.");
@@ -74,15 +80,6 @@ public class GTFSRealtimePredictionAccuracyModule extends PredictionAccuracyModu
 			new StringConfigValue("transitclock.predictionAccuracy.apiKeyValue",
 					null,
 					"api key value if necessary, null if not needed");
-
-	
-  	private static ClassConfigValue translatorConfig =
-		  new ClassConfigValue("transitclock.predAccuracy.RtTranslator", null,
-			  "Implementation of GTFSRealtimeTranslator to perform " +
-		  "the translation of stopIds and other rt quirks");
-	
-  // if stopIds needs optional parsing/translation
-  private GTFSRealtimeTranslator translator = null;
 
   private Set<String> routeFilterSet = new HashSet<>();
 
@@ -303,7 +300,7 @@ public class GTFSRealtimePredictionAccuracyModule extends PredictionAccuracyModu
 								   Integer stopTimeDelay, boolean stopTimeMatchesSchedule){
 		if (scheduledTime != null) {
 			Date eventTime;
-			if (stopTimeUpdate.hasArrival()) {
+			if (processArrivals.getValue() && stopTimeUpdate.hasArrival()) {
 				eventTime = getEventTime(update, stopTimeUpdate, scheduledTime, true, stopTimeDelay,
 						stopTimeMatchesSchedule, eventReadTime);
 				if (eventTime != null) {
@@ -312,7 +309,7 @@ public class GTFSRealtimePredictionAccuracyModule extends PredictionAccuracyModu
 							true, "GTFS-RT (Arrival)", scheduledTime.toString());
 				}
 			}
-			if (stopTimeUpdate.hasDeparture()) {
+			if (processArrivals.getValue() && stopTimeUpdate.hasDeparture()) {
 				eventTime = getEventTime(update, stopTimeUpdate, scheduledTime, false, stopTimeDelay,
 						stopTimeMatchesSchedule, eventReadTime);
 				if (eventTime != null) {
