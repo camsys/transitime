@@ -1,16 +1,16 @@
 /*
  * This file is part of Transitime.org
- * 
+ *
  * Transitime.org is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License (GPL) as published by the
  * Free Software Foundation, either version 3 of the License, or any later
  * version.
- * 
+ *
  * Transitime.org is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with
  * Transitime.org . If not, see <http://www.gnu.org/licenses/>.
  */
@@ -35,11 +35,14 @@ import org.transitclock.config.StringConfigValue;
 import org.transitclock.ipc.rmi.Hello;
 import org.transitclock.utils.Time;
 
+import javax.net.ServerSocketFactory;
+import javax.net.ssl.*;
+
 /**
  * For clients to access RMI based method calls for a remote object simply need
  * to call something like: Hello hello = ClientFactory.getInstance(agencyId,
  * Hello.class);
- * 
+ *
  * @author SkiBu Smith
  *
  */
@@ -55,10 +58,10 @@ public class ClientFactory<T extends Remote> {
 					+ "so total timeout time is twice what is specified here.");
 
 	private static StringConfigValue debugRmiServerHost = new StringConfigValue(
-	    "transtime.rmi.debug.rmi.server", 
-	    null, 
-	    "The RMI server to connect to when in debug mode");
-	
+			"transtime.rmi.debug.rmi.server",
+			null,
+			"The RMI server to connect to when in debug mode");
+
 	private static final Logger logger = LoggerFactory
 			.getLogger(ClientFactory.class);
 
@@ -70,7 +73,7 @@ public class ClientFactory<T extends Remote> {
 	 * reasonable because usually will only be creating a single such object and
 	 * if there are a few that is fine as well since they are not that
 	 * expensive.
-	 * 
+	 *
 	 * @param host
 	 *            Where remote object lives
 	 * @param agencyId
@@ -82,7 +85,7 @@ public class ClientFactory<T extends Remote> {
 	 *         accessing the object then null is returned.
 	 */
 	public static <T extends Remote> T getInstance(String agencyId,
-			Class<T> clazz) {
+												   Class<T> clazz) {
 		// Set RMI timeout if need to
 		enableRmiTimeout();
 
@@ -93,7 +96,7 @@ public class ClientFactory<T extends Remote> {
 			// an error.
 			RmiStubInfo info = new RmiStubInfo(agencyId, clazz.getSimpleName());
 
-			// Get the RMI stub. Don't update host name since there is no 
+			// Get the RMI stub. Don't update host name since there is no
 			// indication of a problem with the cached version. Instead,
 			// just use the cached version to reduce db access.
 			boolean updateHostName = true;
@@ -116,7 +119,7 @@ public class ClientFactory<T extends Remote> {
 			return (T) proxiedStub;
 		} catch (Exception e) {
 			logger.error("Exception occurred when creating the RMI client "
-					+ "object for class={} and agencyId={}. {}", 
+							+ "object for class={} and agencyId={}. {}",
 					clazz.getName(), agencyId, e.getMessage());
 			return null;
 		}
@@ -125,7 +128,7 @@ public class ClientFactory<T extends Remote> {
 	/**
 	 * Creates an RMI stub based on the project name, host name, and class name.
 	 * An RMI stub is a remote reference to an object.
-	 * 
+	 *
 	 * @param info
 	 *            Species the agency ID and the host name
 	 * @param updateHostName
@@ -140,18 +143,18 @@ public class ClientFactory<T extends Remote> {
 	 * @throws NotBoundException
 	 */
 	public static <T extends Remote> T getRmiStub(RmiStubInfo info,
-			boolean updateHostName) throws RemoteException, NotBoundException {
+												  boolean updateHostName) throws RemoteException, NotBoundException {
 		// Determine the hostname depending on if should update cache or not
-		String hostName = updateHostName ? 
+		String hostName = updateHostName ?
 				info.getHostNameViaUpdatedCache() : info.getHostName();
-		
-	    if (debugRmiServerHost.getValue() != null) {
-	      logger.info("using debug RMI server value of {}", debugRmiServerHost.getValue());
-	      hostName = debugRmiServerHost.getValue();
-	    }
+
+		if (debugRmiServerHost.getValue() != null) {
+			logger.info("using debug RMI server value of {}", debugRmiServerHost.getValue());
+			hostName = debugRmiServerHost.getValue();
+		}
 
 		logger.debug("Getting RMI registry for hostname={} port={} ...",
-		    hostName, RmiParams.getRmiPort());
+				hostName, RmiParams.getRmiPort());
 		// Get the registry
 		Registry registry =
 				LocateRegistry.getRegistry(hostName, RmiParams.getRmiPort());
@@ -189,22 +192,51 @@ public class ClientFactory<T extends Remote> {
 				// for
 				// a socket with a timeout.
 				RMISocketFactory.setSocketFactory(new RMISocketFactory() {
-					public Socket createSocket(String host, int port)
+					public SSLSocket createSocket(String host, int port)
 							throws IOException {
 						// Need to do quite a bit to get a timeout to work with
 						// RMI
-						Socket socket = new Socket();
-						int timeoutMillis =
-								timeoutSec.getValue() * Time.MS_PER_SEC;
-						socket.setSoTimeout(timeoutMillis);
-						socket.setSoLinger(false, 0);
+						logger.info("rjasmin test 1: inside createSocket");
+						logger.info("rjasmin test 1.2: host = {}", host);
+						logger.info("rjasmin test 1.3: port = {}", port);
+						try {
+							SSLServerSocketFactory ssf = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+							//cast to SSL/test to see if its SSL
+							//support both modes or only SSL?
+							SSLServerSocket serverSocket = (SSLServerSocket) ssf.createServerSocket(port);
+							logger.info("rjasmin test 1.5: serverSocket.getPort() = {}", serverSocket.getLocalPort());
+							SSLSocket socket = (SSLSocket) serverSocket.accept();
+							SSLSocketFactory sslSf = SSLContext.getDefault().getSocketFactory();
+							logger.info("rjasmin test 2: socket.getLocalAddress() = {}", socket.getLocalAddress());
 
-						if (debugRmiServerHost.getValue() != null) {
-						  host = debugRmiServerHost.getValue();
+							//SSLSocket sslSocket = (SSLSocket) sslSf.createSocket(socket, host,
+									//socket.getPort(), true);
+							logger.info("rjasmin test 2.5: socket.getPort() = {}", socket.getPort());
+							serverSocket.setUseClientMode(false);
+
+
+							int timeoutMillis =
+									timeoutSec.getValue() * Time.MS_PER_SEC;
+							logger.info("rjasmin test 3: timeoutMillis = {}", timeoutMillis);
+							serverSocket.setSoTimeout(timeoutMillis);
+							socket.setSoLinger(false, 0);
+
+							if (debugRmiServerHost.getValue() != null) {
+								host = debugRmiServerHost.getValue();
+								logger.info("rjasmin test 4: host = {}", host);
+							}
+							logger.info("rjasmin test 5: connecting host = {}", host);
+							//sslSocket.connect(new InetSocketAddress(host, socket.getPort()),
+									//timeoutMillis);
+							logger.info("rjasmin test 6: successful connect to host = {}", host);
+							return socket;
+						}catch(Exception e){
+
+							logger.info("rjasmin test error: error  = {}", e.getMessage());
+							logger.info("rjasmin test error: error 2 = ", e);
+
 						}
-						socket.connect(new InetSocketAddress(host, port),
-								timeoutMillis);
-						return socket;
+						return null;
 					}
 
 					public ServerSocket createServerSocket(int port)
@@ -225,7 +257,7 @@ public class ClientFactory<T extends Remote> {
 
 	/**
 	 * Returns the timeout time. Useful for error messages.
-	 * 
+	 *
 	 * @return Timeout time in seconds
 	 */
 	public static int getTimeoutSec() {
@@ -234,7 +266,7 @@ public class ClientFactory<T extends Remote> {
 
 	/**
 	 * Just for debugging.
-	 * 
+	 *
 	 * @param args
 	 */
 	public static void main(String args[]) {
