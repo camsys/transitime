@@ -73,13 +73,13 @@ public class AvlJsonQuery {
 
 		//need to limit the vehicle state table by time as well to utilize index on avlTime column
 		String sql = "SELECT a.vehicleId, a.time, a.assignmentId, a.lat, a.lon, a.speed, "
-				+ "a.heading, a.timeProcessed, a.source, v.routeShortName, t.blockId, t.headsign, t.tripId "
+				+ "a.heading, a.timeProcessed, a.source, v.routeId, t.blockId, t.headsign, t.tripId "
 				+ ",round(v.schedAdhMsec / (1000 * 60), 1) mod 60 as schedAdh "
 				+ headwayColSql
 				+ onTimePerformanceSql
 				+ "FROM AvlReports a "
 				+ "LEFT JOIN "
-				+ "(SELECT vehicleId, tripId, routeShortName, avlTime, schedAdh, CAST(schedAdhMsec AS CHAR) + 0.0 as schedAdhMsec FROM VehicleStates "
+				+ "(SELECT vehicleId, tripId, routeId, avlTime, schedAdh, CAST(schedAdhMsec AS CHAR) + 0.0 as schedAdhMsec FROM VehicleStates "
 				+ "WHERE avlTime BETWEEN '" + beginDate + "' "
 				+ "AND TIMESTAMPADD(DAY,1,'" + beginDate + "') "
 				+ ") v "
@@ -97,7 +97,7 @@ public class AvlJsonQuery {
 			sql += " AND a.vehicleId='" + vehicleId + "' ";
 
 		if (routeId != null && !routeId.trim().isEmpty())
-			sql += " AND v.routeShortName='" + routeId + "' ";
+			sql += " AND v.routeId='" + routeId + "' ";
 		
 		// Make sure data is ordered by vehicleId so that can draw lines 
 		// connecting the AVL reports per vehicle properly. Also then need
@@ -210,7 +210,7 @@ public class AvlJsonQuery {
 	/**
 	 * Queries agency for AVL data and corresponding Match and Trip data. By
 	 * joining in Match and Trip data can see what the block and trip IDs, the
-	 * routeShortName, and possibly other information, for each AVL report.
+	 * routeId, and possibly other information, for each AVL report.
 	 * Returns result as a JSON string. Limited to returning MAX_ROWS (50,000)
 	 * data points.
 	 * 
