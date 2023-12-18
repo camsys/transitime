@@ -539,7 +539,7 @@ abstract public class PredictionAccuracyQuery {
 
 
 		String mySql = "SELECT "
-				+ "     abs(((unix_timestamp(pa1.arrivalDepartureTime)-unix_timestamp(pa1.predictionReadTime)))/60 div 1) as predLength, "
+				+ "     ROUND((unix_timestamp(pa1.arrivalDepartureTime)-unix_timestamp(pa1.predictionReadTime))/60) as predLength, "
 				+ "     pa1.predictionAccuracyMsecs/1000 as predAccuracy, "
 				+ "     predictionSource as source "
 				+ "FROM PredictionAccuracy AS pa1 "
@@ -555,7 +555,7 @@ abstract public class PredictionAccuracyQuery {
 				+ "     SELECT pa2.id "
 				+ "     FROM PredictionAccuracy AS pa2 "
 				+ "     WHERE "
-				+ "     abs(((unix_timestamp(pa2.arrivalDepartureTime)-unix_timestamp(pa2.predictionReadTime)))/60 div 1) in (1, 5, 10, 15, 20) "
+				+ "     ROUND((unix_timestamp(pa2.arrivalDepartureTime)-unix_timestamp(pa2.predictionReadTime))/60) in (1, 5, 10, 15, 20) "
 				+ "     AND "
 				+ "		pa1.arrivalDepartureTime BETWEEN "
 				+ "		CAST(? AS DATETIME) "
