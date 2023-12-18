@@ -102,7 +102,7 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
         long gpsTime = inferredLocationBean.getRecordTimestamp();
         Double lat = inferredLocationBean.getInferredLatitude();
         Double lon = inferredLocationBean.getInferredLongitude();
-        float speed = inferredLocationBean.getSpeed() * MILES_TO_METERS_PER_SEC;
+        float speed = inferredLocationBean.getSpeed().floatValue() * MILES_TO_METERS_PER_SEC;
         float heading = (float) inferredLocationBean.getBearing();
 
         // AvlReport is expecting time in ms while the proto provides it in
