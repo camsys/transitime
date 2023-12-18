@@ -5,6 +5,7 @@ package org.transitclock.feed.zmq.oba;
  */
 public class AgencyAndId {
 
+  public static final String ID_SEPARATOR = "_";
   private final String agencyId;
   private final String id;
 
@@ -24,10 +25,10 @@ public class AgencyAndId {
 
   public static AgencyAndId convertFromString(String agencyAndId) {
     if (agencyAndId == null) return null;
-    int index = agencyAndId.indexOf("_");
-    if (index < 0) throw new IllegalStateException("invalid agencyAndId " + agencyAndId);
-    String agency = agencyAndId.substring(0, index-1);
-    String id = agencyAndId.substring(index+1, agencyAndId.length()-1);
+    int index = agencyAndId.indexOf(ID_SEPARATOR);
+    if (index < 0) throw new IllegalStateException("invalid agency-and-id " + agencyAndId);
+    String agency = agencyAndId.substring(0, index);
+    String id = agencyAndId.substring(index+1, agencyAndId.length());
     return new AgencyAndId(agency, id);
   }
 

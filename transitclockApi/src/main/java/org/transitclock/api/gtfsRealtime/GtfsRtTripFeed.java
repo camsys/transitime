@@ -27,8 +27,8 @@ import org.transitclock.api.data.IpcPredictionComparator;
 import org.transitclock.api.utils.AgencyTimezoneCache;
 import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.IntegerConfigValue;
-import org.transitclock.core.dataCache.canceledTrip.CanceledTripKey;
 import org.transitclock.core.holdingmethod.PredictionTimeComparator;
+import org.transitclock.feed.zmq.oba.AgencyAndId;
 import org.transitclock.ipc.clients.ConfigInterfaceFactory;
 import org.transitclock.ipc.clients.PredictionsInterfaceFactory;
 import org.transitclock.ipc.data.IpcCanceledTrip;
@@ -86,6 +86,11 @@ public class GtfsRtTripFeed {
 			"Whether or not to include delay in the TripUpdate message");
 	private static final boolean INCLUDE_SKIPPED_STOPS = includeSkippedStops.getValue();
 
+	private static BooleanConfigValue prependAgencyToTripId = new BooleanConfigValue(
+					"transitclock.api.prependAgencyToTripId", false,
+					"Whether or not to prepend Agency to Trip Id");
+	private static final boolean PREPEND_AGENCY_TRIP_ID = prependAgencyToTripId.getValue();
+
 	// For when creating StopTimeEvent for schedule based prediction  
 	// 5 minutes (300 seconds)
 	private static final int SCHED_BASED_PRED_UNCERTAINTY_VALUE = 5 * 60;
@@ -130,9 +135,15 @@ public class GtfsRtTripFeed {
 		TripDescriptor.Builder tripDescriptor = TripDescriptor.newBuilder();
 
 		String routeId = firstPred.getRouteId();
-		String tripId = firstPred.getTripId();
 		String vehicleId = firstPred.getVehicleId();
-
+		String agencyId = "";
+		if(vehicleId != null) {
+			agencyId = AgencyAndId.convertFromString(vehicleId).getAgencyId();
+		}
+		String tripId = firstPred.getTripId();
+		if(PREPEND_AGENCY_TRIP_ID){
+			tripId = agencyId + AgencyAndId.ID_SEPARATOR + tripId;
+		}
 		if (routeId != null)
 			tripDescriptor.setRouteId(routeId);
 
