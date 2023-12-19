@@ -12,8 +12,7 @@ public class DwellTimeUtil {
 
     /**
      * Specify minimum allowable time in msec when calculating dwell time for departures.
-     * Currently hard coded to be 1 second. Should we allow this to be configurable?
-     * Store preferences in the DB?
+     * Defaults to 1 millisecond, can be overwritten in properties
      * @return
      */
     private static long getMinAllowableDwellTime() {
@@ -27,8 +26,7 @@ public class DwellTimeUtil {
 
     /**
      * Specifying the Max allowable time when calculating dwell time for departures.
-     * Currently hard coded to 1 minute. Should we allow this to be configurable?
-     * Store preferences in the DB?
+     * Defaults to 60 seconds, can be overwritten in properties
      * @return
      */
     private static long getMaxAllowableDwellTime() {
