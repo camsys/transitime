@@ -18,6 +18,8 @@ package org.transitclock.avl;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,8 @@ import org.transitclock.db.structs.AvlReport;
 import org.transitclock.modules.Module;
 import org.transitclock.utils.IntervalTimer;
 import org.transitclock.utils.Time;
+import org.transitclock.utils.threading.BoundedExecutor;
+import org.transitclock.utils.threading.NamedThreadFactory;
 
 /**
  * For running the system in "playback mode" where AVL data is read from the
@@ -82,9 +86,15 @@ public class PlaybackModule extends Module {
 	
 	protected static IntegerConfigValue playbackStartDelayMinutes=
 			new IntegerConfigValue("transitclock.avl.playbackStartDelayMinutes", 
-					3,
+					0,
 					"Time to sleep before starting. Gives some time to connect remote debugger.");
-	
+
+	protected static BooleanConfigValue asynchronous =
+					new BooleanConfigValue("transitclock.avl.playbackAsynchronous",
+									false,
+									"Use AvlExecutor instead of AvlClient.");
+
+	private BoundedExecutor _avlClientExecutor;
 	/********************* Logging **************************/
 	private static final Logger logger = 
 			LoggerFactory.getLogger(PlaybackModule.class);
@@ -106,6 +116,9 @@ public class PlaybackModule extends Module {
 		
 		// Initialize the dbReadBeingTime member
 		this.dbReadBeginTime = parsePlaybackStartTime(getPlaybackStartTimeStr());
+		if (asynchronous.getValue()) {
+			setupAsynchronous();
+		}
 	}
 	
 	private static long parsePlaybackStartTime(String playbackStartTimeStr) {
@@ -240,8 +253,9 @@ public class PlaybackModule extends Module {
 		
 		IntervalTimer timer = new IntervalTimer();
 		// Keep running as long as not trying to access in the future.
-		long last_avl_time=-1;	
-		while (dbReadBeginTime < System.currentTimeMillis() && (playbackEndTimeStr.getValue().length()==0 || dbReadBeginTime<parsePlaybackEndTime(playbackEndTimeStr.getValue()))) {
+		long last_avl_time=-1;
+		long endTime = parsePlaybackEndTime(playbackEndTimeStr.getValue());
+		while (dbReadBeginTime < System.currentTimeMillis() && (playbackEndTimeStr.getValue().length()==0 || dbReadBeginTime<endTime)) {
 			List<AvlReport> avlReports = getBatchOfAvlReportsFromDb();
 			
 			// Process the AVL Reports read in.			
@@ -271,10 +285,8 @@ public class PlaybackModule extends Module {
 				
 				// Update the Core SystemTime to use this AVL time
 				Core.getInstance().setSystemTime(avlReport.getTime());
-				
-				// Do the actual processing of the AVL data
-				AvlProcessor.getInstance().processAvlReport(avlReport);						
-			
+				processReport(avlReport);
+
 			}
 		}
 		// logging here as the rest is database access dependent.
@@ -296,6 +308,39 @@ public class PlaybackModule extends Module {
 				"time so done. Exiting.");
 		
 		System.exit(0);	
+	}
+
+	private void processReport(AvlReport avlReport) {
+		if (asynchronous.getValue()) {
+			Runnable avlClient = new AvlClient(avlReport);
+			while (_avlClientExecutor.spaceInQueue() < 10) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException ie) {
+					return;
+				}
+			}
+			try {
+				_avlClientExecutor.execute(avlClient);
+			} catch (InterruptedException e) {
+				return;
+			}
+		} else {
+			// Do the actual processing of the AVL data
+			AvlProcessor.getInstance().processAvlReport(avlReport);
+		}
+	}
+
+	private void setupAsynchronous() {
+		// Create the executor that actually processes the AVL data
+		NamedThreadFactory avlClientThreadFactory = new NamedThreadFactory(
+						"avlClient");
+		int numberThreads = Runtime.getRuntime().availableProcessors();
+		int maxAVLQueueSize = 100;
+		Executor executor = Executors.newFixedThreadPool(numberThreads,
+						avlClientThreadFactory);
+		_avlClientExecutor = new BoundedExecutor(executor, maxAVLQueueSize);
+
 	}
 	
 }
