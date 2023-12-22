@@ -421,10 +421,14 @@ public class DbConfig {
 		Collection<String> stopIds = new ArrayList<String>(100);
 		
 		List<TripPattern> tripPatternsForRoute = tripPatternsByRouteMap.get(routeId);
-		for (TripPattern tripPattern : tripPatternsForRoute) {
-			for (String stopId : tripPattern.getStopIds()) {
-				stopIds.add(stopId);
+		if (tripPatternsForRoute != null) {
+			for (TripPattern tripPattern : tripPatternsForRoute) {
+				for (String stopId : tripPattern.getStopIds()) {
+					stopIds.add(stopId);
+				}
 			}
+		} else {
+			logger.error("no pattern for route {}", routeId);
 		}
 		
 		return stopIds;
