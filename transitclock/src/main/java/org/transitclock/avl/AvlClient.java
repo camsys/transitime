@@ -17,6 +17,7 @@
 package org.transitclock.avl;
 
 import java.util.HashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +80,7 @@ public class AvlClient implements Runnable {
 	public void run() {
 		// Put a try/catch around everything so that if unexpected exception 
 		// occurs an e-mail is sent and the avl client thread isn't killed.
+		ReentrantLock l = new ReentrantLock();
 		try {
 			// If the data is bad throw it out
 			String errorMsg = avlReport.validateData();
@@ -89,7 +91,7 @@ public class AvlClient implements Runnable {
 			}
 
 			// See if should filter out report
-			synchronized (avlReports) {
+			l.lock();
 				AvlReport previousReportForVehicle =
 						avlReports.get(avlReport.getVehicleId());
 
@@ -165,7 +167,7 @@ public class AvlClient implements Runnable {
 				// filter
 				// the next one
 				avlReports.put(avlReport.getVehicleId(), avlReport);
-			}
+
 
 			// Process the report
 			logger.info("Thread={} AvlClient processing AVL data {}", 
@@ -179,6 +181,9 @@ public class AvlClient implements Runnable {
 //			logger.error(Markers.email(),
 //					"For agencyId={} Exception {} for avlReport={}.",
 //					AgencyConfig.getAgencyId(), e.getMessage(), avlReport, e);
+		}
+		finally{
+			l.unlock();
 		}
 	}
 	

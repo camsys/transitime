@@ -19,6 +19,7 @@ package org.transitclock.utils.threading;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +80,8 @@ public class NamedThread extends Thread {
 	 * @return
 	 */
 	private static String threadNameWithCounter(String name) {
-		synchronized (threadNameCountMap) {
+		ReentrantLock l = new ReentrantLock();
+		l.lock();
 			Integer count = threadNameCountMap.get(name);
 			if (count == null) {
 				count = 1;				
@@ -88,16 +90,19 @@ public class NamedThread extends Thread {
 				count++;			
 			}		
 			threadNameCountMap.put(name, count);
+			l.unlock();
 			return name + "-" + count;
-		}
 	}
 	
 	@Override
 	public void run() {
 		logger.debug("Created NamedThread {}", getName());
+		ReentrantLock l = new ReentrantLock();
 		try {
+			l.lock();
 			numAlive.incrementAndGet();
 			super.run();
+
 		} catch (Throwable t) {
 			// Log the problem but do so within a try/catch in case it is
 			// an OutOfMemoryError and need to exit even if get another
@@ -141,6 +146,7 @@ public class NamedThread extends Thread {
 				System.exit(-1);
 			}
 		} finally {
+			l.unlock();
 			numAlive.decrementAndGet();
 			logger.debug("Exiting NamedThread {}", getName());
 		}

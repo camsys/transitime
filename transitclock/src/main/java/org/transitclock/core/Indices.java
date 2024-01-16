@@ -18,6 +18,7 @@ package org.transitclock.core;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.transitclock.applications.Core;
 import org.transitclock.db.structs.ArrivalDeparture;
@@ -196,6 +197,8 @@ public class Indices implements Serializable {
 	 * @return The resulting Indices object
 	 */
 	public Indices increment(long epochTime) {
+		ReentrantLock l = new ReentrantLock();
+		l.lock();
 		++segmentIndex;
 		if (segmentIndex >= block.numSegments(tripIndex, stopPathIndex)) {
 			segmentIndex = 0;
@@ -217,6 +220,7 @@ public class Indices implements Serializable {
 				}
 			}
 		}
+		l.unlock();
 
 		return this;
 	}

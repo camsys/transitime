@@ -42,6 +42,7 @@ import org.transitclock.utils.StringUtils;
 import org.transitclock.utils.Time;
 
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * This is a very important high-level class. It takes the AVL data and
@@ -1583,19 +1584,19 @@ public class AvlProcessor {
 		VehicleState vehicleState =
 				VehicleStateManager.getInstance().getVehicleState(
 						avlReport.getVehicleId());
-		
+		ReentrantLock l = new ReentrantLock();
+		l.lock();
 		// Since modifying the VehicleState should synchronize in case another
 		// thread simultaneously processes data for the same vehicle. This
 		// would be extremely rare but need to be safe.
-		synchronized (vehicleState) {
-			// Update AVL report for cached VehicleState
-			vehicleState.setAvlReport(avlReport);
+		// Update AVL report for cached VehicleState
+		vehicleState.setAvlReport(avlReport);
 
-			// Let vehicle data cache know that the vehicle state was updated
-			// so that new IPC vehicle data will be created and cached and
-			// made available to the API.
-			VehicleDataCache.getInstance().updateVehicle(vehicleState);
-		}
+		// Let vehicle data cache know that the vehicle state was updated
+		// so that new IPC vehicle data will be created and cached and
+		// made available to the API.
+		VehicleDataCache.getInstance().updateVehicle(vehicleState);
+		l.unlock();
 	}
 
 	private boolean isCanceled(VehicleState vehicleState) {
@@ -1637,7 +1638,7 @@ public class AvlProcessor {
 	 *            The new AVL report to be processed
 	 */
 	public void processAvlReport(AvlReport avlReport) {
-		IntervalTimer timer = new IntervalTimer(); 
+		IntervalTimer timer = new IntervalTimer();
 
 		// Handle special case where want to not use assignment from AVL
 		// report, most likely because want to test automatic assignment
