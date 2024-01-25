@@ -272,6 +272,7 @@
         arrivalDepartureTime timestamp,
         directionId varchar2(60 char),
         dwellTimeAlgorithm number(10,0),
+        gtfsStopSeq number(10,0),
         predictedTime timestamp,
         predictionAccuracyMsecs number(10,0),
         predictionReadTime timestamp,
