@@ -52,6 +52,6 @@ public class CreateWebAgency {
 		System.out.println("Storing " + webAgency);
 		
 		// Store the WebAgency
-		webAgency.store(webAgencyDbName);
+		webAgency.store(agencyId);
 	}
 }
