@@ -189,6 +189,11 @@ public class HibernateUtils {
 
 				dbUrl += "?connectTimeout=" + timeout + "&socketTimeout=" + timeout;
 			}
+			Boolean useSSL = DbSetupConfig.getUseSSL();
+			if(useSSL != null){
+				dbUrl += "&useSSL=" + useSSL;
+			}
+
 		}
 		return dbUrl;
 	}
