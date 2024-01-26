@@ -1397,6 +1397,8 @@ public class AvlProcessor {
 	private void lowLevelProcessAvlReport(AvlReport avlReport,
 			boolean recursiveCall) {
 		// Determine previous state of vehicle
+		ReentrantLock l = new ReentrantLock();
+		l.lock();
 		String vehicleId = avlReport.getVehicleId();
 		VehicleState vehicleState = VehicleStateManager.getInstance()
 				.getVehicleState(vehicleId);
@@ -1404,7 +1406,7 @@ public class AvlProcessor {
 		// Since modifying the VehicleState should synchronize in case another
 		// thread simultaneously processes data for the same vehicle. This
 		// would be extremely rare but need to be safe.
-		synchronized (vehicleState) {
+
 			// Keep track of last AvlReport even if vehicle not predictable.
 			vehicleState.setAvlReport(avlReport);
 
@@ -1519,7 +1521,7 @@ public class AvlProcessor {
 			org.transitclock.db.structs.VehicleState dbVehicleState =
 					new org.transitclock.db.structs.VehicleState(vehicleState);
 			Core.getInstance().getDbLogger().add(dbVehicleState);
-		} // End of synchronizing on vehicleState }
+		l.unlock(); // End of synchronizing on vehicleState }
 	}
 
 	/**
@@ -1581,11 +1583,12 @@ public class AvlProcessor {
 	 * @param avlReport
 	 */
 	public void cacheAvlReportWithoutProcessing(AvlReport avlReport) {
+		ReentrantLock l = new ReentrantLock();
+		l.lock();
 		VehicleState vehicleState =
 				VehicleStateManager.getInstance().getVehicleState(
 						avlReport.getVehicleId());
-		ReentrantLock l = new ReentrantLock();
-		l.lock();
+
 		// Since modifying the VehicleState should synchronize in case another
 		// thread simultaneously processes data for the same vehicle. This
 		// would be extremely rare but need to be safe.
@@ -1639,6 +1642,7 @@ public class AvlProcessor {
 	 */
 	public void processAvlReport(AvlReport avlReport) {
 		IntervalTimer timer = new IntervalTimer();
+		logger.error("rjasmin processing starting {}msec", System.currentTimeMillis());
 
 		// Handle special case where want to not use assignment from AVL
 		// report, most likely because want to test automatic assignment

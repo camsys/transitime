@@ -16,10 +16,12 @@
  */
 package org.transitclock.avl;
 
+import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,8 +49,8 @@ public class AvlQueue extends ArrayBlockingQueue<Runnable> {
 
 	// For keeping track of the last AVL report for each vehicle. Used to
 	// determine if AVL report from queue is obsolete.
-	ConcurrentMap<String, AvlReport> avlDataPerVehicleMap =
-			new ConcurrentHashMap<String, AvlReport>();
+	HashMap<String, AvlReport> avlDataPerVehicleMap =
+			new HashMap<String, AvlReport>();
 
 	private static final long serialVersionUID = 6587642826604552096L;
 
@@ -76,9 +78,12 @@ public class AvlQueue extends ArrayBlockingQueue<Runnable> {
 	private void addToAvlDataPerVehicleMap(Runnable runnable) {
 		if (!(runnable instanceof AvlClient))
 			throw new IllegalArgumentException("Runnable must be AvlClient.");
+		ReentrantLock l = new ReentrantLock();
+		l.lock();
 		
 		AvlReport avlReport = ((AvlClient) runnable).getAvlReport();
 		avlDataPerVehicleMap.put(avlReport.getVehicleId(), avlReport);
+		l.unlock();
 	}
 
 	/**
@@ -92,6 +97,8 @@ public class AvlQueue extends ArrayBlockingQueue<Runnable> {
 	private boolean isObsolete(Runnable runnableFromQueue) {
 		if (!(runnableFromQueue instanceof AvlClient))
 			throw new IllegalArgumentException("Runnable must be AvlClient.");
+		ReentrantLock l = new ReentrantLock();
+		l.lock();
 
 		AvlReport avlReportFromQueue =
 				((AvlClient) runnableFromQueue).getAvlReport();
@@ -110,6 +117,7 @@ public class AvlQueue extends ArrayBlockingQueue<Runnable> {
 					+ "is {}",	
 					avlReportFromQueue, lastAvlReportForVehicle, size());
 		}
+		l.unlock();
 		return obsolete;
 	}
 	

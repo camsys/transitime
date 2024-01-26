@@ -21,12 +21,9 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.transitclock.configData.AgencyConfig;
 import org.transitclock.configData.AvlConfig;
-import org.transitclock.configData.CoreConfig;
 import org.transitclock.core.AvlProcessor;
 import org.transitclock.db.structs.AvlReport;
-import org.transitclock.logging.Markers;
 import org.transitclock.utils.Time;
 
 /**
@@ -44,7 +41,7 @@ public class AvlClient implements Runnable {
 	// List of current AVL reports by vehicle. Useful for determining last
 	// report so can filter out new report if the same as the old one.
 	// Keyed on vehicle ID.
-	private static HashMap<String, AvlReport> avlReports =
+	private static final HashMap<String, AvlReport> avlReports =
 			new HashMap<String, AvlReport>();
 	
 	private static final Logger logger= 
@@ -81,6 +78,7 @@ public class AvlClient implements Runnable {
 		// Put a try/catch around everything so that if unexpected exception 
 		// occurs an e-mail is sent and the avl client thread isn't killed.
 		ReentrantLock l = new ReentrantLock();
+		l.lock();
 		try {
 			// If the data is bad throw it out
 			String errorMsg = avlReport.validateData();
@@ -91,7 +89,7 @@ public class AvlClient implements Runnable {
 			}
 
 			// See if should filter out report
-			l.lock();
+
 				AvlReport previousReportForVehicle =
 						avlReports.get(avlReport.getVehicleId());
 
