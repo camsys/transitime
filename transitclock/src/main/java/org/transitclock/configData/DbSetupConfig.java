@@ -17,6 +17,7 @@
 
 package org.transitclock.configData;
 
+import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.StringConfigValue;
 
@@ -87,6 +88,16 @@ public class DbSetupConfig {
 					"So can set low-level socket timeout for JDBC connections. "
 					+ "Useful for when a session dies during a request, such as "
 					+ "for when a db is rebooted. Set to 0 to have no timeout.");
+
+	public static Boolean getUseSSL() {
+		return useSSL.getValue();
+	}
+	public static BooleanConfigValue useSSL =
+			new BooleanConfigValue("transitclock.db.useSSL",
+					false,
+					"Specify whether you'd like to use an SSL connection for MySQL. Set to false" +
+							"by default since MySQL may need SSL support to be setup explicitly before" +
+							"allowing connections.");
 	
 	/**
 	 * So that have flexibility with where the hibernate config file is.
