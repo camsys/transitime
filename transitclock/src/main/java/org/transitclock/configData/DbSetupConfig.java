@@ -90,7 +90,7 @@ public class DbSetupConfig {
 					+ "for when a db is rebooted. Set to 0 to have no timeout.");
 
 	public static Boolean getUseSSL() {
-		return socketTimeoutSec.getValue();
+		return useSSL.getValue();
 	}
 	public static BooleanConfigValue useSSL =
 			new BooleanConfigValue("transitclock.db.useSSL",
