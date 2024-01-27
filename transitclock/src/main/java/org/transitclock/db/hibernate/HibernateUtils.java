@@ -32,7 +32,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.configData.DbSetupConfig;
-import org.hibernate.service.ServiceRegistryBuilder;
 
 /**
  * Utilities for dealing with Hibernate issues such as sessions.
@@ -53,6 +52,8 @@ public class HibernateUtils {
 	// Cache. Keyed on database name
 	private static HashMap<String, SessionFactory> sessionFactoryCache =
 			new HashMap<String, SessionFactory>();
+
+	private static ThreadLocal<Session> localSession = new ThreadLocal<>();
 
 	public static final Logger logger = 
 			LoggerFactory.getLogger(HibernateUtils.class);
@@ -373,4 +374,16 @@ public class HibernateUtils {
 		else
 			return getRootCause(subcause);
 	}
+
+	/**
+	 * retrieve or create a session on this thread.
+	 * @param agencyId
+	 * @return
+	 */
+  public static synchronized Session getSessionForThread(String agencyId) {
+		if (localSession.get() == null) {
+			localSession.set(getSession(agencyId));
+		}
+		return localSession.get();
+  }
 }

@@ -1380,13 +1380,29 @@ public final class Block implements Serializable {
 	/**
 	 * force any lazy loaded objects to load now before moving to another thread
 	 */
-	public void initialize() {
+	public synchronized void initialize() {
 		if (!initialized) {
 			for (Trip unloadedTrip : getTrips()) {
 				unloadedTrip.initialize();
 			}
 			initialized = true;
 		}
+	}
+
+	/**
+	 * Load (hydrate) the block and all trips on this session.
+	 * @param session
+	 * @return
+	 */
+	public synchronized Block initialize(Session session) {
+		if (initialized) return this;
+		Block returnBlock = (Block) session.load(Block.class, this);
+		if (returnBlock == null) return null;
+		for (Trip unloadedTrip : returnBlock.getTrips()) {
+			unloadedTrip.initialize(session);
+		}
+		returnBlock.initialized = true;
+		return returnBlock;
 	}
 
 	public static class BlockLoader implements Runnable {
