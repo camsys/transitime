@@ -1435,10 +1435,6 @@ public class Trip implements Lifecycle, Serializable {
 			Hibernate.initialize(returnTrip.getTravelTimes().getTravelTimesForStopPaths());
 		returnTrip.initialized = true;
 
-		if (returnTrip.getBlock() != null) {
-			returnTrip.getBlock().initialize(session);
-		}
-
 		return returnTrip;
 	}
 
