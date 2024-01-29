@@ -32,11 +32,11 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.collection.internal.PersistentList;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.classic.Lifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
+import org.transitclock.configData.AgencyConfig;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.query.TripQuery;
 import org.transitclock.gtfs.DbConfig;
@@ -171,6 +171,8 @@ public class Trip implements Lifecycle, Serializable {
 
 	@Column(name="tripPattern_id", updatable=false, insertable=false)
 	private String tripPatternId;
+
+	private transient boolean initialized = false;
 	
 	// Note: though trip_short_name and wheelchair_accessible are available
 	// as part of the GTFS spec and in a GtfsTrip object, they are not
@@ -379,6 +381,23 @@ public class Trip implements Lifecycle, Serializable {
 		noSchedule = false;
 		exactTimesHeadway = false;
 		boardingType = null;
+	}
+
+	// fully load trip/block on this thread
+	public static synchronized List<Trip> refreshTrips(List<Trip> potentialTrips, Session sessionForThread) {
+		List<Trip> loadedTrips = new ArrayList<>();
+		for (Trip potentialTrip : potentialTrips) {
+			if (potentialTrip.getBlock() != null) {
+				Block potentialBlock = potentialTrip.getBlock().initialize(sessionForThread);
+				Trip loadedTrip = potentialBlock.getTrip(potentialTrip.getId());
+				if (loadedTrip != null) {
+					loadedTrips.add(loadedTrip);
+				} else {
+					logger.error("missing trip {} for block {} with index", potentialTrip.getId(), potentialBlock.getId(), potentialTrip.getIndexInBlock());
+				}
+			}
+		}
+		return loadedTrips;
 	}
 
 	/**
@@ -1358,10 +1377,17 @@ public class Trip implements Lifecycle, Serializable {
 		}
 	}
 
+	public synchronized void initialize() {
+		initialize(HibernateUtils.getSessionForThread(AgencyConfig.getAgencyId()));
+	}
 	/**
 	 * Force any lazy-loaded objects to be loaded now before moving to another thread.
 	 */
-	public void initialize() {
+	public synchronized Trip initialize(Session session) {
+		if (initialized) return this;
+		if (((PersistentList)getScheduleTimes()).getSession().isConnected()) {
+			return initializeSingleTrip(session);
+		}
 		try {
 			if (!Hibernate.isInitialized(getScheduleTimes())) {
 				Hibernate.initialize(getScheduleTimes());
@@ -1390,7 +1416,26 @@ public class Trip implements Lifecycle, Serializable {
 		} catch (Throwable t) {
 			logger.error("unable to load stop path travel times for trip {}", this, t);
 		}
+		initialized = true;
+		return this;
+	}
 
+	// load (hydrate) this trip and all properties and collections.
+	private Trip initializeSingleTrip(Session session) {
+		Trip returnTrip = (Trip) session.load(Trip.class, this);
+		if (returnTrip == null) {
+			logger.error("trip not found {}", tripId);
+			return null;
+		}
+
+		Hibernate.initialize(returnTrip.getScheduleTimes());
+		Hibernate.initialize(returnTrip.getTripPattern());
+		Hibernate.initialize(returnTrip.getTravelTimes());
+		if (returnTrip.getTravelTimes() != null)
+			Hibernate.initialize(returnTrip.getTravelTimes().getTravelTimesForStopPaths());
+		returnTrip.initialized = true;
+
+		return returnTrip;
 	}
 
 }

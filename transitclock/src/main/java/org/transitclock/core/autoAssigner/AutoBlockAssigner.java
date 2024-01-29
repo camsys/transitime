@@ -29,6 +29,7 @@ import org.transitclock.applications.Core;
 import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.DoubleConfigValue;
 import org.transitclock.config.IntegerConfigValue;
+import org.transitclock.configData.AgencyConfig;
 import org.transitclock.configData.CoreConfig;
 import org.transitclock.core.BlocksInfo;
 import org.transitclock.core.SpatialMatch;
@@ -40,6 +41,7 @@ import org.transitclock.core.TravelTimes;
 import org.transitclock.core.VehicleState;
 import org.transitclock.core.dataCache.VehicleDataCache;
 import org.transitclock.core.dataCache.VehicleStateManager;
+import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.db.structs.Block;
 import org.transitclock.db.structs.Trip;
@@ -252,6 +254,8 @@ public class AutoBlockAssigner {
 		// is only for use with no schedule assignments.
 		AvlReport avlReport = getAvlReport();
 		List<Trip> potentialTrips = block.getTripsCurrentlyActive(avlReport);
+		potentialTrips = Trip.refreshTrips(potentialTrips,
+						HibernateUtils.getSessionForThread(AgencyConfig.getAgencyId()));
 		List<SpatialMatch> spatialMatches = SpatialMatcher
 				.getSpatialMatchesForAutoAssigning(vehicleState, getAvlReport(),
 						block, potentialTrips);
@@ -345,7 +349,8 @@ public class AutoBlockAssigner {
 		// Determine which trips are currently active so that don't bother 
 		// looking at all trips
 		List<Trip> activeTrips = block.getTripsCurrentlyActive(avlReport);
-		
+		activeTrips = Trip.refreshTrips(activeTrips,
+						HibernateUtils.getSessionForThread(AgencyConfig.getAgencyId()));
 		// Determine trips that need to look at for spatial matches because 
 		// haven't looked at the associated trip pattern yet.
 		List<Trip> tripsNeedToInvestigate = new ArrayList<Trip>();
@@ -482,6 +487,8 @@ public class AutoBlockAssigner {
 		// Determine which trips are currently active so that don't bother 
 		// looking at all trips
 		List<Trip> activeTrips = block.getTripsCurrentlyActive(avlReport);
+		activeTrips = Trip.refreshTrips(activeTrips,
+						HibernateUtils.getSessionForThread(AgencyConfig.getAgencyId()));
 
 		// Get and return the spatial matches
 		List<SpatialMatch> spatialMatches = SpatialMatcher

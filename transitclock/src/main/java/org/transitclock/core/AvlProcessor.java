@@ -16,6 +16,7 @@
  */
 package org.transitclock.core;
 
+import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
@@ -32,6 +33,7 @@ import org.transitclock.core.dataCache.PredictionDataCache;
 import org.transitclock.core.dataCache.VehicleDataCache;
 import org.transitclock.core.dataCache.VehicleStateManager;
 import org.transitclock.core.dataCache.canceledTrip.CanceledTripCache;
+import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.*;
 import org.transitclock.db.structs.AvlReport.AssignmentType;
 import org.transitclock.logging.Markers;
@@ -781,6 +783,7 @@ public class AvlProcessor {
 					+ "block. {}", vehicleState);
 		}
 
+		Session session = HibernateUtils.getSessionForThread(AgencyConfig.getAgencyId());
 		logger.debug("Matching unassigned vehicle to block assignment {}. {}",
 				block.getId(), vehicleState);
 
@@ -796,9 +799,12 @@ public class AvlProcessor {
 		// specifying the block assignment so it should find a match even
 		// if it pretty far off.
 		List<Trip> potentialTrips = block.getTripsCurrentlyActive(avlReport);
+		// hydrate trips and attach to this session
+		potentialTrips = Trip.refreshTrips(potentialTrips, session);
+
 		List<SpatialMatch> spatialMatches =
 				SpatialMatcher.getSpatialMatches(vehicleState, vehicleState.getAvlReport(),
-						block, potentialTrips, MatchingType.STANDARD_MATCHING);
+						block.initialize(session), potentialTrips, MatchingType.STANDARD_MATCHING);
 		logger.debug("For vehicleId={} and blockId={} spatial matches={}",
 				avlReport.getVehicleId(), block.getId(), spatialMatches);
 
