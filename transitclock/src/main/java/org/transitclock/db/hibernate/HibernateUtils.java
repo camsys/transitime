@@ -24,6 +24,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Properties;
 import org.hibernate.HibernateException;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -31,7 +32,9 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.applications.Core;
 import org.transitclock.configData.DbSetupConfig;
+import org.transitclock.gtfs.DbConfig;
 
 /**
  * Utilities for dealing with Hibernate issues such as sessions.
@@ -53,7 +56,7 @@ public class HibernateUtils {
 	private static HashMap<String, SessionFactory> sessionFactoryCache =
 			new HashMap<String, SessionFactory>();
 
-	private static ThreadLocal<Session> localSession = new ThreadLocal<>();
+	private static ThreadLocal<SessionAndLastTest> localSession = new ThreadLocal<>();
 
 	public static final Logger logger = 
 			LoggerFactory.getLogger(HibernateUtils.class);
@@ -382,8 +385,41 @@ public class HibernateUtils {
 	 */
   public static synchronized Session getSessionForThread(String agencyId) {
 		if (localSession.get() == null) {
-			localSession.set(getSession(agencyId));
+			localSession.set(new SessionAndLastTest(getSession(agencyId)));
 		}
-		return localSession.get();
-  }
+		SessionAndLastTest session = localSession.get();
+		if (!isValid(session)) {
+			localSession.remove(); // next access will create a new session
+		}
+		return session.session;
+	}
+
+	private static boolean isValid(SessionAndLastTest session) {
+		if (session == null || session.session == null)
+			return false;
+		long now = System.currentTimeMillis();
+		if (now - session.timestamp < 60 * 1000) {
+			// we tested recently, no need to retest
+			return true;
+		}
+		if (!session.session.isConnected())
+			return false;
+		try {
+			DbConfig dbConfig = Core.getInstance().getDbConfig();
+			Query query = session.session.createSQLQuery(dbConfig.getValidateTestQuery());
+			query.list();
+		} catch (Throwable t) {
+			return false;
+		}
+		return true;
+	}
+
+	private static class SessionAndLastTest {
+		private final long timestamp;
+		private final Session session;
+		public SessionAndLastTest(Session session) {
+			timestamp = System.currentTimeMillis();
+			this.session = session;
+		}
+	}
 }
