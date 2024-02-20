@@ -164,6 +164,7 @@ public class VehicleEvent implements Serializable {
 	public static final String AVL_CONFLICT ="AVL Conflict";
 	public static final String PREDICTION_VARIATION = "Prediction variation";
 	public static final String UNMATCHED_ASSIGNMENT = "Unmatched Assignment";
+	public static final String AUTO_ASSIGNMENT = "Auto Assignment";
 	
 	// Hibernate requires class to be Serializable
 	private static final long serialVersionUID = -763445348557811925L;

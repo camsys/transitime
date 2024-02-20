@@ -1106,8 +1106,10 @@ public class AvlProcessor {
 		// auto assignment feature in case it is enabled.
 		boolean autoAssigned = 
 				automaticalyMatchVehicleToAssignment(vehicleState);
-		if (autoAssigned)
+		if (autoAssigned) {
+			logAutoAssignment(vehicleState);
 			return true;
+		}
 
 		if (AssignmentType.TRIP_ID.equals(avlReport.getAssignmentType())
 					&& avlReport.getAssignmentId() != null) {
@@ -1631,6 +1633,17 @@ public class AvlProcessor {
 						description, false, // predictable
 						true, // becameUnpredictable
 						null); // supervisor
+	}
+
+	private void logAutoAssignment(VehicleState vehicleState) {
+		final String description = "Assignment " + vehicleState.getAvlReport().getAssignmentId()
+						+ " unset or ignored";
+		VehicleEvent.create(vehicleState.getAvlReport(),
+						vehicleState.getMatch(), VehicleEvent.AUTO_ASSIGNMENT,
+						description, true, // predictable
+						false, // becameUnpredictable
+						null); // supervisor
+
 	}
 	/**
 	 * First does housekeeping for the AvlReport (stores it in db, logs it,
