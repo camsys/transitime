@@ -73,9 +73,9 @@
 			trouble finding the c3p0 connection pooler for example if use old hibernate-core
 			but new c3p0. -->
 		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.49</version>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<version>8.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -127,7 +127,7 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk</artifactId>
-			<version>1.12.239</version>
+			<version>1.11.916</version>
 		</dependency>
 		<!-- For many java utilities, such as StringEscapeUtils -->
 		<dependency>
