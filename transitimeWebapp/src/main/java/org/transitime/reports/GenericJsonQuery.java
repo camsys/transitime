@@ -18,6 +18,7 @@ package org.transitime.reports;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -101,6 +102,10 @@ public class GenericJsonQuery extends GenericQuery {
 				addRowElement(i, (String) o);
 			} else if (o instanceof Timestamp) {
 				addRowElement(i, ((Timestamp) o));
+			} else if (o instanceof LocalDateTime) {
+				addRowElement(i, Timestamp.valueOf((LocalDateTime) o));
+			} else {
+				System.err.println("unexpected column " + o.getClass().getName() + ":" + o);
 			}
 		}
 		
