@@ -342,11 +342,12 @@ $("#submit").on("click", function() {
         confirmYes = confirm('Are you sure you want All Vehicles and All Routes?');
     }
 
-    if(!request.r){
-    	$("#route-error-display").removeClass("d-none")
-    	return true;
-	}
-	$("#route-error-display").addClass("d-none")
+	// remove route validate -- its back to optional!
+    // if(!request.r){
+    // 	$("#route-error-display").removeClass("d-none")
+    // 	return true;
+	// }
+	// $("#route-error-display").addClass("d-none")
     //go ahead if no confirm needed or if the confirm was a yes
     if (!askConfirm || confirmYes) {
 		// Clear existing layer and draw new objects on map.
