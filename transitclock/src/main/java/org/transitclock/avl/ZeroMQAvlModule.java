@@ -11,6 +11,7 @@ import org.zeromq.ZMQ;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Date;
 
 public class ZeroMQAvlModule extends PollUrlAvlModule {
 
@@ -66,40 +67,41 @@ public class ZeroMQAvlModule extends PollUrlAvlModule {
      * getAndProcessData().
      */
     @Override
-    protected void getAndProcessData() {
+    public void run() {
 
-        // prefer a java sleep to a native block
-        _poller.poll(0 * 1000); // microseconds for 2.2, milliseconds for 3.0
-        if (_poller.pollin(0)) {
+        while (!Thread.currentThread().isInterrupted()) {
+            // prefer a java sleep to a native block
+            _poller.poll(0 * 1000); // microseconds for 2.2, milliseconds for 3.0
+            if (_poller.pollin(0)) {
 
-            String address = new String(_socket.recv(0));
-            byte[] buff = _socket.recv(0);
+                String address = new String(_socket.recv(0));
+                byte[] buff = _socket.recv(0);
 
-            if(address == null || !address.equals(zeromqTopic.getValue())){
-                return;
+                try {
+                    String contents = new String(buff);
+
+                    // Convert to an AvlReport
+                    AvlReport avlReport = ZmqQueueReaderFactory.getInstance().getAvlReport(zeromqTopic.getValue(), contents);
+
+                    // Process the individual AVL Report
+                    processAvlReport(avlReport);
+                } catch(Exception ex) {
+                    logger.error("#####>>>>> processMessage() failed", ex);
+                }
+                Thread.yield();
+            } else {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    logger.error("#####>>>>> processMessage() failed, exception was: " + e.getMessage(), e);
+                    return;
+                }
             }
 
-            try {
-                String contents = new String(buff);
 
-                // Convert to an AvlReport
-                AvlReport avlReport = ZmqQueueReaderFactory.getInstance().getAvlReport(zeromqTopic.getValue(), contents);
-
-                // Process the individual AVL Report
-                processAvlReport(avlReport);
-
-            } catch(Exception ex) {
-                logger.error("#####>>>>> processMessage() failed, exception was: " + ex.getMessage(), ex);
-            }
-
-        } else {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                logger.warn("exiting ZMQ thread (interrupted)");
-                return;
-            }
         }
+        logger.error("Thread loop for ZMQ was Interrupted, exiting");
+
     }
 
     @Override

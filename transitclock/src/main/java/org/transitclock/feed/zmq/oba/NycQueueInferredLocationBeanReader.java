@@ -2,9 +2,11 @@ package org.transitclock.feed.zmq.oba;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.avl.ZeroMQAvlModule;
+import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.StringConfigValue;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.feed.zmq.ZmqQueueBeanReader;
@@ -26,7 +28,7 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
     private static final Logger logger = LoggerFactory
             .getLogger(ZeroMQAvlModule.class);
     private static final ObjectMapper _mapper = new ObjectMapper();
-    private static final ObjectReader _reader =  _mapper.readerFor(NycQueueInferredLocationBeanReader.class);
+    private static final ObjectReader _reader =  _mapper.readerFor(NycQueuedInferredLocationBean.class);
 
     Date markTimestamp = new Date();
     private int processedCount = 0;
@@ -38,6 +40,12 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
             new StringConfigValue("transitclock.avl.zeromqAllowedRoutesFilter",
                     "*",
                     "List of acceptable routes for incoming avl data. Defaults to * which allows all.");
+
+    public static StringConfigValue stripAgencyIdPrefixWithSeparator =
+            new StringConfigValue("transitclock.avl.zeromq.stripAgencyIdPrefixWithSeparator",
+                    "_",
+                    "Strips AgencyId prefix for Blocks and Trips. Assumes default agency prefix separator of _ " +
+                            "If none is specified then agencyId is not stripped.");
 
     private static Set<String> routeFilterList = new HashSet<>();
 
@@ -137,15 +145,27 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
         );
 
         if(inferredLocationBean.getInferredTripId() != null){
-            avlReport.setAssignment(inferredLocationBean.getInferredTripId(),
+            avlReport.setAssignment(cleanUpAssignment(inferredLocationBean.getInferredTripId()),
                     AvlReport.AssignmentType.TRIP_ID);
         } else if(inferredLocationBean.getInferredBlockId() != null) {
-            avlReport.setAssignment(inferredLocationBean.getInferredBlockId(), AvlReport.AssignmentType.BLOCK_ID);
+            avlReport.setAssignment(cleanUpAssignment(inferredLocationBean.getInferredBlockId()), AvlReport.AssignmentType.BLOCK_ID);
         } else if(inferredLocationBean.getInferredRouteId() != null){
-            avlReport.setAssignment(inferredLocationBean.getInferredRouteId(), AvlReport.AssignmentType.ROUTE_ID);
+            avlReport.setAssignment(cleanUpAssignment(inferredLocationBean.getInferredRouteId()), AvlReport.AssignmentType.ROUTE_ID);
         }
         return avlReport;
     }
+
+    private String cleanUpAssignment(String value){
+        if(StringUtils.isNotEmpty(stripAgencyIdPrefixWithSeparator.getValue()) && StringUtils.isNotEmpty(value)){
+            int index = value.indexOf(stripAgencyIdPrefixWithSeparator.getValue());
+            if (index > -1) {
+                return value.substring(index + 1);
+            }
+        }
+        return value;
+    }
+
+
 
     private void logCounts(String topic){
         if (processedCount > COUNT_INTERVAL) {
