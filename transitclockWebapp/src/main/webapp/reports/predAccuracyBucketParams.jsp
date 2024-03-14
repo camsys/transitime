@@ -106,7 +106,7 @@
                         title="How early a vehicle can arrive compared to the prediction
             and still be acceptable. Must be a positive number to indicate
             early."
-                        value="1.0"
+                        value="0.5"
                         step="0.5"
                         placeholder="minute"
                         type="number">
@@ -138,7 +138,7 @@
                         title="How early a vehicle can arrive compared to the prediction
             and still be acceptable. Must be a positive number to indicate
             early."
-                        value="1.5"
+                        value="1.0"
                         step="0.5"
                         placeholder="minute"
                         type="number">
@@ -150,7 +150,7 @@
             <div class="col-sm-5 pad-left-0">
                 <input   class="form-control"  id="allowableLate2" name="allowableLate2"
                          title="How late a vehicle can arrive compared to the prediction and still be acceptable. Must be a positive number to indicate late."
-                         value="2.0"
+                         value="3.0"
                          step="0.5"
                          type="number"
                          placeholder="minute">
@@ -169,7 +169,7 @@
                         title="How early a vehicle can arrive compared to the prediction
             and still be acceptable. Must be a positive number to indicate
             early."
-                        value="2.5"
+                        value="1.0"
                         step="0.5"
                         placeholder="minute"
                         type="number">
@@ -181,7 +181,7 @@
             <div class="col-sm-5 pad-left-0">
                 <input   class="form-control"  id="allowableLate3" name="allowableLate3"
                          title="How late a vehicle can arrive compared to the prediction and still be acceptable. Must be a positive number to indicate late."
-                         value="3.5"
+                         value="4.0"
                          step="0.5"
                          type="number"
                          placeholder="minute">
@@ -199,7 +199,7 @@
                         title="How early a vehicle can arrive compared to the prediction
             and still be acceptable. Must be a positive number to indicate
             early."
-                        value="4.0"
+                        value="1.0"
                         step="0.5"
                         type="number"
                         placeholder="minute">
@@ -229,7 +229,7 @@
                         title="How early a vehicle can arrive compared to the prediction
             and still be acceptable. Must be a positive number to indicate
             early."
-                        value="4.0"
+                        value="1.0"
                         step="0.5"
                         type="number"
                         placeholder="minute">
