@@ -939,7 +939,7 @@ public class DbConfig {
 		}
 		
 		fareAttributes =
-				FareAttribute.getFareAttributes(globalSession, configRev);
+				FareAttributeDAO.getFareAttributes(globalSession, configRev);
 		fareRules = FareRule.getFareRules(globalSession, configRev);
 		frequencies = Frequency.getFrequencies(globalSession, configRev);
 		transfers = Transfer.getTransfers(globalSession, configRev);

@@ -23,10 +23,7 @@ import org.hibernate.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.configData.DbSetupConfig;
-import org.transitclock.db.dao.AgencyDAO;
-import org.transitclock.db.dao.BlockDAO;
-import org.transitclock.db.dao.CalendarDAO;
-import org.transitclock.db.dao.CalendarDateDAO;
+import org.transitclock.db.dao.*;
 import org.transitclock.db.structs.*;
 import org.transitclock.utils.IntervalTimer;
 
@@ -172,7 +169,7 @@ public class DbWriter {
 		}
 		
 		logger.info("Saving fare attributes to database...");
-		FareAttribute.deleteFromRev(session, configRev);
+		FareAttributeDAO.deleteFromRev(session, configRev);
 		for (FareAttribute fareAttribute : gtfsData.getFareAttributes()) {
 			writeObject(session, fareAttribute);
 		}

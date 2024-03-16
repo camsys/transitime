@@ -100,39 +100,6 @@ public class FareAttribute implements Serializable {
 		transferDuration = null;		
 	}
 	
-	/**
-	 * Deletes rev from the FareAttributes table
-	 * 
-	 * @param session
-	 * @param configRev
-	 * @return Number of rows deleted
-	 * @throws HibernateException
-	 */
-	public static int deleteFromRev(Session session, int configRev) 
-			throws HibernateException {
-		// Note that hql uses class name, not the table name
-		String hql = "DELETE FareAttribute WHERE configRev=" + configRev;
-		int numUpdates = session.createQuery(hql).executeUpdate();
-		return numUpdates;
-	}
-
-	/**
-	 * Returns List of FareAttribute objects for the specified database revision.
-	 * 
-	 * @param session
-	 * @param configRev
-	 * @return
-	 * @throws HibernateException
-	 */
-	@SuppressWarnings("unchecked")
-	public static List<FareAttribute> getFareAttributes(Session session, int configRev) 
-			throws HibernateException {
-		String hql = "FROM FareAttribute " +
-				"    WHERE configRev = :configRev";
-		Query query = session.createQuery(hql);
-		query.setInteger("configRev", configRev);
-		return query.list();
-	}
 
 	/**
 	 * Needed because have a composite ID for Hibernate storage
