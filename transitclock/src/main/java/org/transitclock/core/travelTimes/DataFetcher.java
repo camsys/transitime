@@ -32,6 +32,7 @@ import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.AgencyDAO;
+import org.transitclock.db.dao.MatchDAO;
 import org.transitclock.db.structs.Agency;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Match;
@@ -385,7 +386,7 @@ public class DataFetcher {
 		int batchSize = pageSize.getValue();  // Also known as maxResults
 		String sqlClause = "AND atStop = false ORDER BY avlTime";
 		logger.info("counting matches...");
-		Long count = Match.getMatchesCountFromDb(projectId, beginTime, endTime, "AND atStop = false");
+		Long count = MatchDAO.getMatchesCountFromDb(projectId, beginTime, endTime, "AND atStop = false");
 		logger.info("found {} matches", count);
 		
 		// The temporary list for the loop that contains a batch of results
@@ -398,7 +399,7 @@ public class DataFetcher {
 			int runningCount = 0;
 			do {
 				logger.info("querying matches for between {} and {}", pageBeginTime, pageEndTime);
-				matchBatchList = Match.getMatchesFromDb(projectId, pageBeginTime, pageEndTime, sqlClause, null, null);
+				matchBatchList = MatchDAO.getMatchesFromDb(projectId, pageBeginTime, pageEndTime, sqlClause, null, null);
 				// Add arrivals/departures to map
 				for (Match match : matchBatchList) {
 					addMatchToMap(resultsMap, match);
@@ -414,7 +415,7 @@ public class DataFetcher {
 		} else {
 		// Read in batch of 50k rows of data and process it
 			do {				
-				matchBatchList = Match.getMatchesFromDb(
+				matchBatchList = MatchDAO.getMatchesFromDb(
 						projectId, 
 						beginTime, endTime, 
 						// Only want matches that are not at a stop since for that
