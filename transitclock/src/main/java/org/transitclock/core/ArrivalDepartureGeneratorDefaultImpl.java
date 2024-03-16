@@ -37,6 +37,7 @@ import org.transitclock.core.dwell.DwellTimeUtil;
 import org.transitclock.core.holdingmethod.HoldingTimeGeneratorFactory;
 
 import org.transitclock.core.predAccuracy.PredictionAccuracyModule;
+import org.transitclock.db.dao.VehicleEventDAO;
 import org.transitclock.db.structs.*;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
 import org.transitclock.logging.Markers;
@@ -594,7 +595,7 @@ public class ArrivalDepartureGeneratorDefaultImpl
 					+ Time.timeStr(departure.getScheduledTime());
 
 			// Create, store in db, and log the VehicleEvent
-			VehicleEvent.create(vehicleState.getAvlReport(), vehicleState.getMatch(),
+			VehicleEventDAO.create(vehicleState.getAvlReport(), vehicleState.getMatch(),
 					VehicleEvent.LEFT_TERMINAL_EARLY,
 					description,
 					true,  // predictable
@@ -614,7 +615,7 @@ public class ArrivalDepartureGeneratorDefaultImpl
 					+ Time.timeStr(departure.getScheduledTime());
 
 			// Create, store in db, and log the VehicleEvent
-			VehicleEvent.create(vehicleState.getAvlReport(), vehicleState.getMatch(),
+			VehicleEventDAO.create(vehicleState.getAvlReport(), vehicleState.getMatch(),
 					VehicleEvent.LEFT_TERMINAL_LATE,
 					description,
 					true,  // predictable

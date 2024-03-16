@@ -34,6 +34,7 @@ import org.transitclock.core.dataCache.VehicleDataCache;
 import org.transitclock.core.dataCache.VehicleStateManager;
 import org.transitclock.core.dataCache.canceledTrip.CanceledTripCache;
 import org.transitclock.db.dao.TripDAO;
+import org.transitclock.db.dao.VehicleEventDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.*;
 import org.transitclock.db.structs.AvlReport.AssignmentType;
@@ -178,7 +179,7 @@ public class AvlProcessor {
 		AvlReport avlReport = vehicleState.getAvlReport();
 		TemporalMatch lastMatch = vehicleState.getMatch();
 		boolean wasPredictable = vehicleState.isPredictable();
-		VehicleEvent.create(avlReport, lastMatch, vehicleEvent,
+		VehicleEventDAO.create(avlReport, lastMatch, vehicleEvent,
 				eventDescription, false, // predictable
 				wasPredictable, // becameUnpredictable
 				null); // supervisor
@@ -394,7 +395,7 @@ public class AvlProcessor {
 				// If vehicle newly delayed then also create a VehicleEvent 
 				// indicating such
 				if (!wasDelayed) {
-					VehicleEvent.create(vehicleState.getAvlReport(), 
+					VehicleEventDAO.create(vehicleState.getAvlReport(),
 							vehicleState.getMatch(), VehicleEvent.DELAYED,
 							description, 
 							true, // predictable
@@ -602,7 +603,7 @@ public class AvlProcessor {
 			// Record a corresponding VehicleEvent
 			String eventDescription = "Vehicle successfully matched to "
 					+ assignmentType + " assignment and is now predictable.";
-			VehicleEvent.create(avlReport, bestMatch, VehicleEvent.PREDICTABLE,
+			VehicleEventDAO.create(avlReport, bestMatch, VehicleEvent.PREDICTABLE,
 					eventDescription, true, // predictable
 					false, // becameUnpredictable
 					null); // supervisor
@@ -656,7 +657,7 @@ public class AvlProcessor {
       String eventDescription = "Vehicle match conflict from AVL report of " 
 	    + Geo.distanceFormat(deltaDistance) + " from match " + matchLocation; 
 	    
-      VehicleEvent.create(vehicleState.getAvlReport(), bestMatch, VehicleEvent.AVL_CONFLICT,
+      VehicleEventDAO.create(vehicleState.getAvlReport(), bestMatch, VehicleEvent.AVL_CONFLICT,
           eventDescription, true, // predictable
           false, // becameUnpredictable
           null); // supervisor
@@ -1333,7 +1334,7 @@ public class AvlProcessor {
 					+ Time.timeOfDayStr(scheduledDepartureTime);
 
 			// Create, store in db, and log the VehicleEvent
-			VehicleEvent.create(vehicleState.getAvlReport(),
+			VehicleEventDAO.create(vehicleState.getAvlReport(),
 					vehicleState.getMatch(), VehicleEvent.NOT_LEAVING_TERMINAL,
 					description, true, // predictable
 					false, // becameUnpredictable
@@ -1627,7 +1628,7 @@ public class AvlProcessor {
 	private void logInvalidAssignment(VehicleState vehicleState) {
 		final String description = "Assignment " + vehicleState.getAvlReport().getAssignmentId()
 						+ " not valid";
-		VehicleEvent.create(vehicleState.getAvlReport(),
+		VehicleEventDAO.create(vehicleState.getAvlReport(),
 						vehicleState.getMatch(), VehicleEvent.UNMATCHED_ASSIGNMENT,
 						description, false, // predictable
 						true, // becameUnpredictable

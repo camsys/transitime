@@ -4,7 +4,7 @@ import java.rmi.RemoteException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collection;
-import java.util.Date;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +16,7 @@ import org.transitclock.core.dataCache.PredictionDataCache;
 import org.transitclock.core.dataCache.VehicleDataCache;
 import org.transitclock.core.dataCache.VehicleStateManager;
 import org.transitclock.db.structs.AvlReport;
-import org.transitclock.db.structs.VehicleEvent;
+import org.transitclock.db.dao.VehicleEventDAO;
 import org.transitclock.ipc.data.IpcAvl;
 import org.transitclock.ipc.data.IpcVehicleComplete;
 import org.transitclock.ipc.interfaces.CommandsInterface;
@@ -120,7 +120,7 @@ public class CommandsServer extends AbstractServer
 		
 		String vehicleEvent="Command called to make vehicleId unpredicable. ";
 		String eventDescription="Command called to make vehicleId unpredicable. ";;
-		VehicleEvent.create(avlReport, lastMatch, vehicleEvent,
+		VehicleEventDAO.create(avlReport, lastMatch, vehicleEvent,
 				eventDescription, false, // predictable
 				wasPredictable, // becameUnpredictable
 				null); // supervisor
