@@ -205,21 +205,6 @@ public class ApcReport implements Serializable {
     return arrivalDeparture;
   }
 
-  public static List<ApcReport> getApcReportsFromDb(String projectId, Date beginTime, Date endTime) {
-    Session session = HibernateUtils.getSession(projectId);
-    String hql = "FROM ApcReport " +
-            " WHERE time >= :beginDate " +
-            " AND time < :endDate";
-    Query query = session.createQuery(hql);
-    query.setTimestamp("beginDate", beginTime);
-    query.setTimestamp("endDate", endTime);
-
-    try {
-      return query.list();
-    } finally {
-      session.close();
-    }
-  }
 
   @Override
   public String toString() {
