@@ -27,10 +27,7 @@ import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.StringConfigValue;
 import org.transitclock.core.ServiceUtilsImpl;
 
-import org.transitclock.db.dao.ActiveRevisionDAO;
-import org.transitclock.db.dao.AgencyDAO;
-import org.transitclock.db.dao.BlockDAO;
-import org.transitclock.db.dao.CalendarDAO;
+import org.transitclock.db.dao.*;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.*;
@@ -890,7 +887,7 @@ public class DbConfig {
 				individualTripsMap.put(trip.getId(), trip);
 			}
 		}
-		configRevisions = ConfigRevision.getConfigRevisions(globalSession, configRev);
+		configRevisions = ConfigRevisionDAO.getConfigRevisions(globalSession, configRev);
 		feedInfos = FeedInfo.getFeedInfos(globalSession);
 
 		blocksByServiceMap = putBlocksIntoMap(blocks);
@@ -919,7 +916,7 @@ public class DbConfig {
 		timer = new IntervalTimer();
 		agencies = AgencyDAO.getAgencies(globalSession, configRev);
 		calendars = CalendarDAO.getCalendars(globalSession, configRev);
-		calendarDates = CalendarDate.getCalendarDates(globalSession, configRev);
+		calendarDates = CalendarDateDAO.getCalendarDates(globalSession, configRev);
 
 		calendarByServiceIdMap = new HashMap<>();
 		for (Calendar calendar : calendars) {

@@ -2,6 +2,7 @@ package org.transitclock.core;
 
 import org.hibernate.Session;
 import org.transitclock.db.dao.CalendarDAO;
+import org.transitclock.db.dao.CalendarDateDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.CalendarDate;
@@ -138,7 +139,7 @@ public class ServiceTypeUtil {
 
         // Process Calendar Dates
 
-        List<CalendarDate> calendarDates = CalendarDate.getCalendarDates(session, configRev);
+        List<CalendarDate> calendarDates = CalendarDateDAO.getCalendarDates(session, configRev);
         for(CalendarDate calendarDate : calendarDates){
             Set<ServiceType> serviceTypes = serviceTypesByServiceId.get(calendarDate.getServiceId());
             // Only add if service id doesn't already exist

@@ -17,20 +17,13 @@
 
 package org.transitclock.db.structs;
 
-import org.hibernate.HibernateException;
-import org.hibernate.Query;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.annotations.DynamicUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.transitclock.db.hibernate.HibernateUtils;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.List;
 
 /**
  * For keeping track of information having to do with a configuration revision.
@@ -100,25 +93,7 @@ public class ConfigRevision {
 				+ "]";
 	}
 
-	/**
-	 * Stores this ConfigRevision into the database for the agencyId.
-	 * 
-	 * @param agencyId
-	 */
-	public void save(String agencyId) {
-		Session session = HibernateUtils.getSession(agencyId);
-		Transaction tx = session.beginTransaction();
-		try {
-			session.save(this);
-			tx.commit();
-		} catch (HibernateException e) {
-			logger.error("Error saving ConfigRevision data to db. {}", 
-					this, e);
-		} finally {
-			session.close();
-		}
-	}
-	
+
 	/*********************** Getters *********************/
 	
 	public int getConfigRev() {
@@ -143,47 +118,5 @@ public class ConfigRevision {
 		return notes;
 	}
 
-	public static List<ConfigRevision> getConfigRevisions(Session session, int configRev) throws HibernateException {
-		String hql = "From ConfigRevision c ORDER by configRev";
-		Query query = session.createQuery(hql);
-		return query.list();
-	}
-
-	public static List<ConfigRevision> getConfigRevisionsForDateRange(LocalDateTime startTime,
-																	  LocalDateTime endTime,
-																	  boolean readOnly) throws HibernateException {
-
-
-		String hql = "FROM ConfigRevision c " +
-				     "WHERE c.processedTime between " +
-					 "(" +
-					 	"SELECT MAX(c2.procssedTime) " +
-						"FROM ConfigRevision c2 " +
-						"WHERE c2.processedTime < :start " +
-					 ") " +
-					 "AND :end " +
-					 "ORDER BY c.processedTime DESC";
-
-		Session session = HibernateUtils.getSession(readOnly);
-		Query query = session.createQuery(hql);
-		query.setParameter("start", startTime);
-		query.setParameter("end", endTime);
-		return query.list();
-	}
-
-	public static List<ConfigRevision> getConfigRevisionsForMaxDate( LocalDateTime endTime,
-																	 boolean readOnly) throws HibernateException {
-
-
-		String hql = "FROM ConfigRevision c " +
-				"WHERE c.processedTime < :end " +
-				"ORDER BY c.processedTime DESC";
-
-		Session session = HibernateUtils.getSession(readOnly);
-		Query query = session.createQuery(hql);
-		query.setParameter("end", java.sql.Timestamp.valueOf(endTime));
-		query.setMaxResults(1);
-		return query.list();
-	}
 
 }

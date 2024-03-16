@@ -26,6 +26,7 @@ import org.transitclock.configData.DbSetupConfig;
 import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.dao.BlockDAO;
 import org.transitclock.db.dao.CalendarDAO;
+import org.transitclock.db.dao.CalendarDateDAO;
 import org.transitclock.db.structs.*;
 import org.transitclock.utils.IntervalTimer;
 
@@ -159,7 +160,7 @@ public class DbWriter {
 		}
 		
 		logger.info("Saving calendar dates to database...");
-		CalendarDate.deleteFromRev(session, configRev);
+		CalendarDateDAO.deleteFromRev(session, configRev);
 		for (CalendarDate calendarDate : gtfsData.getCalendarDates()) {
 			writeObject(session, calendarDate);
 		}

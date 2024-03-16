@@ -8,6 +8,7 @@ import org.transitclock.applications.Core;
 import org.transitclock.db.dao.ArrivalDepartureDAO;
 import org.transitclock.core.ServiceType;
 import org.transitclock.db.dao.CalendarDAO;
+import org.transitclock.db.dao.CalendarDateDAO;
 import org.transitclock.db.query.ArrivalDepartureQuery;
 import org.transitclock.db.query.RunTimeForRouteQuery;
 import org.transitclock.db.query.TripQuery;
@@ -41,7 +42,7 @@ public class PrescriptiveRunTimesTest extends AbstractPrescriptiveRunTimesTests{
     private MockedStatic<Trip> staticTrip;
     private MockedStatic<TripPattern> staticTripPattern;
     private MockedStatic<CalendarDAO> staticCalendarDAO;
-    private MockedStatic<CalendarDate> staticCalendarDate;
+    private MockedStatic<CalendarDateDAO> staticCalendarDateDAO;
     private MockedStatic<ArrivalDepartureDAO> arrivalDepartureDAOMockedStatic;
 
 
@@ -70,7 +71,7 @@ public class PrescriptiveRunTimesTest extends AbstractPrescriptiveRunTimesTests{
         staticTrip = mockStatic(Trip.class);
         staticTripPattern = mockStatic(TripPattern.class);
         staticCalendarDAO = mockStatic(CalendarDAO.class);
-        staticCalendarDate = mockStatic(CalendarDate.class);
+        staticCalendarDateDAO = mockStatic(CalendarDateDAO.class);
         arrivalDepartureDAOMockedStatic = mockStatic(ArrivalDepartureDAO.class);
     }
 
@@ -80,7 +81,7 @@ public class PrescriptiveRunTimesTest extends AbstractPrescriptiveRunTimesTests{
         staticTrip.close();
         staticTripPattern.close();
         staticCalendarDAO.close();
-        staticCalendarDate.close();
+        staticCalendarDateDAO.close();
         arrivalDepartureDAOMockedStatic.close();
     }
 
@@ -208,7 +209,7 @@ public class PrescriptiveRunTimesTest extends AbstractPrescriptiveRunTimesTests{
         staticTrip.when(() -> Trip.getTripsFromDb(any(TripQuery.class))).thenReturn(trips);
         staticTripPattern.when(() -> TripPattern.getTripPatternsForRoute(anyString(), anyInt(), anyBoolean())).thenReturn(tripPatterns);
         staticCalendarDAO.when(() -> CalendarDAO.getCalendars(any(Session.class), anyInt())).thenReturn(calendars);
-        staticCalendarDate.when(() -> CalendarDate.getCalendarDates(any(Session.class), anyInt())).thenReturn(calendarDates);
+        staticCalendarDateDAO.when(() -> CalendarDateDAO.getCalendarDates(any(Session.class), anyInt())).thenReturn(calendarDates);
         arrivalDepartureDAOMockedStatic.when(() -> ArrivalDepartureDAO.getArrivalsDeparturesFromDb(any(ArrivalDepartureQuery.class))).thenReturn(arrivalDepartures);
 
         // Instantiate Prescriptive RunTimes Service

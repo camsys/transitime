@@ -2,6 +2,7 @@ package org.transitclock.core;
 
 import org.hibernate.Session;
 import org.transitclock.db.dao.CalendarDAO;
+import org.transitclock.db.dao.CalendarDateDAO;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.CalendarDate;
 import org.transitclock.db.structs.Trip;
@@ -72,6 +73,6 @@ public class RunTimesServiceUtilsImpl implements RunTimeServiceUtils {
     }
 
     public List<CalendarDate> getCalendarDatesForDate(Session session, int configRev, Date date){
-        return CalendarDate.getCalendarDates(session, configRev, date);
+        return CalendarDateDAO.getCalendarDates(session, configRev, date);
     }
 }
