@@ -10,6 +10,7 @@ import org.transitclock.core.ServiceType;
 import org.transitclock.core.ServiceTypeUtil;
 import org.transitclock.db.dao.StopDAO;
 import org.transitclock.db.dao.TripDAO;
+import org.transitclock.db.dao.TripPatternDAO;
 import org.transitclock.db.query.ArrivalDepartureQuery;
 import org.transitclock.db.query.PrescriptiveRunTimeStateQuery;
 import org.transitclock.db.query.RunTimeForRouteQuery;
@@ -193,7 +194,7 @@ public class PrescriptiveRunTimeService {
     }
 
     public List<TripPattern> getTripPatternsForRoute(String routeShortName, int configRev, boolean readOnly) {
-        return TripPattern.getTripPatternsForRoute(routeShortName, configRev, readOnly);
+        return TripPatternDAO.getTripPatternsForRoute(routeShortName, configRev, readOnly);
     }
 
     private void fillAdjustedTimeBandTimes(List<TimebandTime> timebandTimes) {

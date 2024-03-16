@@ -230,6 +230,100 @@ public class TripPattern implements Serializable, Lifecycle {
 	}
 
 	/**
+	 * Determines the ID of the TripPattern. It is of course important that the
+	 * trip pattern be unique. It also needs to be consistent even if the order
+	 * of the stop_times file changes or trips are added or removed. Plus it
+	 * needs to be understandable. Therefore it consists of appending the
+	 * shapeId (if not-null), the from stop ID, the to stop ID, and a hash of
+	 * the concatenation of all the stop IDs that make up the trip pattern. It
+	 * will be something like "shape_932012_stops_stop1_to_stop2_hash". Long,
+	 * but it is readable, unique, and consistent.
+	 *
+	 * It is important to not just always use "stop1_to_stop2" since some
+	 * agencies might for the same stops have different stopPaths for connecting
+	 * them. Therefore should use the shapeId from the Trip passed in.
+	 *
+	 * @param shapeId
+	 *            Used for the trip pattern id if it is not null
+	 * @param stopPaths
+	 *            If shapeId null then used as part of ID
+	 * @param trip
+	 *            In case things get complicated with determining ID and need to
+	 *            log message
+	 * @param gtfsData
+	 *            In case things get complicated with determining ID
+	 * @return Unique generated trip pattern ID for the specified trip
+	 */
+	private static String generateTripPatternId(String shapeId,
+																							List<StopPath> stopPaths,
+																							Trip trip,
+																							GtfsData gtfsData) {
+		// The ID to be constructed and returned
+		String tripPatternId = "";
+
+		// If shapeId defined then start with it
+		if (shapeId != null) {
+			tripPatternId = "shape_" + shapeId + "_";
+		}
+
+		// Add the from and to stop IDs
+		if (stopPaths != null && stopPaths.size() > 1) {
+			StopPath path1 = stopPaths.get(0);
+			StopPath path2 = stopPaths.get(stopPaths.size()-1);
+			tripPatternId += path1.getStopId() + "_to_" + path2.getStopId() + "_";
+		} else {
+			GtfsData.logger.info("There was an issue with creating trip " +
+							"pattern for tripId={} for routeId={}, it is missing stops ");
+			return tripPatternId;
+		}
+
+		// Determine hash in hexadecimal format of list of stops
+		StringBuilder sb = new StringBuilder();
+		for (StopPath stopPath : stopPaths) {
+			sb.append(stopPath.getStopId());
+		}
+		String hexOfStopsHash = String.format("%x", sb.toString().hashCode());
+		tripPatternId += hexOfStopsHash;
+
+		// Make sure not too long for the database column. Include possibility
+		// of needing to include the "_variation N" to make it unique. Otherwise
+		// wouldn't notice problem until actually written to db.
+		int extraNeededForVariation = "_variation".length() + 2;
+		if (tripPatternId.length() + extraNeededForVariation > TRIP_PATTERN_ID_LENGTH)
+			tripPatternId =
+							tripPatternId.substring(tripPatternId.length()
+											+ extraNeededForVariation - TRIP_PATTERN_ID_LENGTH);
+
+		// Still need to make sure that tripPatternIds are unique. This should
+		// never be a problem due to the rather unique way the trip pattern IDs
+		// are determined but still want to be absolutely safe since using a
+		// hash of the list of stop IDs and a hash isn't guaranteed to be
+		// unique.
+		boolean problemWithTripPatternId = false;
+		int variationCounter = 1;
+		String originalTripPatternId = tripPatternId;
+		while (gtfsData.isTripPatternIdAlreadyUsed(tripPatternId)) {
+			tripPatternId =
+							originalTripPatternId + "_variation" + variationCounter++;
+			problemWithTripPatternId = true;
+		}
+
+		if (problemWithTripPatternId)
+			GtfsData.logger.info("There was an issue with creating trip " +
+											"pattern for tripId={} for routeId={} in " +
+											"TripPattern.generateTripPatternId(). " +
+											"There already was a trip pattern with the desired name. " +
+											"This likely means that a trip pattern is defined with the " +
+											"same shapeId (which is used for the trip pattern ID) but " +
+											"with different stop list indicating the trips are not " +
+											"consistently defined. Therefore using the special " +
+											"tripPatternId={}.",
+							trip.getId(), trip.getRouteId(), tripPatternId);
+
+		return tripPatternId;
+	}
+
+	/**
 	 * Gets the route_short_name from the GTFS route data. If the
 	 * route_short_name was not specified in the GTFS data then will use the
 	 * route_long_name. This way the route short name returned will always be
@@ -253,214 +347,7 @@ public class TripPattern implements Serializable, Lifecycle {
 		return name;
 	}
 	
-	/**
-	 * Deletes rev from the TripPattern_to_Path_joinTable, StopPaths, 
-	 * and TripPatterns tables.
-	 * 
-	 * @param session
-	 * @param configRev
-	 * @return Number of rows deleted
-	 * @throws HibernateException
-	 */
-	public static int deleteFromRev(Session session, int configRev) 
-			throws HibernateException {
-		// In a perfect Hibernate world one would simply call on session.delete()
-		// for each trip pattern and the join table and the associated trip pattern
-		// elements would be automatically deleted by using the magic of Hibernate.
-		// But this means that would have to read in all the objects and sub-objects
-		// first, which of course takes lots of time and memory, often causing
-		// program to crash due to out of memory issue. Therefore
-		// using the much, much faster solution of direct SQL calls. Can't use
-		// HQL on the join table since it is not a regularly defined table. 
-		//
-		// Would be great to see if can actually use HQL and delete the 
-		// appropriate TripPatterns and have the join table and the trip pattern
-		// elements table be automatically updated. I doubt this would work but
-		// would be interesting to try if had the time.
-		//
-		// Delete from TripPattern_to_Path_joinTable first since it has a foreign
-		// key to the StopPath table, 
-		int rowsUpdated = 0;
-		rowsUpdated += session.
-				createSQLQuery("DELETE FROM TripPattern_to_Path_joinTable "
-						+ "WHERE TripPatterns_configRev=" + configRev).
-				executeUpdate();
-		rowsUpdated += session.
-				createSQLQuery("DELETE FROM StopPaths WHERE configRev=" 
-						+ configRev).
-				executeUpdate();
-		rowsUpdated += session.
-				createSQLQuery("DELETE FROM TripPatterns WHERE configRev=" 
-						+ configRev).
-				executeUpdate();
-		return rowsUpdated;
-		
-//		// Because TripPattern uses a List of Paths things are
-//		// complicated because there are multiple tables with foreign keys.
-//		// And the join table is not a regular Hibernate table so I don't
-//		// believe can use hql to empty it out. Therefore it is best to
-//		// read in the objects and then delete them and let Hibernate make
-//		// sure it is all done correctly.
-//		// NOTE: Unfortunately this is quite slow since have to read in
-//		// all the objects first. Might just want to use regular SQL to
-//		// delete the items in the TripPattern_to_Path_joinTable
-//		List<TripPattern> tripPatternsFromDb = getTripPatterns(session, 0);
-//		for (TripPattern tp : tripPatternsFromDb)
-//			session.delete(tp);
-//		// Need to flush. Otherwise when writing new TripPatterns will get
-//		// a uniqueness violation even though already told the session to
-//		// delete those objects.
-//		session.flush();
-//		return tripPatternsFromDb.size();
-		
-//		int numUpdates = 0;
-//		String hql;
-//		
-//		// Need to first delete the list of Paths
-//		hql = "DELETE StopPath WHERE configRev=0";
-//		numUpdates += session.createQuery(hql).executeUpdate();
-////		hql = "";
-////		numUpdates += session.createQuery(hql).executeUpdate();
-//		
-//		// Note that hql uses class name, not the table name
-//		hql = "DELETE TripPattern WHERE configRev=0";
-//		numUpdates += session.createQuery(hql).executeUpdate();
-//		return numUpdates;
-	}
-	
-	/**
-	 * Returns list of TripPattern objects for the specified configRev
-	 * 
-	 * @param session
-	 * @param configRev
-	 * @return
-	 * @throws HibernateException
-	 */
-	@SuppressWarnings("unchecked")
-	public static List<TripPattern> getTripPatterns(Session session, int configRev)
-			throws HibernateException {
-		String hql = "FROM TripPattern " +
-				"    WHERE configRev = :configRev";
-		Query query = session.createQuery(hql);
-		query.setInteger("configRev", configRev);
-		return query.list();
-	}
 
-	/**
-	 * Returns list of TripPattern objects for the specified configRev
-	 *
-	 * @param configRev
-	 * @return
-	 * @throws HibernateException
-	 */
-	@SuppressWarnings("unchecked")
-	public static List<TripPattern> getTripPatternsForRoute(String routeShortName, int configRev, boolean readOnly)
-			throws HibernateException {
-		Session session = HibernateUtils.getSession(readOnly);
-		String hql = "FROM TripPattern " +
-					 "WHERE configRev = :configRev " +
-					 "AND routeShortName = :routeShortName";
-		Query query = session.createQuery(hql);
-		query.setInteger("configRev", configRev);
-		query.setString("routeShortName", routeShortName);
-		return query.list();
-	}
-
-
-	/**
-	 * Determines the ID of the TripPattern. It is of course important that the
-	 * trip pattern be unique. It also needs to be consistent even if the order
-	 * of the stop_times file changes or trips are added or removed. Plus it
-	 * needs to be understandable. Therefore it consists of appending the
-	 * shapeId (if not-null), the from stop ID, the to stop ID, and a hash of
-	 * the concatenation of all the stop IDs that make up the trip pattern. It
-	 * will be something like "shape_932012_stops_stop1_to_stop2_hash". Long,
-	 * but it is readable, unique, and consistent.
-	 * 
-	 * It is important to not just always use "stop1_to_stop2" since some
-	 * agencies might for the same stops have different stopPaths for connecting
-	 * them. Therefore should use the shapeId from the Trip passed in.
-	 * 
-	 * @param shapeId
-	 *            Used for the trip pattern id if it is not null
-	 * @param stopPaths
-	 *            If shapeId null then used as part of ID
-	 * @param trip
-	 *            In case things get complicated with determining ID and need to
-	 *            log message
-	 * @param gtfsData
-	 *            In case things get complicated with determining ID
-	 * @return Unique generated trip pattern ID for the specified trip
-	 */
-	private static String generateTripPatternId(String shapeId, 
-			List<StopPath> stopPaths,
-			Trip trip, 
-			GtfsData gtfsData) {
-		// The ID to be constructed and returned
-		String tripPatternId = "";
-		
-		// If shapeId defined then start with it
-		if (shapeId != null) {
-			tripPatternId = "shape_" + shapeId + "_";
-		}
-		
-		// Add the from and to stop IDs
-		if (stopPaths != null && stopPaths.size() > 1) {
-		  StopPath path1 = stopPaths.get(0);
-		  StopPath path2 = stopPaths.get(stopPaths.size()-1);
-		  tripPatternId += path1.getStopId() + "_to_" + path2.getStopId() + "_";
-		} else {
-		  GtfsData.logger.info("There was an issue with creating trip " + 
-          "pattern for tripId={} for routeId={}, it is missing stops "); 
-		  return tripPatternId;
-		}
-		
-		// Determine hash in hexadecimal format of list of stops
-		StringBuilder sb = new StringBuilder();
-		for (StopPath stopPath : stopPaths) {
-			sb.append(stopPath.getStopId());
-		}
-		String hexOfStopsHash = String.format("%x", sb.toString().hashCode());
-		tripPatternId += hexOfStopsHash;
-		
-		// Make sure not too long for the database column. Include possibility 
-		// of needing to include the "_variation N" to make it unique. Otherwise
-		// wouldn't notice problem until actually written to db.
-		int extraNeededForVariation = "_variation".length() + 2;
-		if (tripPatternId.length() + extraNeededForVariation > TRIP_PATTERN_ID_LENGTH)
-			tripPatternId =
-					tripPatternId.substring(tripPatternId.length()
-							+ extraNeededForVariation - TRIP_PATTERN_ID_LENGTH);
-		
-		// Still need to make sure that tripPatternIds are unique. This should
-		// never be a problem due to the rather unique way the trip pattern IDs
-		// are determined but still want to be absolutely safe since using a 
-		// hash of the list of stop IDs and a hash isn't guaranteed to be 
-		// unique.
-		boolean problemWithTripPatternId = false;
-		int variationCounter = 1;
-		String originalTripPatternId = tripPatternId;
-		while (gtfsData.isTripPatternIdAlreadyUsed(tripPatternId)) {
-			tripPatternId = 
-					originalTripPatternId + "_variation" + variationCounter++;
-			problemWithTripPatternId = true;
-		}
-		
-		if (problemWithTripPatternId)
-			GtfsData.logger.info("There was an issue with creating trip " + 
-					"pattern for tripId={} for routeId={} in " +
-					"TripPattern.generateTripPatternId(). " + 
-					"There already was a trip pattern with the desired name. " + 
-					"This likely means that a trip pattern is defined with the " +
-					"same shapeId (which is used for the trip pattern ID) but " +
-					"with different stop list indicating the trips are not " +
-					"consistently defined. Therefore using the special " +
-					"tripPatternId={}.",
-					trip.getId(), trip.getRouteId(), tripPatternId);
-		
-		return tripPatternId;
-	}
-	
 	/**
 	 * When processing a new trip let the TripPattern know that
 	 * this additional Trip refers to it. 

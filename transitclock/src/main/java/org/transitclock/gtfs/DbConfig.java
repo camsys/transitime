@@ -901,7 +901,7 @@ public class DbConfig {
 		logger.debug("Reading routes took {} msec", timer.elapsedMsec());
 
 		timer = new IntervalTimer();
-		List<TripPattern> tripPatterns = TripPattern.getTripPatterns(globalSession, configRev);
+		List<TripPattern> tripPatterns = TripPatternDAO.getTripPatterns(globalSession, configRev);
 		tripPatternsByRouteMap = putTripPatternsIntoRouteMap(tripPatterns);
 		tripPatternsByIdMap = putTripPatternsIntoMap(tripPatterns);
 		logger.debug("Reading trip patterns took {} msec", timer.elapsedMsec());

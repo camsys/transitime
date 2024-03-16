@@ -106,7 +106,7 @@ public class DbWriter {
 	
 			logger.info("Deleting old trip patterns from rev {} of database...", 
 					configRev);
-			TripPattern.deleteFromRev(session, configRev);
+			TripPatternDAO.deleteFromRev(session, configRev);
 			
 			// Get rid of travel times that are associated with the rev being 
 			// deleted
