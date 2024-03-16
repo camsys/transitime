@@ -30,6 +30,7 @@ import org.transitclock.core.ServiceUtilsImpl;
 import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.dao.BlockDAO;
+import org.transitclock.db.dao.CalendarDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.*;
@@ -917,7 +918,7 @@ public class DbConfig {
 
 		timer = new IntervalTimer();
 		agencies = AgencyDAO.getAgencies(globalSession, configRev);
-		calendars = Calendar.getCalendars(globalSession, configRev);
+		calendars = CalendarDAO.getCalendars(globalSession, configRev);
 		calendarDates = CalendarDate.getCalendarDates(globalSession, configRev);
 
 		calendarByServiceIdMap = new HashMap<>();

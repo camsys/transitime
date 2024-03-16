@@ -1,7 +1,7 @@
 package org.transitclock.core;
 
 import org.hibernate.Session;
-import org.transitclock.db.hibernate.HibernateUtils;
+import org.transitclock.db.dao.CalendarDAO;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.CalendarDate;
 import org.transitclock.db.structs.Trip;
@@ -62,7 +62,7 @@ public class RunTimesServiceUtilsImpl implements RunTimeServiceUtils {
 
     public Calendar getCalendarForServiceId(Session session, int configRev, String serviceId){
         try {
-            List<Calendar> calendars = Calendar.getCalendar(session, configRev, serviceId);
+            List<Calendar> calendars = CalendarDAO.getCalendar(session, configRev, serviceId);
             return calendars.stream().findAny().orElse(null);
         }catch(Exception e){
             e.printStackTrace();
