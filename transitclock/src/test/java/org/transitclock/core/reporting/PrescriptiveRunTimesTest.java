@@ -5,6 +5,7 @@ import org.junit.*;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.transitclock.applications.Core;
+import org.transitclock.avl.ArrivalDepartureDAO;
 import org.transitclock.core.ServiceType;
 import org.transitclock.db.query.ArrivalDepartureQuery;
 import org.transitclock.db.query.RunTimeForRouteQuery;
@@ -207,7 +208,7 @@ public class PrescriptiveRunTimesTest extends AbstractPrescriptiveRunTimesTests{
         staticTripPattern.when(() -> TripPattern.getTripPatternsForRoute(anyString(), anyInt(), anyBoolean())).thenReturn(tripPatterns);
         staticCalendar.when(() -> Calendar.getCalendars(any(Session.class), anyInt())).thenReturn(calendars);
         staticCalendarDate.when(() -> CalendarDate.getCalendarDates(any(Session.class), anyInt())).thenReturn(calendarDates);
-        arrivalDepartureMockedStatic.when(() -> ArrivalDeparture.getArrivalsDeparturesFromDb(any(ArrivalDepartureQuery.class))).thenReturn(arrivalDepartures);
+        arrivalDepartureMockedStatic.when(() -> ArrivalDepartureDAO.getArrivalsDeparturesFromDb(any(ArrivalDepartureQuery.class))).thenReturn(arrivalDepartures);
 
         // Instantiate Prescriptive RunTimes Service
         PrescriptiveRunTimeService prescriptiveRunTimeService = new PrescriptiveRunTimeService();

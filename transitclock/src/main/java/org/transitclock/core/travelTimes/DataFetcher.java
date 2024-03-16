@@ -27,6 +27,7 @@ import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.avl.ArrivalDepartureDAO;
 import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.db.dao.ActiveRevisionDAO;
@@ -280,7 +281,7 @@ public class DataFetcher {
 		// The temporary list for the loop that contains a batch of results
 		
 		logger.info("counting arrival/departures");
-		Long count = ArrivalDeparture.getArrivalsDeparturesCountFromDb(dbName, beginTime, endTime, null, false);
+		Long count = ArrivalDepartureDAO.getArrivalsDeparturesCountFromDb(dbName, beginTime, endTime, null, false);
 		logger.info("retrieving {} arrival/departures", count);
 		List<ArrivalDeparture> arrDepBatchList;
 		
@@ -291,7 +292,7 @@ public class DataFetcher {
 			int runningCount = 0;
 			do {
 				logger.info("querying a/d for between {} and {}", pageBeginTime, pageEndTime);
-				arrDepBatchList = ArrivalDeparture.getArrivalsDeparturesFromDb(
+				arrDepBatchList = ArrivalDepartureDAO.getArrivalsDeparturesFromDb(
 						dbName, 
 						pageBeginTime, pageEndTime, 
 						// Order results by time so that process them in the same
@@ -316,7 +317,7 @@ public class DataFetcher {
 		} else {
 			// Read in batch of 50k rows of data and process it
 			do {				
-				arrDepBatchList = ArrivalDeparture.getArrivalsDeparturesFromDb(
+				arrDepBatchList = ArrivalDepartureDAO.getArrivalsDeparturesFromDb(
 						dbName, 
 						beginTime, endTime, 
 						// Order results by time so that process them in the same

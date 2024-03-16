@@ -248,7 +248,7 @@ public class ApcDataProcessor {
 
   protected List<ArrivalDeparture> findArrivalDepartures(TimeRange range) {
     String agencyId = AgencyConfig.getAgencyId();
-    return ArrivalDeparture.getArrivalsDeparturesFromDb(agencyId,
+    return ArrivalDepartureDAO.getArrivalsDeparturesFromDb(agencyId,
             range.getBeginTime(),
             range.getEndTime());
   }

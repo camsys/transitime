@@ -4,6 +4,7 @@ import org.junit.*;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.transitclock.applications.Core;
+import org.transitclock.avl.ArrivalDepartureDAO;
 import org.transitclock.db.query.ArrivalDepartureQuery;
 import org.transitclock.db.query.RunTimeForRouteQuery;
 import org.transitclock.db.structs.*;
@@ -82,9 +83,9 @@ public class PrescriptiveRunTimesDataSourceTest extends AbstractPrescriptiveRunT
 
         OnTimePerformanceService onTimePerformanceService = new OnTimePerformanceService();
 
-        MockedStatic<ArrivalDeparture> arrivalDepartureMockedStatic = mockStatic(ArrivalDeparture.class);
-        arrivalDepartureMockedStatic.
-                when(() -> ArrivalDeparture.getArrivalsDeparturesFromDb(any(ArrivalDepartureQuery.class)))
+        MockedStatic<ArrivalDepartureDAO> arrivalDepartureDAOMockedStatic = mockStatic(ArrivalDepartureDAO.class);
+        arrivalDepartureDAOMockedStatic.
+                when(() -> ArrivalDepartureDAO.getArrivalsDeparturesFromDb(any(ArrivalDepartureQuery.class)))
                 .thenReturn(arrivalDepartures);
 
         ArrivalDepartureQuery query = new ArrivalDepartureQuery.Builder().build();

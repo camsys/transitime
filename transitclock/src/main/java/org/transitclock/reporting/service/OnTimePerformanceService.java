@@ -2,6 +2,7 @@ package org.transitclock.reporting.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.avl.ArrivalDepartureDAO;
 import org.transitclock.core.ServiceType;
 import org.transitclock.db.query.ArrivalDepartureQuery;
 import org.transitclock.db.structs.ArrivalDeparture;
@@ -23,7 +24,7 @@ public class OnTimePerformanceService {
 
         List<IpcArrivalDepartureScheduleAdherence> ipcArrivalDepartures = new ArrayList<>();
 
-        List<ArrivalDeparture> arrivalDepartures = ArrivalDeparture.getArrivalsDeparturesFromDb(query);
+        List<ArrivalDeparture> arrivalDepartures = ArrivalDepartureDAO.getArrivalsDeparturesFromDb(query);
 
         for(ArrivalDeparture arrivalDeparture : arrivalDepartures){
             IpcArrivalDepartureScheduleAdherence ipcArrivalDeparture = new IpcArrivalDepartureScheduleAdherence(arrivalDeparture);
@@ -59,7 +60,7 @@ public class OnTimePerformanceService {
                 .readOnly(readOnly)
                 .build();
 
-        List<ArrivalDeparture> arrivalDepartures = ArrivalDeparture.getArrivalsDeparturesFromDb(adQuery);
+        List<ArrivalDeparture> arrivalDepartures = ArrivalDepartureDAO.getArrivalsDeparturesFromDb(adQuery);
         return arrivalDepartures;
     }
 }

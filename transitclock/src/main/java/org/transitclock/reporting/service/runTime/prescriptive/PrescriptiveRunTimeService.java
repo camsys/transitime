@@ -3,6 +3,7 @@ package org.transitclock.reporting.service.runTime.prescriptive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
+import org.transitclock.avl.ArrivalDepartureDAO;
 import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.DoubleConfigValue;
 import org.transitclock.config.IntegerConfigValue;
@@ -448,7 +449,7 @@ public class PrescriptiveRunTimeService {
                 .readOnly(prtsQuery.isReadOnly())
                 .build();
 
-        List<ArrivalDeparture> arrivalDepartures = ArrivalDeparture.getArrivalsDeparturesFromDb(adQuery);
+        List<ArrivalDeparture> arrivalDepartures = ArrivalDepartureDAO.getArrivalsDeparturesFromDb(adQuery);
 
         // Get list of historical runTimes to help build PrescriptiveRunTimeState
         List<RunTimesForRoutes> runTimesForRoutes = runTimeService.getRunTimesForRoutes(rtQuery);

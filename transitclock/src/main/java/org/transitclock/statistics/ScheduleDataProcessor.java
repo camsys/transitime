@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.avl.ArrivalDepartureDAO;
 import org.transitclock.configData.DbSetupConfig;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.ArrivalDeparture.ArrivalsOrDepartures;
@@ -599,7 +600,7 @@ public class ScheduleDataProcessor {
 					// Note: I tried adding a "ORDER BY time" clause to see
 					// if that would speed things up when doing multiple batches
 					// but it only served to slow things down.
-					arrDepBatchList = ArrivalDeparture
+					arrDepBatchList = ArrivalDepartureDAO
 							.getArrivalsDeparturesFromDb(new Date(
 									batchBeginTime), new Date(batchEndTime),
 									null, // SQL clause

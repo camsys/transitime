@@ -2,6 +2,7 @@ package org.transitclock.reporting.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.avl.ArrivalDepartureDAO;
 import org.transitclock.core.ServiceType;
 import org.transitclock.core.TemporalDifference;
 import org.transitclock.db.dao.AgencyDAO;
@@ -70,7 +71,7 @@ public class SpeedMapService {
                 .build();
 
         IntervalTimer timer = new IntervalTimer();
-        List<ArrivalDeparture> arrivalDeparturesList = ArrivalDeparture.getArrivalsDeparturesFromDb(adQuery);
+        List<ArrivalDeparture> arrivalDeparturesList = ArrivalDepartureDAO.getArrivalsDeparturesFromDb(adQuery);
         System.out.println(timer.elapsedMsecStr());
 
         Map<ArrivalDepartureTripKey, List<ArrivalDeparture>> resultsMap = new HashMap<>();
@@ -277,7 +278,7 @@ public class SpeedMapService {
                 .readOnly(readOnly)
                 .build();
 
-        List<ArrivalDeparture> arrivalDepartures = ArrivalDeparture.getArrivalsDeparturesFromDb(adQuery);
+        List<ArrivalDeparture> arrivalDepartures = ArrivalDepartureDAO.getArrivalsDeparturesFromDb(adQuery);
 
         List<IpcStopWithDwellTime> stopsWithAvgDwellTime = new ArrayList<>();
 
@@ -332,7 +333,7 @@ public class SpeedMapService {
                 .readOnly(readOnly)
                 .build();
 
-        List<ArrivalDeparture> arrivalDepartures = ArrivalDeparture.getArrivalsDeparturesFromDb(adQuery);
+        List<ArrivalDeparture> arrivalDepartures = ArrivalDepartureDAO.getArrivalsDeparturesFromDb(adQuery);
 
         Map<TripDateKey, Long> runTimeByTripId = getRunTimeByTripDateKey(arrivalDepartures);
 
