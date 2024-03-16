@@ -202,7 +202,7 @@ public class DbWriter {
 		}
 
 		logger.info("Saving feedinfo to database...");
-		FeedInfo.deleteFromRev(session, configRev);
+		FeedInfoDAO.deleteFromRev(session, configRev);
 		for (FeedInfo feedInfo : gtfsData.getFeedInfo()) {
 			writeObject(session, feedInfo);
 		}

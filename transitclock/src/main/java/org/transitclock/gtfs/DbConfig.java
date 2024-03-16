@@ -888,7 +888,7 @@ public class DbConfig {
 			}
 		}
 		configRevisions = ConfigRevisionDAO.getConfigRevisions(globalSession, configRev);
-		feedInfos = FeedInfo.getFeedInfos(globalSession);
+		feedInfos = FeedInfoDAO.getFeedInfos(globalSession);
 
 		blocksByServiceMap = putBlocksIntoMap(blocks);
 		blocksByRouteMap = putBlocksIntoMapByRoute(blocks);
@@ -943,7 +943,7 @@ public class DbConfig {
 		fareRules = FareRuleDAO.getFareRules(globalSession, configRev);
 		frequencies = Frequency.getFrequencies(globalSession, configRev);
 		transfers = Transfer.getTransfers(globalSession, configRev);
-		feedInfo = FeedInfo.getFeedInfo(globalSession, configRev);
+		feedInfo = FeedInfoDAO.getFeedInfo(globalSession, configRev);
 
 
 		List<RouteDirection> routeDirections =  RouteDirection.getRouteDirection(globalSession, configRev);
