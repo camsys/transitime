@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.transitclock.avl.AvlCsvWriter;
+import org.transitclock.avl.AvlReportDAO;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.utils.Time;
 import org.transitclock.utils.TimeZoneSetter;
@@ -59,7 +60,7 @@ public class AvlReportsFromDbToCsv {
 		String sqlClause = args.length > 4 ? args[4] : null;
 		
 		List<AvlReport> avlReports =
-				AvlReport.getAvlReportsFromDb(beginTime, endTime, vehicleId,
+						AvlReportDAO.getAvlReportsFromDb(beginTime, endTime, vehicleId,
 						sqlClause);
 		
 		return avlReports;

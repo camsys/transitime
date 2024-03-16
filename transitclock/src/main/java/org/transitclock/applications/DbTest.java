@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.avl.AvlReportDAO;
 import org.transitclock.configData.DbSetupConfig;
 import org.transitclock.db.structs.AvlReport;
 
@@ -40,7 +41,7 @@ public class DbTest {
 	 */
 	public static void main(String[] args) {
 		try {
-			List<AvlReport> avlReports = AvlReport.getAvlReportsFromDb(
+			List<AvlReport> avlReports = AvlReportDAO.getAvlReportsFromDb(
 					new Date(), // beginTime
 					new Date(), // endTime
 					null, // vehicleId

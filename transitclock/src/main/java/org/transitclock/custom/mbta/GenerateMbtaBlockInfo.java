@@ -31,6 +31,7 @@ import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.avl.AvlReportDAO;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.gtfs.gtfsStructs.GtfsStopTime;
 import org.transitclock.gtfs.gtfsStructs.GtfsTrip;
@@ -182,7 +183,7 @@ public class GenerateMbtaBlockInfo {
 				+ time.dateTimeStrMsecForTimezone(endDate.getTime()));
 		
 		// Get days worth of data from db
-		List<AvlReport> avlReports = AvlReport.getAvlReportsFromDb(
+		List<AvlReport> avlReports = AvlReportDAO.getAvlReportsFromDb(
 				beginDate, endDate, null, "ORDER BY time");
 		System.out.println("Read in " + avlReports.size() 
 				+ " AVL reports for " 

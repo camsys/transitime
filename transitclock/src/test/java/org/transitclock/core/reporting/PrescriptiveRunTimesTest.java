@@ -41,7 +41,7 @@ public class PrescriptiveRunTimesTest extends AbstractPrescriptiveRunTimesTests{
     private MockedStatic<TripPattern> staticTripPattern;
     private MockedStatic<Calendar> staticCalendar;
     private MockedStatic<CalendarDate> staticCalendarDate;
-    private MockedStatic<ArrivalDeparture> arrivalDepartureMockedStatic;
+    private MockedStatic<ArrivalDepartureDAO> arrivalDepartureDAOMockedStatic;
 
 
 
@@ -70,7 +70,7 @@ public class PrescriptiveRunTimesTest extends AbstractPrescriptiveRunTimesTests{
         staticTripPattern = mockStatic(TripPattern.class);
         staticCalendar = mockStatic(Calendar.class);
         staticCalendarDate = mockStatic(CalendarDate.class);
-        arrivalDepartureMockedStatic = mockStatic(ArrivalDeparture.class);
+        arrivalDepartureDAOMockedStatic = mockStatic(ArrivalDepartureDAO.class);
     }
 
     @After
@@ -80,7 +80,7 @@ public class PrescriptiveRunTimesTest extends AbstractPrescriptiveRunTimesTests{
         staticTripPattern.close();
         staticCalendar.close();
         staticCalendarDate.close();
-        arrivalDepartureMockedStatic.close();
+        arrivalDepartureDAOMockedStatic.close();
     }
 
     @Test
@@ -208,7 +208,7 @@ public class PrescriptiveRunTimesTest extends AbstractPrescriptiveRunTimesTests{
         staticTripPattern.when(() -> TripPattern.getTripPatternsForRoute(anyString(), anyInt(), anyBoolean())).thenReturn(tripPatterns);
         staticCalendar.when(() -> Calendar.getCalendars(any(Session.class), anyInt())).thenReturn(calendars);
         staticCalendarDate.when(() -> CalendarDate.getCalendarDates(any(Session.class), anyInt())).thenReturn(calendarDates);
-        arrivalDepartureMockedStatic.when(() -> ArrivalDepartureDAO.getArrivalsDeparturesFromDb(any(ArrivalDepartureQuery.class))).thenReturn(arrivalDepartures);
+        arrivalDepartureDAOMockedStatic.when(() -> ArrivalDepartureDAO.getArrivalsDeparturesFromDb(any(ArrivalDepartureQuery.class))).thenReturn(arrivalDepartures);
 
         // Instantiate Prescriptive RunTimes Service
         PrescriptiveRunTimeService prescriptiveRunTimeService = new PrescriptiveRunTimeService();

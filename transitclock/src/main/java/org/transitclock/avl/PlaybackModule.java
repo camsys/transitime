@@ -192,7 +192,7 @@ public class PlaybackModule extends Module {
 							Time.dateTimeStr(end),
 							playbackVehicleId);
 			avlReports =
-							AvlReport.getAvlReportsFromDb(
+							AvlReportDAO.getAvlReportsFromDb(
 											new Date(start),
 											new Date(end),
 											getPlaybackVehicleId(),
@@ -205,7 +205,7 @@ public class PlaybackModule extends Module {
 							Time.dateTimeStr(start),
 							Time.dateTimeStr(end),
 							playbackVehicleId);
-			avlReports = AvlReport.getAvlReportsFromDb(new Date(start),
+			avlReports = AvlReportDAO.getAvlReportsFromDb(new Date(start),
 							new Date(end),
 							null,
 							"ORDER BY time");
