@@ -45,10 +45,10 @@ import org.transitclock.core.dataCache.ehcache.StopArrivalDepartureCache;
 import org.transitclock.core.dataCache.frequency.FrequencyBasedHistoricalAverageCache;
 import org.transitclock.core.dataCache.scheduled.ScheduleBasedHistoricalAverageCache;
 import org.transitclock.core.predictiongenerator.scheduled.traveltime.kalman.TrafficManager;
+import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.hibernate.DataDbLogger;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ActiveRevisions;
-import org.transitclock.db.structs.Agency;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.guice.modules.ReportingModule;
@@ -165,7 +165,7 @@ public class Core {
 		// Set the timezone so that when dates are read from db or are logged
 		// the time will be correct. Therefore this needs to be done right at
 		// the start of the application, before db is read.
-		TimeZone timeZone = Agency.getTimeZoneFromDb(agencyId);
+		TimeZone timeZone = AgencyDAO.getTimeZoneFromDb(agencyId);
 		TimeZone.setDefault(timeZone);
 
 		// Clears out the session factory so that a new one will be created for

@@ -26,6 +26,7 @@ import org.transitclock.configData.AgencyConfig;
 import org.transitclock.core.travelTimes.TravelTimeInfoMap;
 import org.transitclock.core.travelTimes.TravelTimeInfoWithHowSet;
 import org.transitclock.core.travelTimes.TravelTimesProcessor;
+import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.*;
 import org.transitclock.utils.IntervalTimer;
@@ -445,7 +446,7 @@ public class UpdateTravelTimes {
 		// Set the timezone for the application. Must be done before
 		// determine begin and end time so that get the proper time of day.
 		TimeZone timezone =
-				Agency.getAgencies(agencyId, configRev).get(0).getTimeZone();
+				AgencyDAO.getAgencies(agencyId, configRev).get(0).getTimeZone();
 		TimeZone.setDefault(timezone);
 
 		// Determine beginTime and endTime

@@ -3,6 +3,7 @@ package org.transitclock.db.dao;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ActiveRevisions;
 import org.transitclock.db.structs.Agency;
 
@@ -27,6 +28,25 @@ public class AgencyDAO {
         int numUpdates = session.createQuery(hql).executeUpdate();
         return numUpdates;
     }
+
+    /**
+     * Returns the list of agencies for the specified project ID.
+     *
+     * @param agencyId
+     *            Specifies name of database
+     * @param configRev
+     * @return
+     */
+    public static List<Agency> getAgencies(String agencyId, int configRev) {
+        // Get the database session. This is supposed to be pretty light weight
+        Session session = HibernateUtils.getSession(agencyId);
+        try {
+            return getAgencies(session, configRev);
+        } finally {
+            session.close();
+        }
+    }
+
 
     /**
      * Returns List of Agency objects for the specified database revision.
@@ -62,16 +82,5 @@ public class AgencyDAO {
             return null;
     }
 
-    /**
-     * Returns cached TimeZone object for agency. Useful for creating
-     * Calendar objects and such.
-     *
-     * @return The TimeZone object for this agency
-     */
-    public TimeZone getTimeZone() {
-        if (timezone == null)
-            timezone = TimeZone.getTimeZone(agencyTimezone);
-        return timezone;
-    }
 
 }

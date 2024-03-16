@@ -325,5 +325,17 @@ public class Agency implements Serializable {
 	public Extent getExtent() {
 		return extent;
 	}
-	
+
+	/**
+	 * Returns cached TimeZone object for agency. Useful for creating
+	 * Calendar objects and such.
+	 *
+	 * @return The TimeZone object for this agency
+	 */
+	public TimeZone getTimeZone() {
+		if (timezone == null)
+			timezone = TimeZone.getTimeZone(agencyTimezone);
+		return timezone;
+	}
+
 }

@@ -9,9 +9,9 @@ import org.transitclock.core.RunTimeServiceUtils;
 import org.transitclock.core.RunTimesServiceUtilsImpl;
 import org.transitclock.core.reporting.*;
 import org.transitclock.core.travelTimes.DataFetcher;
+import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ActiveRevisions;
-import org.transitclock.db.structs.Agency;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.utils.IntervalTimer;
 import org.transitclock.utils.Time;
@@ -97,7 +97,7 @@ public class UpdateRunTimes {
     // determine begin and end time so that get the proper time of day.
     int configRev = ActiveRevisions.get(agencyId).getConfigRev();
     TimeZone timezone =
-            Agency.getAgencies(agencyId, configRev).get(0).getTimeZone();
+            AgencyDAO.getAgencies(agencyId, configRev).get(0).getTimeZone();
     TimeZone.setDefault(timezone);
 
     // Determine beginTime and endTime

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.core.ServiceType;
 import org.transitclock.core.TemporalDifference;
+import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.query.ArrivalDepartureQuery;
 import org.transitclock.db.structs.*;
 import org.transitclock.ipc.data.IpcDoubleSummaryStatistics;
@@ -97,7 +98,7 @@ public class SpeedMapService {
                                           Map<String, StopPath> stopPathsMap,
                                           String agencyId){
 
-        TimeZone tz = Agency.getTimeZoneFromDb(agencyId);
+        TimeZone tz = AgencyDAO.getTimeZoneFromDb(agencyId);
 
         for (ArrivalDeparture arrDep : arrivalDeparturesList) {
 

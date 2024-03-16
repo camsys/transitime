@@ -12,7 +12,7 @@ import org.transitclock.applications.Core;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.StringConfigValue;
 import org.transitclock.configData.AgencyConfig;
-import org.transitclock.db.structs.Agency;
+import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.structs.ApcReport;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.monitoring.MonitoringService;
@@ -70,7 +70,7 @@ public class ApcDataProcessor {
       synchronized (lockObject) {
         if (singleton == null) {
           String agencyId = AgencyConfig.getAgencyId();
-          TimeZone timeZoneFromDb = Agency.getTimeZoneFromDb(agencyId);
+          TimeZone timeZoneFromDb = AgencyDAO.getTimeZoneFromDb(agencyId);
           if (timeZoneFromDb == null) {
             timeZoneFromDb = TimeZone.getDefault();
           }

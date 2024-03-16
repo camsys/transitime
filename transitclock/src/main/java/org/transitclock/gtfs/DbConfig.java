@@ -27,6 +27,7 @@ import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.StringConfigValue;
 import org.transitclock.core.ServiceUtilsImpl;
 
+import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.*;
@@ -913,7 +914,7 @@ public class DbConfig {
 		logger.debug("Reading stops took {} msec", timer.elapsedMsec());
 
 		timer = new IntervalTimer();
-		agencies = Agency.getAgencies(globalSession, configRev);
+		agencies = AgencyDAO.getAgencies(globalSession, configRev);
 		calendars = Calendar.getCalendars(globalSession, configRev);
 		calendarDates = CalendarDate.getCalendarDates(globalSession, configRev);
 

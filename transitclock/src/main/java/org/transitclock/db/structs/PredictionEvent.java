@@ -238,7 +238,7 @@ public class PredictionEvent implements Serializable {
 						serviceId, tripId, stopId, arrivalStopId, departureStopId,  referenceVehicleId, arrivalTime, departureTime);
 
 		// Log predictionEvent in log file
-		logger.info(predictionEvent.toString());
+//		logger.info(predictionEvent.toString());
 
 		// Queue to write object to database
 		Core.getInstance().getDbLogger().add(predictionEvent);
