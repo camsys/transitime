@@ -26,6 +26,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.db.dao.TravelTimesForTripDAO;
 import org.transitclock.db.structs.ActiveRevisions;
 import org.transitclock.db.structs.ScheduleTime;
 import org.transitclock.db.structs.StopPath;
@@ -751,7 +752,7 @@ public class TravelTimesProcessorForGtfsUpdates {
 		// Read existing data from db and put into travelTimesFromDbMap member.
 		// Map is keyed on trip pattern ID.
 		Map<String, List<TravelTimesForTrip>> travelTimesFromDbMap = 
-				TravelTimesForTrip.getTravelTimesForTrips(session, 
+				TravelTimesForTripDAO.getTravelTimesForTrips(session,
 						originalTravelTimesRev);
 
 		setOriginalNumberOfTravelTimes(

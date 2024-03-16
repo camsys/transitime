@@ -112,7 +112,7 @@ public class DbWriter {
 			// deleted
 			logger.info("Deleting old travel times from rev {} of database...", 
 					configRev);
-			TravelTimesForTrip.deleteFromRev(session, configRev);
+			TravelTimesForTripDAO.deleteFromRev(session, configRev);
 		}
 		
 		// Now write the data to the database.
