@@ -181,7 +181,7 @@ public class DbWriter {
 		}
 		
 		logger.info("Saving transfers to database...");
-		Transfer.deleteFromRev(session, configRev);
+		TransferDAO.deleteFromRev(session, configRev);
 		for (Transfer transfer : gtfsData.getTransfers()) {
 			writeObject(session, transfer);
 		}
