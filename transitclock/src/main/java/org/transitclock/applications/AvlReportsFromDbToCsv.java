@@ -21,7 +21,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.transitclock.avl.AvlCsvWriter;
-import org.transitclock.avl.AvlReportDAO;
+import org.transitclock.db.dao.AvlReportDAO;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.utils.Time;
 import org.transitclock.utils.TimeZoneSetter;

@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.core.RunTimeServiceUtils;
 import org.transitclock.core.travelTimes.DataFetcher;
+import org.transitclock.db.dao.BlockDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Block;
@@ -105,7 +106,7 @@ public class RunTimeLoader {
     if(blocksByServiceAndBlockId == null){
       logger.info("Loading blocks for configRev {} ...", configRev);
       blocksByServiceAndBlockId = new HashMap<>();
-      List<Block> blocks = Block.getBlocks(session, configRev);
+      List<Block> blocks = BlockDAO.getBlocks(session, configRev);
       for(Block block : blocks){
         blocksByServiceAndBlockId.put(hashBlock(block.getServiceId(), block.getId()), block);
       }

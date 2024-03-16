@@ -29,6 +29,7 @@ import org.transitclock.core.ServiceUtilsImpl;
 
 import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.AgencyDAO;
+import org.transitclock.db.dao.BlockDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.*;
@@ -571,7 +572,7 @@ public class DbConfig {
 			// pattern data, is only read serially (not read simultaneously
 			// by multiple threads). Otherwise get a "force initialize loading
 			// collection" error.
-			synchronized (Block.getLazyLoadingSyncObject()) {
+			synchronized (BlockDAO.getLazyLoadingSyncObject()) {
 				logger.debug("About to load trips...");
 
 				// Use the global session so that don't need to read in any
@@ -635,7 +636,7 @@ public class DbConfig {
 			// pattern data, is only read serially (not read simultaneously
 			// by multiple threads). Otherwise get a "force initialize loading
 			// collection" error.
-			synchronized (Block.getLazyLoadingSyncObject()) {
+			synchronized (BlockDAO.getLazyLoadingSyncObject()) {
 				trip = Trip.getTrip(globalSession, configRev, tripIdOrShortName);
 				int configRevToTry = 0;
 				while (trip == null && configRevToTry < previousConfigRevsToCheck) {
@@ -676,7 +677,7 @@ public class DbConfig {
 	 */
 	private Set<String> getTripNameSet() {
 		if (tripNameSet == null) {
-			synchronized (Block.getLazyLoadingSyncObject()) {
+			synchronized (BlockDAO.getLazyLoadingSyncObject()) {
 				// check to see if we won the lock
 				if (tripNameSet != null) return tripNameSet;
 				IntervalTimer tick = new IntervalTimer();
@@ -712,7 +713,7 @@ public class DbConfig {
 
 	private Set<String> getTripIdSet() {
 		if (tripIdSet == null) {
-			synchronized (Block.getLazyLoadingSyncObject()) {
+			synchronized (BlockDAO.getLazyLoadingSyncObject()) {
 				// check to see if we won the lock
 				if (tripIdSet != null) return tripIdSet;
 				IntervalTimer tick = new IntervalTimer();
@@ -794,7 +795,7 @@ public class DbConfig {
 		// pattern data, is only read serially (not read simultaneously
 		// by multiple threads). Otherwise get a "force initialize loading
 		// collection" error.
-		synchronized (Block.getLazyLoadingSyncObject()) {
+		synchronized (BlockDAO.getLazyLoadingSyncObject()) {
 			trips =	Trip.getTripByShortName(globalSession, configRev,
 							tripShortName);
 		}
@@ -881,7 +882,7 @@ public class DbConfig {
 		// logger.debug("Reading stopPaths took {} msec", timer.elapsedMsec());
 
 		timer = new IntervalTimer();
-		blocks = Block.getBlocks(globalSession, configRev);
+		blocks = BlockDAO.getBlocks(globalSession, configRev);
 		for (Block block : blocks) {
 			for (Trip trip : block.getTrips()) {
 				// build up internal cache now to avoid lazy-load lag

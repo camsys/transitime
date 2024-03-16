@@ -14,6 +14,7 @@ import org.transitclock.config.StringConfigValue;
 import org.transitclock.configData.AgencyConfig;
 import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.dao.ApcReportDAO;
+import org.transitclock.db.dao.ArrivalDepartureDAO;
 import org.transitclock.db.structs.ApcReport;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.monitoring.MonitoringService;

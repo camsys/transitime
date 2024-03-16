@@ -2,7 +2,7 @@ package org.transitclock.reporting.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.transitclock.avl.ArrivalDepartureDAO;
+import org.transitclock.db.dao.ArrivalDepartureDAO;
 import org.transitclock.core.ServiceType;
 import org.transitclock.core.TemporalDifference;
 import org.transitclock.db.dao.AgencyDAO;
@@ -17,7 +17,6 @@ import org.transitclock.utils.Geo;
 import org.transitclock.utils.IntervalTimer;
 import org.transitclock.utils.Time;
 
-import javax.inject.Inject;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;

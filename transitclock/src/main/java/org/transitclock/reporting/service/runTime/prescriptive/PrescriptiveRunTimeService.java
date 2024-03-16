@@ -3,13 +3,11 @@ package org.transitclock.reporting.service.runTime.prescriptive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
-import org.transitclock.avl.ArrivalDepartureDAO;
+import org.transitclock.db.dao.ArrivalDepartureDAO;
 import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.DoubleConfigValue;
-import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.core.ServiceType;
 import org.transitclock.core.ServiceTypeUtil;
-import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.query.ArrivalDepartureQuery;
 import org.transitclock.db.query.PrescriptiveRunTimeStateQuery;
 import org.transitclock.db.query.RunTimeForRouteQuery;
@@ -18,10 +16,8 @@ import org.transitclock.db.structs.*;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.exceptions.InvalidRouteException;
 import org.transitclock.ipc.data.*;
-import org.transitclock.ipc.util.GtfsDbDataUtil;
 import org.transitclock.reporting.TimePointStatistics;
 import org.transitclock.reporting.keys.StopPathRunTimeKey;
-import org.transitclock.reporting.service.OnTimePerformanceService;
 import org.transitclock.reporting.service.RunTimeService;
 import org.transitclock.reporting.service.runTime.TimePointRunTimeProcessor;
 import org.transitclock.reporting.service.runTime.prescriptive.helper.DatedGtfsService;
@@ -40,8 +36,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static org.transitclock.ipc.util.GtfsDbDataUtil.getRouteShortName;
 
 public class PrescriptiveRunTimeService {
 

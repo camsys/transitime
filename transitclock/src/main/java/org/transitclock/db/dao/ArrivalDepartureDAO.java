@@ -1,4 +1,4 @@
-package org.transitclock.avl;
+package org.transitclock.db.dao;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;

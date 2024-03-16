@@ -4,7 +4,7 @@ import org.junit.*;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.transitclock.applications.Core;
-import org.transitclock.avl.ArrivalDepartureDAO;
+import org.transitclock.db.dao.ArrivalDepartureDAO;
 import org.transitclock.db.query.ArrivalDepartureQuery;
 import org.transitclock.db.query.RunTimeForRouteQuery;
 import org.transitclock.db.structs.*;

@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.configData.DbSetupConfig;
 import org.transitclock.db.dao.AgencyDAO;
+import org.transitclock.db.dao.BlockDAO;
 import org.transitclock.db.structs.*;
 import org.transitclock.utils.IntervalTimer;
 
@@ -98,7 +99,7 @@ public class DbWriter {
 			// deleting of this data is done here before writing the data.
 			logger.info("Deleting old blocks and associated trips from rev {} of "
 					+ "database...", configRev);
-			Block.deleteFromRev(session, configRev);
+			BlockDAO.deleteFromRev(session, configRev);
 	
 			logger.info("Deleting old trips from rev {} of database...", 
 					configRev);

@@ -27,12 +27,11 @@ import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.transitclock.avl.ArrivalDepartureDAO;
+import org.transitclock.db.dao.ArrivalDepartureDAO;
 import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.AgencyDAO;
-import org.transitclock.db.structs.ActiveRevisions;
 import org.transitclock.db.structs.Agency;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Match;

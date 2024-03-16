@@ -31,7 +31,7 @@ import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.transitclock.avl.AvlReportDAO;
+import org.transitclock.db.dao.AvlReportDAO;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.gtfs.gtfsStructs.GtfsStopTime;
 import org.transitclock.gtfs.gtfsStructs.GtfsTrip;

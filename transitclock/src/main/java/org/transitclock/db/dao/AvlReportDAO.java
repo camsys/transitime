@@ -1,4 +1,4 @@
-package org.transitclock.avl;
+package org.transitclock.db.dao;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
