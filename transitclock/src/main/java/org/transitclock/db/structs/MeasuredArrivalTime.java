@@ -101,26 +101,6 @@ public class MeasuredArrivalTime implements Serializable {
 	}
 
 	/**
-	 * Returns the SQL to save the object into database. Usually Hibernate is
-	 * used because such data is stored by the core system. But
-	 * MeasuredArrivalTime objects are written by the website, which doesn't use
-	 * Hibernate to write objects since it has to be able to talk with any db.
-	 * 
-	 * @return SQL to store the object
-	 */
-	public String getUpdateSql() {
-		return "INSERT INTO MeasuredArrivalTimes ("
-				+ "time, stopId, routeId, routeShortName, directionId, headsign) "
-				+ "VALUES('" + time + "', '" 
-				+ stopId + "', '"
-				+ routeId + "', '"
-				+ routeShortName + "', '"
-				+ directionId + "', '"
-				+ headsign + "'"
-				+ ");";
-	}
-	
-	/**
 	 * Because using a composite Id Hibernate wants this member.
 	 */	
 	@Override
@@ -199,6 +179,28 @@ public class MeasuredArrivalTime implements Serializable {
 				+ ", headsign=" + headsign
 				+ "]";
 	}
-	
-	
+
+	public Date getTime() {
+		return time;
+	}
+
+	public String getStopId() {
+		return stopId;
+	}
+
+	public String getRouteId() {
+		return routeId;
+	}
+
+	public String getRouteShortName() {
+		return routeShortName;
+	}
+
+	public String getDirectionId() {
+		return directionId;
+	}
+
+	public String getHeadsign() {
+		return headsign;
+	}
 }

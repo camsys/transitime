@@ -45,6 +45,7 @@ import org.transitclock.api.data.ApiCommandAck;
 import org.transitclock.api.utils.StandardParameters;
 import org.transitclock.api.utils.WebUtils;
 import org.transitclock.db.GenericQuery;
+import org.transitclock.db.dao.MeasuredArrivalTimeDAO;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.db.structs.MeasuredArrivalTime;
 import org.transitclock.db.structs.AvlReport.AssignmentType;
@@ -323,7 +324,7 @@ public class CommandsApi {
 			MeasuredArrivalTime time =
 					new MeasuredArrivalTime(new Date(), stopId, routeId,
 							routeShortName, directionId, headsign);
-			String sql = time.getUpdateSql();
+			String sql = MeasuredArrivalTimeDAO.getUpdateSql(time);
 			GenericQuery query = new GenericQuery(agencyId);
 			query.doUpdate(sql);
 			
