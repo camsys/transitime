@@ -208,7 +208,7 @@ public class DbWriter {
 		}
 
 		logger.info("Saving route_direction to database...");
-		RouteDirection.deleteFromRev(session, configRev);
+		RouteDirectionDAO.deleteFromRev(session, configRev);
 		for (RouteDirection routeDirection : gtfsData.getRouteDirection()) {
 			writeObject(session, routeDirection);
 		}

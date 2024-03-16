@@ -946,7 +946,7 @@ public class DbConfig {
 		feedInfo = FeedInfoDAO.getFeedInfo(globalSession, configRev);
 
 
-		List<RouteDirection> routeDirections =  RouteDirection.getRouteDirection(globalSession, configRev);
+		List<RouteDirection> routeDirections =  RouteDirectionDAO.getRouteDirection(globalSession, configRev);
 		routeDirectionsByRoute = new HashMap<>();
 
 		for(RouteDirection routeDirection : routeDirections){
