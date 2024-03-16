@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.core.dataCache.StopPathCacheKey;
 import org.transitclock.core.dataCache.StopPathPredictionCacheFactory;
+import org.transitclock.db.dao.PredictionForStopPathDAO;
 import org.transitclock.db.structs.PredictionForStopPath;
 import org.transitclock.ipc.data.IpcPredictionForStopPath;
 import org.transitclock.ipc.interfaces.PredictionAnalysisInterface;
@@ -62,7 +63,7 @@ public class PredictionAnalysisServer extends AbstractServer implements Predicti
 	@Override
 	public List<IpcPredictionForStopPath> getRecordedTravelTimePredictions(String tripId, Integer stopPathIndex,
 			Date startdate, Date enddate, String algorithm) throws RemoteException {
-		List<PredictionForStopPath> result = PredictionForStopPath.getPredictionForStopPathFromDB(startdate, enddate, algorithm, tripId, stopPathIndex);
+		List<PredictionForStopPath> result = PredictionForStopPathDAO.getPredictionForStopPathFromDB(startdate, enddate, algorithm, tripId, stopPathIndex);
 		List<IpcPredictionForStopPath> results=new ArrayList<IpcPredictionForStopPath>();
 		for(PredictionForStopPath prediction:result)
 		{
