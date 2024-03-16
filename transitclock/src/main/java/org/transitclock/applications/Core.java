@@ -45,6 +45,7 @@ import org.transitclock.core.dataCache.ehcache.StopArrivalDepartureCache;
 import org.transitclock.core.dataCache.frequency.FrequencyBasedHistoricalAverageCache;
 import org.transitclock.core.dataCache.scheduled.ScheduleBasedHistoricalAverageCache;
 import org.transitclock.core.predictiongenerator.scheduled.traveltime.kalman.TrafficManager;
+import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.hibernate.DataDbLogger;
 import org.transitclock.db.hibernate.HibernateUtils;
@@ -149,7 +150,7 @@ public class Core {
 			configRev = Integer.parseInt(configRevStr);
 		} else {
 			// Read in config rev from ActiveRevisions table in db
-			ActiveRevisions activeRevisions = ActiveRevisions.get(agencyId);
+			ActiveRevisions activeRevisions = ActiveRevisionDAO.get(agencyId);
 
 			// If config rev not set properly then simply log error.
 			// Originally would also exit() but found that want system to

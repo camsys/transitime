@@ -26,6 +26,7 @@ import org.transitclock.configData.AgencyConfig;
 import org.transitclock.core.travelTimes.TravelTimeInfoMap;
 import org.transitclock.core.travelTimes.TravelTimeInfoWithHowSet;
 import org.transitclock.core.travelTimes.TravelTimesProcessor;
+import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.*;
@@ -98,7 +99,7 @@ public class UpdateTravelTimes {
 		
 		// Determine which travel times rev is currently being used and which
 		// rev should be used for the new travel times.
-		ActiveRevisions activeRevisions = ActiveRevisions.get(session);
+		ActiveRevisions activeRevisions = ActiveRevisionDAO.get(session);
 		int currentTravelTimesRev = activeRevisions.getTravelTimesRev();
 		int newTravelTimesRev = currentTravelTimesRev + 1;
 		
@@ -299,7 +300,7 @@ public class UpdateTravelTimes {
 	  Map<String, Trip> tripMap = new HashMap<String, Trip>() ;
 	  IntervalTimer timer = new IntervalTimer();
 	  try {
-  		ActiveRevisions activeRevisions = ActiveRevisions.get(session); 
+  		ActiveRevisions activeRevisions = ActiveRevisionDAO.get(session);
   		logger.info("Reading in trips from db...");
   		tripMap = 
   				Trip.getTrips(session, activeRevisions.getConfigRev());
@@ -437,7 +438,7 @@ public class UpdateTravelTimes {
 //		specialDaysOfWeek.add(java.util.Calendar.FRIDAY);
 		List<Integer> specialDaysOfWeek = null;
 		
-		int configRev = ActiveRevisions.get(agencyId).getConfigRev();
+		int configRev = ActiveRevisionDAO.get(agencyId).getConfigRev();
 		if (args.length > 2) {
 			configRev = Integer.parseInt(args[2]);
 		}

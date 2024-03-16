@@ -27,6 +27,7 @@ import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.StringConfigValue;
 import org.transitclock.core.ServiceUtilsImpl;
 
+import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.Calendar;
@@ -1324,7 +1325,7 @@ public class DbConfig {
 	public static void main(String args[]) {
 		String projectId = "1";
 
-		int configRev = ActiveRevisions.get(projectId).getConfigRev();
+		int configRev = ActiveRevisionDAO.get(projectId).getConfigRev();
 
 		DbConfig dbConfig = new DbConfig(projectId);
 		dbConfig.read(configRev);

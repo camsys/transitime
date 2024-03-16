@@ -11,6 +11,7 @@ import org.transitclock.avl.ApcParsedRecord;
 import org.transitclock.config.ConfigFileReader;
 import org.transitclock.configData.AgencyConfig;
 import org.transitclock.core.dataCache.StopArrivalDepartureCacheInterface;
+import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ActiveRevisions;
 import org.transitclock.db.structs.ApcReport;
@@ -189,7 +190,7 @@ public class LoadApcData {
     try {
       String agencyId = AgencyConfig.getAgencyId();
 
-      int configRev = ActiveRevisions.get(agencyId).getConfigRev();
+      int configRev = ActiveRevisionDAO.get(agencyId).getConfigRev();
       logger.info("configRev = {} for agencyId = {}", configRev, agencyId);
       session = HibernateUtils.getSession(agencyId);
       tx = session.beginTransaction();

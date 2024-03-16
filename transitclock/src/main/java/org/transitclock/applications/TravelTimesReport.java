@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.config.ConfigFileReader;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.configData.AgencyConfig;
+import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ActiveRevisions;
 import org.transitclock.db.structs.TravelTimesForStopPath;
@@ -301,12 +302,12 @@ public class TravelTimesReport {
         ConfigFileReader.processConfig();
 
         String agencyId = AgencyConfig.getAgencyId();
-        int configRev = ActiveRevisions.get(agencyId).getConfigRev();
+        int configRev = ActiveRevisionDAO.get(agencyId).getConfigRev();
 
         if (startTravelTimesRev == null || maxTravelTimesRev == null) {
             // run for last rev
-            startTravelTimesRev = ActiveRevisions.get(agencyId).getTravelTimesRev();
-            maxTravelTimesRev = ActiveRevisions.get(agencyId).getTravelTimesRev();
+            startTravelTimesRev = ActiveRevisionDAO.get(agencyId).getTravelTimesRev();
+            maxTravelTimesRev = ActiveRevisionDAO.get(agencyId).getTravelTimesRev();
             logger.info("liading travel times for latest rev {}", startTravelTimesRev);
         }
 

@@ -73,7 +73,7 @@ public class AgencyDAO {
      * @return The TimeZone, or null if not successful
      */
     public static TimeZone getTimeZoneFromDb(String agencyId) {
-        int configRev = ActiveRevisions.get(agencyId).getConfigRev();
+        int configRev = ActiveRevisionDAO.get(agencyId).getConfigRev();
 
         List<Agency> agencies = getAgencies(agencyId, configRev);
         if (agencies.size() != 0)

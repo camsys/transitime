@@ -31,6 +31,7 @@ import org.transitclock.config.DoubleConfigValue;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.StringConfigValue;
 import org.transitclock.configData.AgencyConfig;
+import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ActiveRevisions;
 import org.transitclock.db.structs.Location;
@@ -297,7 +298,7 @@ public class LoadTrafficSensors {
    */
   private int getConfigRev() {
     if (configRev == null) {
-      configRev = ActiveRevisions.get(getAgencyId()).getConfigRev();
+      configRev = ActiveRevisionDAO.get(getAgencyId()).getConfigRev();
     }
     return configRev;
   }
@@ -697,7 +698,7 @@ public class LoadTrafficSensors {
    */
   private Integer getTrafficRev() {
     if (trafficRev == null) {
-      ActiveRevisions activeRevisions = ActiveRevisions.get(session);
+      ActiveRevisions activeRevisions = ActiveRevisionDAO.get(session);
       if (activeRevisions.getTrafficRev() == null) {
         // first use, set it to 0
         trafficRev = 0;

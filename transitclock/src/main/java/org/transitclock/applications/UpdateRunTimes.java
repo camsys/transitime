@@ -9,6 +9,7 @@ import org.transitclock.core.RunTimeServiceUtils;
 import org.transitclock.core.RunTimesServiceUtilsImpl;
 import org.transitclock.core.reporting.*;
 import org.transitclock.core.travelTimes.DataFetcher;
+import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ActiveRevisions;
@@ -95,7 +96,7 @@ public class UpdateRunTimes {
 
     // Set the timezone for the application. Must be done before
     // determine begin and end time so that get the proper time of day.
-    int configRev = ActiveRevisions.get(agencyId).getConfigRev();
+    int configRev = ActiveRevisionDAO.get(agencyId).getConfigRev();
     TimeZone timezone =
             AgencyDAO.getAgencies(agencyId, configRev).get(0).getTimeZone();
     TimeZone.setDefault(timezone);

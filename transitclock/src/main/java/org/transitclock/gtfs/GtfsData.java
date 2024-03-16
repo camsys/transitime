@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.config.DoubleConfigValue;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.StringConfigValue;
+import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.*;
@@ -274,7 +275,7 @@ public class GtfsData {
 		monitoringService = MonitoringService.getInstance();
 		// Deal with the ActiveRevisions. First, store the original travel times
 		// rev since need it to read in old travel time data. 		
-		ActiveRevisions originalRevs = ActiveRevisions.get(session); 
+		ActiveRevisions originalRevs = ActiveRevisionDAO.get(session);
 		originalTravelTimesRev = originalRevs.getTravelTimesRev();
 		
 		// If should store the new revs in database (make them active)

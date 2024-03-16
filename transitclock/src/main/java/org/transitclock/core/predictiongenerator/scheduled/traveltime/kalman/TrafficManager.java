@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
 import org.transitclock.config.BooleanConfigValue;
+import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.structs.ActiveRevisions;
 import org.transitclock.db.structs.StopPath;
 import org.transitclock.db.structs.TrafficPath;
@@ -103,7 +104,7 @@ public class TrafficManager {
    */
   private void init() {
     Session session = Core.getInstance().getDbConfig().getGlobalSession();
-    ActiveRevisions activeRevisions = ActiveRevisions.get(session);
+    ActiveRevisions activeRevisions = ActiveRevisionDAO.get(session);
 
     trafficRev = activeRevisions.getTrafficRev();
 

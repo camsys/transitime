@@ -8,6 +8,7 @@ import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.JDBCConnectionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ActiveRevisions;
 import org.transitclock.db.structs.RunTimesForRoutes;
@@ -192,7 +193,7 @@ public class RunTimeWriterImpl implements RunTimeWriter{
       session = HibernateUtils.getSession(agencyId);
       tx = session.beginTransaction();
 
-      int configRev = ActiveRevisions.get(agencyId).getConfigRev();
+      int configRev = ActiveRevisionDAO.get(agencyId).getConfigRev();
       // delete run times for configRev
       logger.info("deleting RunTimesForStops....(be patient)");
       int numUpdates = 0;
