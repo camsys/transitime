@@ -139,7 +139,7 @@ public class DbWriter {
 		}
 		
 		logger.info("Saving stops to database...");
-		Stop.deleteFromRev(session, configRev);
+		StopDAO.deleteFromRev(session, configRev);
 		for (Stop stop : gtfsData.getStops()) {
 			writeObject(session, stop);
 		}

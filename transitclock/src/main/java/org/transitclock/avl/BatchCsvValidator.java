@@ -1,6 +1,7 @@
 package org.transitclock.avl;
 
 import org.hibernate.Session;
+import org.transitclock.db.dao.StopDAO;
 import org.transitclock.db.structs.Stop;
 
 import java.util.HashSet;
@@ -22,7 +23,7 @@ public class BatchCsvValidator {
   public boolean validateStopId(String stopId, int configRev) {
     if (stopIds == null) {
       stopIds = new HashSet<>();
-      for (Stop stop : Stop.getStops(session, configRev)) {
+      for (Stop stop : StopDAO.getStops(session, configRev)) {
         stopIds.add(stop.getId());
       }
     }

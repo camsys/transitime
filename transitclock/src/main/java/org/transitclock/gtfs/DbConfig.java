@@ -907,7 +907,7 @@ public class DbConfig {
 		logger.debug("Reading trip patterns took {} msec", timer.elapsedMsec());
 		
 		timer = new IntervalTimer();
-		List<Stop> stopsList = Stop.getStops(globalSession, configRev);
+		List<Stop> stopsList = StopDAO.getStops(globalSession, configRev);
 		stopsMap = putStopsIntoMap(stopsList);
 		stopsByStopCode = putStopsIntoMapByStopCode(stopsList);
 		routesListByStopIdMap = putRoutesIntoMapByStopId(routes);

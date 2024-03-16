@@ -8,6 +8,7 @@ import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.DoubleConfigValue;
 import org.transitclock.core.ServiceType;
 import org.transitclock.core.ServiceTypeUtil;
+import org.transitclock.db.dao.StopDAO;
 import org.transitclock.db.query.ArrivalDepartureQuery;
 import org.transitclock.db.query.PrescriptiveRunTimeStateQuery;
 import org.transitclock.db.query.RunTimeForRouteQuery;
@@ -148,7 +149,7 @@ public class PrescriptiveRunTimeService {
 
 
             // Get all stops for provided TripPattern
-            Map<String, Stop> stopsByStopId = Stop.getStops(configRev, tripPatternStopIds);
+            Map<String, Stop> stopsByStopId = StopDAO.getStops(configRev, tripPatternStopIds);
 
             // Populate Timepoints for trip pattern
             List<IpcStopPath> timePoints = new ArrayList<>();
