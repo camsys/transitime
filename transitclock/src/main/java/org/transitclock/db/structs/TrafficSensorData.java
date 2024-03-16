@@ -137,34 +137,6 @@ public class TrafficSensorData implements Serializable {
     return time;
   }
 
-  /**
-   * do bulk load of data.
-   * @param session
-   * @param startDate
-   * @param endDate
-   * @return
-   */
-  public static Iterator<TrafficSensorData> getTrafficSensorDataIteratorFromDb(Session session, Date startDate, Date endDate) {
-    String hql = "FROM TrafficSensorData " +
-            " WHERE time >= :beginDate " +
-            " AND time < :endDate";
-    Query query = session.createQuery(hql);
-    query.setTimestamp("beginDate", startDate);
-    query.setTimestamp("endDate", endDate);
-    //iterator performance on mysql is poor!
-    return query.iterate();
-  }
-
-  public static List<TrafficSensorData> getTrafficSensorDataFromDb(Session session, Date startDate, Date endDate) {
-    String hql = "FROM TrafficSensorData " +
-            " WHERE time >= :beginDate " +
-            " AND time < :endDate";
-    Query query = session.createQuery(hql);
-    query.setTimestamp("beginDate", startDate);
-    query.setTimestamp("endDate", endDate);
-
-    return query.list();
-  }
 
   @Override
   public int hashCode() {

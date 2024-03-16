@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
 import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.db.dao.ActiveRevisionDAO;
+import org.transitclock.db.dao.TrafficSensorDataDAO;
 import org.transitclock.db.structs.ActiveRevisions;
 import org.transitclock.db.structs.StopPath;
 import org.transitclock.db.structs.TrafficPath;
@@ -215,7 +216,7 @@ public class TrafficManager {
  */
   public void populateCacheFromDb(Session session, Date startDate, Date endDate) {
 
-    List<TrafficSensorData> list = TrafficSensorData.getTrafficSensorDataFromDb(session, startDate, endDate);
+    List<TrafficSensorData> list = TrafficSensorDataDAO.getTrafficSensorDataFromDb(session, startDate, endDate);
     Iterator<TrafficSensorData> iterator = list.iterator();
 
     int i = 0;
