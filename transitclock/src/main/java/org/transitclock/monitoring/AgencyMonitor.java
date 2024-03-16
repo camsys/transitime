@@ -19,6 +19,8 @@ package org.transitclock.monitoring;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.transitclock.db.dao.MonitoringEventDAO;
+import org.transitclock.db.structs.MonitoringEvent;
 import org.transitclock.utils.EmailSender;
 
 import java.util.ArrayList;
@@ -135,21 +137,8 @@ public class AgencyMonitor {
 	 *         all the monitoring if there are any problems.
 	 */
 	public String checkAll() {
-		logger.info("Monitoring agency for problems...");
-		
-		String errorMessage = "";
-		
-		// Check all the monitors. 
-		for (MonitorBase monitor : monitors) {
-			if (monitor.checkAndNotify())
-				errorMessage += " " + monitor.getMessage();			
-		}
-				
-		// Return the concatenated error message if there were any
-		if (errorMessage.length() > 0)
-			return errorMessage;
-		else
-			return null;
+		// monitoring is now external to application
+		return null;
 	}
 	
 	public static void main(String[] args) {

@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.StringConfigValue;
+import org.transitclock.db.dao.MonitoringEventDAO;
 import org.transitclock.db.structs.MonitoringEvent;
 import org.transitclock.utils.EmailSender;
 import org.transitclock.utils.Time;
@@ -85,96 +86,6 @@ public abstract class MonitorBase {
 	public MonitorBase(EmailSender emailSender, String agencyId) {
 		this.emailSender = emailSender;
 		this.agencyId = agencyId;
-	}
-	
-	/**
-	 * Checks the monitor object to see if state has changed currently
-	 * triggered. If state changes then sends out notification e-mail.
-	 * 
-	 * @return True if monitor currently triggered
-	 */
-	public boolean checkAndNotify() {
-		// Call parent method to determine if the monitor is now triggered,
-		// indicating that there is a problem
-		boolean isTriggered = triggered();
-		
-		// If monitor is triggered then should see if the secondary monitor
-		// is triggered. If it is not then shouldn't send out e-mail message.
-		boolean acceptableEvenIfTriggered = false;
-		if (isTriggered) {
-			acceptableEvenIfTriggered = acceptableEvenIfTriggered();
-		}
-		
-		logger.info("For agencyId={} monitoring type={} isTriggered={} "
-				+ "wasTriggered={} message=\"{}\" acceptableEvenIfTriggered={} "
-				+ "acceptableEvenIfTriggeredMessage=\"{}\"", 
-				agencyId, type(), isTriggered, wasTriggered, message,
-				acceptableEvenIfTriggered, acceptableEvenIfTriggeredMessage);
-		
-		// Store MonitorEvent into database if monitor is now triggered or
-		// was previously triggered. This way store event for when first
-		// triggered, when untriggered, and all of the monitoring info
-		// in between. This db logging will be done even if 
-		// acceptableEvenIfTriggered is true, which is good because it allows 
-		// one to see in the db what really happened.		
-		if (isTriggered || wasTriggered) {
-			MonitoringEvent.create(new Date(), type(), isTriggered,
-					getMessage(), value);
-		}
-
-		// Handle notifications according to change of monitoring state. If 
-		// state hasn't changed then don't need to send out notification.
-		if (!wasTriggered && isTriggered && !acceptableEvenIfTriggered) {
-			// If a timeout time is configured then retry after that
-			// number of seconds
-			if (retryTimeoutSecs.getValue() != 0) {
-				logger.debug("Was triggered first time so trying again after "
-						+ "{} seconds. {}",	
-						retryTimeoutSecs.getValue(), getMessage());
-				
-				// Try checking whether triggered again after sleeping a bit
-				Time.sleep(retryTimeoutSecs.getValue() * Time.MS_PER_SEC);
-				isTriggered = triggered() && !acceptableEvenIfTriggered;
-				
-				// If now OK then it was a very temporary issue so do not
-				// send alert
-				if (!isTriggered)
-					return false;
-			}
-			
-			// Changed to now being triggered. Email out the message
-			wasTriggered = true;
-
-			// Notify recipients
-			String subject = "ERROR - " + type() + " - " + agencyId;
-			logger.info("Sending ERROR e-mail \"{}\" to {}", 
-					message, recipients());
-			if (emailRecipients.getValue() != null) {
-				emailSender.send(recipients(), subject, message);
-			} else {
-				logger.error("Could not send ERROR e-mail because "
-						+ "transitclock.monitoring.emailRecipients Java property "
-						+ "not set");
-			}
-		} else if (wasTriggered && !isTriggered) {
-			// Changed from being triggered to not being triggered.
-			wasTriggered = false;
-			
-			// Notify recipients
-			String subject = "OK - " + type() + " - " + agencyId;
-			logger.info("Sending OK e-mail \"{}\" to {}", 
-					message, recipients());
-			if (emailRecipients.getValue() != null) {
-				emailSender.send(recipients(), subject, message);			
-			} else {
-				logger.error("Could not send ERROR e-mail because "
-						+ "transitclock.monitoring.emailRecipients Java property "
-						+ "not set");
-			}
-		}
-		
-		// Return true if monitor currently triggered
-		return isTriggered;
 	}
 	
 	/**
