@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.core.ServiceType;
 import org.transitclock.core.ServiceTypeUtil;
+import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.query.RunTimeForRouteQuery;
 import org.transitclock.db.query.TripQuery;
 import org.transitclock.db.structs.*;
@@ -152,7 +153,7 @@ public class PrescriptiveTimebandService {
         Set<Integer> configRevs = new HashSet<>();
         configRevs.add(configRev);
         TripQuery tripQuery = new TripQuery.Builder(routeShortName, configRevs).build();
-        List<Trip> trips = Trip.getTripsFromDb(tripQuery);
+        List<Trip> trips = TripDAO.getTripsFromDb(tripQuery);
 
         for(Trip trip : trips){
             // Skip trips that already have run time data

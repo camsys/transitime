@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
 import org.transitclock.configData.CoreConfig;
 import org.transitclock.core.SpatialMatch;
+import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.dao.BlockDAO;
 import org.transitclock.gtfs.DbConfig;
@@ -1063,7 +1064,7 @@ public final class Block implements Serializable {
 	public synchronized void initialize() {
 		if (!initialized) {
 			for (Trip unloadedTrip : getTrips()) {
-				unloadedTrip.initialize();
+				TripDAO.initialize(unloadedTrip);
 			}
 			initialized = true;
 		}
@@ -1079,7 +1080,7 @@ public final class Block implements Serializable {
 		Block returnBlock = (Block) session.load(Block.class, this);
 		if (returnBlock == null) return null;
 		for (Trip unloadedTrip : returnBlock.getTrips()) {
-			unloadedTrip.initialize(session);
+			TripDAO.initialize(session, unloadedTrip);
 		}
 		returnBlock.initialized = true;
 		return returnBlock;

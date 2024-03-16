@@ -7,9 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.LongConfigValue;
 import org.transitclock.core.ServiceType;
+import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.query.RunTimeForRouteQuery;
-import org.transitclock.db.query.TripQuery;
 import org.transitclock.db.structs.*;
 import org.transitclock.ipc.data.*;
 import org.transitclock.reporting.*;
@@ -330,7 +330,7 @@ public class RunTimeService {
         if(trip == null){
             Session session = HibernateUtils.getSession(true);
             try{
-                trip = Trip.getTrip(session, configRev, tripId);
+                trip = TripDAO.getTrip(session, configRev, tripId);
             }catch (HibernateException e){
                 logger.error("Unable to retrieve trip {}", tripId, e);
             }finally{

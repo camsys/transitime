@@ -9,6 +9,7 @@ import org.transitclock.config.DoubleConfigValue;
 import org.transitclock.core.ServiceType;
 import org.transitclock.core.ServiceTypeUtil;
 import org.transitclock.db.dao.StopDAO;
+import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.query.ArrivalDepartureQuery;
 import org.transitclock.db.query.PrescriptiveRunTimeStateQuery;
 import org.transitclock.db.query.RunTimeForRouteQuery;
@@ -350,7 +351,7 @@ public class PrescriptiveRunTimeService {
 
         TripQuery tripQuery = new TripQuery.Builder(routeShortName, configRevs).build();
 
-        List<Trip> trips = Trip.getTripsFromDb(tripQuery);
+        List<Trip> trips = TripDAO.getTripsFromDb(tripQuery);
 
         for(Trip trip : trips){
             List<Trip> tripsForPattern = tripsByTripPatternId.get(trip.getTripPatternId());

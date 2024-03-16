@@ -577,7 +577,7 @@ public class DbConfig {
 				// trip patterns that have already been read in as part of
 				// reading in block assignments. This makes reading of the
 				// trip pattern data much faster.
-				tripsMap = Trip.getTrips(globalSession, configRev);
+				tripsMap = TripDAO.getTrips(globalSession, configRev);
 				tripIdsByTripPatternMap = new HashMap<>();
 				for(Map.Entry<String, Trip> tripEntry: tripsMap.entrySet()){
 					String tripPatternId = tripEntry.getValue().getTripPattern().getId();
@@ -635,11 +635,11 @@ public class DbConfig {
 			// by multiple threads). Otherwise get a "force initialize loading
 			// collection" error.
 			synchronized (BlockDAO.getLazyLoadingSyncObject()) {
-				trip = Trip.getTrip(globalSession, configRev, tripIdOrShortName);
+				trip = TripDAO.getTrip(globalSession, configRev, tripIdOrShortName);
 				int configRevToTry = 0;
 				while (trip == null && configRevToTry < previousConfigRevsToCheck) {
 					 configRevToTry++;
-					 trip = Trip.getTrip(globalSession, configRev - configRevToTry , tripIdOrShortName);
+					 trip = TripDAO.getTrip(globalSession, configRev - configRevToTry , tripIdOrShortName);
 					 if (trip != null) {
 						 logger.info("loaded trip {} that was {} rev behind current", tripIdOrShortName, configRevToTry);
 						 getTripNameSet().add(tripIdOrShortName);
@@ -794,7 +794,7 @@ public class DbConfig {
 		// by multiple threads). Otherwise get a "force initialize loading
 		// collection" error.
 		synchronized (BlockDAO.getLazyLoadingSyncObject()) {
-			trips =	Trip.getTripByShortName(globalSession, configRev,
+			trips =	TripDAO.getTripByShortName(globalSession, configRev,
 							tripShortName);
 		}
 

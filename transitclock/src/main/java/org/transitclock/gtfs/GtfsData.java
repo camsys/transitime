@@ -26,6 +26,7 @@ import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.StringConfigValue;
 import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.StopPathDAO;
+import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.*;
@@ -2860,7 +2861,7 @@ public class GtfsData {
     Session statsSession = sessionFactory.openSession();
     monitoringService.averageMetric("PredictionLatestConfigRev", configRev*1.0);
     monitoringService.averageMetric("PredictionLatestTravelTimesRev", travelTimesRev*1.0);
-    Long count = Trip.countTravelTimesForTrips(statsSession, travelTimesRev);
+    Long count = TripDAO.countTravelTimesForTrips(statsSession, travelTimesRev);
     if (count != null) {
       monitoringService.averageMetric("PredictionTravelTimesForTripsCount", count*1.0);
     } else {

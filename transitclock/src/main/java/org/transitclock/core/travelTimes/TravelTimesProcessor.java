@@ -33,6 +33,7 @@ import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.DoubleConfigValue;
 import org.transitclock.core.TemporalDifference;
 import org.transitclock.core.travelTimes.DataFetcher.DbDataMapKey;
+import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Match;
 import org.transitclock.db.structs.StopPath;
@@ -1069,7 +1070,7 @@ public class TravelTimesProcessor {
 	}	
 	
 	 public Long updateMetrics(Session session, int travelTimesRev) {
-	   Long count = Trip.countTravelTimesForTrips(session, travelTimesRev);
+	   Long count = TripDAO.countTravelTimesForTrips(session, travelTimesRev);
 	   monitoringService.averageMetric("PredictionLatestTravelTimeRev", travelTimesRev*1.0);
 	   if (count != null) {
 	     monitoringService.averageMetric("PredictionTravelTimesForTripsCount", count*1.0);

@@ -33,6 +33,7 @@ import org.transitclock.core.dataCache.PredictionDataCache;
 import org.transitclock.core.dataCache.VehicleDataCache;
 import org.transitclock.core.dataCache.VehicleStateManager;
 import org.transitclock.core.dataCache.canceledTrip.CanceledTripCache;
+import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.*;
 import org.transitclock.db.structs.AvlReport.AssignmentType;
@@ -800,7 +801,7 @@ public class AvlProcessor {
 		// if it pretty far off.
 		List<Trip> potentialTrips = block.getTripsCurrentlyActive(avlReport);
 		// hydrate trips and attach to this session
-		potentialTrips = Trip.refreshTrips(potentialTrips, session);
+		potentialTrips = TripDAO.refreshTrips(potentialTrips, session);
 
 		List<SpatialMatch> spatialMatches =
 				SpatialMatcher.getSpatialMatches(vehicleState, vehicleState.getAvlReport(),

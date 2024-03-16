@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.core.RunTimeServiceUtils;
 import org.transitclock.core.travelTimes.DataFetcher;
 import org.transitclock.db.dao.BlockDAO;
+import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Block;
@@ -55,7 +56,7 @@ public class RunTimeLoader {
           String tripId = firstArrivalDeparture.getTripId();
           int configRev = firstArrivalDeparture.getConfigRev();
 
-          Trip trip = Trip.getTrip(session, configRev, tripId);
+          Trip trip = TripDAO.getTrip(session, configRev, tripId);
 
           String blockId = trip.getBlockId();
           String serviceId = trip.getServiceId();

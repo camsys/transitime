@@ -8,6 +8,7 @@ import org.mockito.Mockito;
 import org.transitclock.core.ServiceType;
 import org.transitclock.core.ServiceUtilsImpl;
 import org.transitclock.core.travelTimes.DataFetcher;
+import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.structs.*;
 
 
@@ -84,7 +85,7 @@ public class RunTimeLoaderTest {
         when(trip.getStartTime()).thenReturn(testTrip.getStartTime());
         when(trip.getEndTime()).thenReturn(testTrip.getEndTime());
 
-        staticTrip.when(() -> Trip.getTrip(null, testTrip.getConfigRev(), testTrip.getTripId())).thenReturn(trip);
+        staticTrip.when(() -> TripDAO.getTrip(null, testTrip.getConfigRev(), testTrip.getTripId())).thenReturn(trip);
     }
 
     private static Map<DataFetcher.DbDataMapKey, List<ArrivalDeparture>> getArrivalDepartureToMap(List<ArrivalDeparture> arrivalsDepartures){

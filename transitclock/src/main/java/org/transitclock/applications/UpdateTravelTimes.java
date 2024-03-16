@@ -28,6 +28,7 @@ import org.transitclock.core.travelTimes.TravelTimeInfoWithHowSet;
 import org.transitclock.core.travelTimes.TravelTimesProcessor;
 import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.AgencyDAO;
+import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.*;
 import org.transitclock.utils.IntervalTimer;
@@ -303,7 +304,7 @@ public class UpdateTravelTimes {
   		ActiveRevisions activeRevisions = ActiveRevisionDAO.get(session);
   		logger.info("Reading in trips from db...");
   		tripMap = 
-  				Trip.getTrips(session, activeRevisions.getConfigRev());
+  				TripDAO.getTrips(session, activeRevisions.getConfigRev());
 	  } finally {
 	    logger.info("Reading in trips from db took {} msec", timer.elapsedMsec());
 	  }

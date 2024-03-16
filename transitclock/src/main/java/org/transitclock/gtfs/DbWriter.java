@@ -102,7 +102,7 @@ public class DbWriter {
 	
 			logger.info("Deleting old trips from rev {} of database...", 
 					configRev);
-			Trip.deleteFromRev(session, configRev);
+			TripDAO.deleteFromRev(session, configRev);
 	
 			logger.info("Deleting old trip patterns from rev {} of database...", 
 					configRev);

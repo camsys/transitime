@@ -45,6 +45,7 @@ import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.db.structs.Block;
 import org.transitclock.db.structs.Trip;
+import org.transitclock.db.dao.TripDAO;
 import org.transitclock.utils.IntervalTimer;
 import org.transitclock.utils.Time;
 
@@ -254,7 +255,7 @@ public class AutoBlockAssigner {
 		// is only for use with no schedule assignments.
 		AvlReport avlReport = getAvlReport();
 		List<Trip> potentialTrips = block.getTripsCurrentlyActive(avlReport);
-		potentialTrips = Trip.refreshTrips(potentialTrips,
+		potentialTrips = TripDAO.refreshTrips(potentialTrips,
 						HibernateUtils.getSessionForThread(AgencyConfig.getAgencyId()));
 		List<SpatialMatch> spatialMatches = SpatialMatcher
 				.getSpatialMatchesForAutoAssigning(vehicleState, getAvlReport(),
@@ -349,7 +350,7 @@ public class AutoBlockAssigner {
 		// Determine which trips are currently active so that don't bother 
 		// looking at all trips
 		List<Trip> activeTrips = block.getTripsCurrentlyActive(avlReport);
-		activeTrips = Trip.refreshTrips(activeTrips,
+		activeTrips = TripDAO.refreshTrips(activeTrips,
 						HibernateUtils.getSessionForThread(AgencyConfig.getAgencyId()));
 		// Determine trips that need to look at for spatial matches because 
 		// haven't looked at the associated trip pattern yet.
@@ -487,7 +488,7 @@ public class AutoBlockAssigner {
 		// Determine which trips are currently active so that don't bother 
 		// looking at all trips
 		List<Trip> activeTrips = block.getTripsCurrentlyActive(avlReport);
-		activeTrips = Trip.refreshTrips(activeTrips,
+		activeTrips = TripDAO.refreshTrips(activeTrips,
 						HibernateUtils.getSessionForThread(AgencyConfig.getAgencyId()));
 
 		// Get and return the spatial matches

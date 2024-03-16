@@ -9,6 +9,7 @@ import org.transitclock.db.dao.ArrivalDepartureDAO;
 import org.transitclock.core.ServiceType;
 import org.transitclock.db.dao.CalendarDAO;
 import org.transitclock.db.dao.CalendarDateDAO;
+import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.query.ArrivalDepartureQuery;
 import org.transitclock.db.query.RunTimeForRouteQuery;
 import org.transitclock.db.query.TripQuery;
@@ -39,7 +40,7 @@ import static org.mockito.Mockito.*;
 public class PrescriptiveRunTimesTest extends AbstractPrescriptiveRunTimesTests{
 
     private MockedStatic<Core> singletonCore;
-    private MockedStatic<Trip> staticTrip;
+    private MockedStatic<TripDAO> staticTripDAO;
     private MockedStatic<TripPattern> staticTripPattern;
     private MockedStatic<CalendarDAO> staticCalendarDAO;
     private MockedStatic<CalendarDateDAO> staticCalendarDateDAO;
@@ -68,7 +69,7 @@ public class PrescriptiveRunTimesTest extends AbstractPrescriptiveRunTimesTests{
         singletonCore = mockStatic(Core.class);
         singletonCore.when(() -> Core.getInstance()).thenReturn(mockCore);
 
-        staticTrip = mockStatic(Trip.class);
+        staticTripDAO = mockStatic(TripDAO.class);
         staticTripPattern = mockStatic(TripPattern.class);
         staticCalendarDAO = mockStatic(CalendarDAO.class);
         staticCalendarDateDAO = mockStatic(CalendarDateDAO.class);
@@ -78,7 +79,7 @@ public class PrescriptiveRunTimesTest extends AbstractPrescriptiveRunTimesTests{
     @After
     public void teardown(){
         singletonCore.close();
-        staticTrip.close();
+        staticTripDAO.close();
         staticTripPattern.close();
         staticCalendarDAO.close();
         staticCalendarDateDAO.close();
@@ -206,7 +207,7 @@ public class PrescriptiveRunTimesTest extends AbstractPrescriptiveRunTimesTests{
         PrescriptiveRuntimeClusteringService prescriptiveClusteringService = spy(PrescriptiveRuntimeClusteringService.class);
 
         // Mocked Static Methods
-        staticTrip.when(() -> Trip.getTripsFromDb(any(TripQuery.class))).thenReturn(trips);
+        staticTripDAO.when(() -> TripDAO.getTripsFromDb(any(TripQuery.class))).thenReturn(trips);
         staticTripPattern.when(() -> TripPattern.getTripPatternsForRoute(anyString(), anyInt(), anyBoolean())).thenReturn(tripPatterns);
         staticCalendarDAO.when(() -> CalendarDAO.getCalendars(any(Session.class), anyInt())).thenReturn(calendars);
         staticCalendarDateDAO.when(() -> CalendarDateDAO.getCalendarDates(any(Session.class), anyInt())).thenReturn(calendarDates);
