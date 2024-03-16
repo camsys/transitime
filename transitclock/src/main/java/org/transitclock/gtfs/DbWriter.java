@@ -163,7 +163,7 @@ public class DbWriter {
 		}
 		
 		logger.info("Saving fare rules to database...");
-		FareRule.deleteFromRev(session, configRev);
+		FareRuleDAO.deleteFromRev(session, configRev);
 		for (FareRule fareRule : gtfsData.getFareRules()) {
 			writeObject(session, fareRule);
 		}
