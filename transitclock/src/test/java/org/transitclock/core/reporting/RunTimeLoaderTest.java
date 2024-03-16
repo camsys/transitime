@@ -44,7 +44,7 @@ public class RunTimeLoaderTest {
                     .endTime(Integer.parseInt(record.get("endTime")))
                     .build();
             trips.put(tripId, testTrip);
-            mockTrip(testTrip, staticTrip);
+            mockTrip(testTrip);
         }
     }
 
@@ -73,7 +73,7 @@ public class RunTimeLoaderTest {
         arrivalsDeparturesMap = getArrivalDepartureToMap(arrivalsDepartures);
     }
 
-    private static void mockTrip(MockTrip testTrip, MockedStatic<Trip> staticTrip){
+    private static void mockTrip(MockTrip testTrip){
         Trip trip = mock(Trip.class, Mockito.RETURNS_DEEP_STUBS);
         when(trip.getConfigRev()).thenReturn(testTrip.getConfigRev());
         when(trip.getId()).thenReturn(testTrip.getTripId());
@@ -85,7 +85,7 @@ public class RunTimeLoaderTest {
         when(trip.getStartTime()).thenReturn(testTrip.getStartTime());
         when(trip.getEndTime()).thenReturn(testTrip.getEndTime());
 
-        staticTrip.when(() -> TripDAO.getTrip(null, testTrip.getConfigRev(), testTrip.getTripId())).thenReturn(trip);
+//        staticTripDAO.when(() -> TripDAO.getTrip(null, testTrip.getConfigRev(), testTrip.getTripId())).thenReturn(trip);
     }
 
     private static Map<DataFetcher.DbDataMapKey, List<ArrivalDeparture>> getArrivalDepartureToMap(List<ArrivalDeparture> arrivalsDepartures){
@@ -106,8 +106,8 @@ public class RunTimeLoaderTest {
         loadTestArrivalsDepartures();
     }
 
-    @Ignore
     @Test
+    @Ignore
     public void testRunTimesWithDuplicates(){
 
         for(DataFetcher.DbDataMapKey key : arrivalsDeparturesMap.keySet()){
