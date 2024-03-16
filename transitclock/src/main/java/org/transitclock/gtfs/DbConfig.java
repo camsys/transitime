@@ -941,7 +941,7 @@ public class DbConfig {
 		fareAttributes =
 				FareAttributeDAO.getFareAttributes(globalSession, configRev);
 		fareRules = FareRuleDAO.getFareRules(globalSession, configRev);
-		frequencies = Frequency.getFrequencies(globalSession, configRev);
+		frequencies = FrequencyDAO.getFrequencies(globalSession, configRev);
 		transfers = Transfer.getTransfers(globalSession, configRev);
 		feedInfo = FeedInfoDAO.getFeedInfo(globalSession, configRev);
 

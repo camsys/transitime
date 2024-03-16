@@ -175,7 +175,7 @@ public class DbWriter {
 		}
 		
 		logger.info("Saving frequencies to database...");
-		Frequency.deleteFromRev(session, configRev);
+		FrequencyDAO.deleteFromRev(session, configRev);
 		for (Frequency frequency : gtfsData.getFrequencies()) {
 			writeObject(session, frequency);
 		}
