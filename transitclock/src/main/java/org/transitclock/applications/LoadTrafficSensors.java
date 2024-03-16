@@ -32,6 +32,7 @@ import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.StringConfigValue;
 import org.transitclock.configData.AgencyConfig;
 import org.transitclock.db.dao.ActiveRevisionDAO;
+import org.transitclock.db.dao.StopPathDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ActiveRevisions;
 import org.transitclock.db.structs.Location;
@@ -276,7 +277,7 @@ public class LoadTrafficSensors {
     List<StopPath> allStopPaths = null;
     try {
       logger.info("loading all StopPaths for configRev {}", getConfigRev());
-      allStopPaths = StopPath.getPaths(session,
+      allStopPaths = StopPathDAO.getPaths(session,
               getConfigRev());
     } finally {
       if (allStopPaths != null) {

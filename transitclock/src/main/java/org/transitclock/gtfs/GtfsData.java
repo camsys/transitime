@@ -25,6 +25,7 @@ import org.transitclock.config.DoubleConfigValue;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.StringConfigValue;
 import org.transitclock.db.dao.ActiveRevisionDAO;
+import org.transitclock.db.dao.StopPathDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.*;
@@ -1218,7 +1219,7 @@ public class GtfsData {
 			
 			// Determine the pathId. Make sure that use a unique path ID by
 			// appending "_loop" if looping over the same stops
-			String pathId = StopPath.determinePathId(previousStopId, stopId);
+			String pathId = StopPathDAO.determinePathId(previousStopId, stopId);
 			while (pathIdsForTrip.contains(pathId))
 				pathId += "_loop";
 			pathIdsForTrip.add(pathId);
