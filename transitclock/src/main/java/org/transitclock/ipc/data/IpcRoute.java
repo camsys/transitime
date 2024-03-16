@@ -27,6 +27,7 @@ import java.util.Set;
 import org.transitclock.applications.Core;
 import org.transitclock.core.dataCache.PredictionDataCache;
 import org.transitclock.core.dataCache.VehicleDataCache;
+import org.transitclock.db.dao.RouteDAO;
 import org.transitclock.db.structs.Location;
 import org.transitclock.db.structs.Route;
 import org.transitclock.db.structs.Stop;
@@ -144,7 +145,7 @@ public class IpcRoute extends IpcRouteSummary {
 
 		// If tripPatternId specified then return that trip pattern
 		if (tripPatternId != null) {
-			TripPattern tripPattern = dbRoute.getTripPattern(tripPatternId);
+			TripPattern tripPattern = RouteDAO.getTripPattern(dbRoute.getId(), tripPatternId);
 			if (tripPattern != null)
 				tripPatterns.add(tripPattern);
 			return tripPatterns;
@@ -155,7 +156,7 @@ public class IpcRoute extends IpcRouteSummary {
 			if (directionId == null && stopId != null) {
 				// Determine longest trip pattern that serves the stop
 				List<TripPattern> longestTripPatterns = 
-						dbRoute.getLongestTripPatternForEachDirection();
+						RouteDAO.getLongestTripPatternForEachDirection(dbRoute);
 				for (TripPattern tripPattern : longestTripPatterns) {
 					if (tripPattern.servesStop(stopId)) {
 						tripPatterns.add(tripPattern);
@@ -167,13 +168,13 @@ public class IpcRoute extends IpcRouteSummary {
 				if (directionId != null) {
 					// directionId specified so return longest trip pattern 
 					// just for this direction
-					tripPatterns.add(dbRoute
-							.getLongestTripPatternForDirection(directionId));
+					tripPatterns.add(RouteDAO
+							.getLongestTripPatternForDirection(dbRoute.getId(), directionId));
 					return tripPatterns;
 				} else {
 					// directionId not specified so return longest trip 
 					// patterns for each direction
-					return dbRoute.getLongestTripPatternForEachDirection();
+					return RouteDAO.getLongestTripPatternForEachDirection(dbRoute);
 				}
 			}
 		}

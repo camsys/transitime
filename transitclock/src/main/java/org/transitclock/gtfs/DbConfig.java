@@ -895,7 +895,7 @@ public class DbConfig {
 		logger.debug("Reading blocks took {} msec", timer.elapsedMsec());
 
 		timer = new IntervalTimer();
-		routes = Route.getRoutes(globalSession, configRev);
+		routes = RouteDAO.getRoutes(globalSession, configRev);
 		routesByRouteIdMap = putRoutesIntoMapByRouteId(routes);
 		routesByRouteShortNameMap = putRoutesIntoMapByRouteShortName(routes);
 		logger.debug("Reading routes took {} msec", timer.elapsedMsec());

@@ -23,6 +23,7 @@ import org.transitclock.applications.Core;
 import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.core.dataCache.PredictionDataCache;
+import org.transitclock.db.dao.RouteDAO;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.PredictionAccuracy;
 import org.transitclock.db.structs.Route;
@@ -257,7 +258,7 @@ public class PredictionAccuracyModule extends Module {
 
 			// For each direction for the route...
 			List<TripPattern> tripPatterns =
-					route.getLongestTripPatternForEachDirection();
+					RouteDAO.getLongestTripPatternForEachDirection(route);
 			for (TripPattern tripPattern : tripPatterns) {
 				List<String> stopIdsForTripPattern = tripPattern.getStopIds();
 				

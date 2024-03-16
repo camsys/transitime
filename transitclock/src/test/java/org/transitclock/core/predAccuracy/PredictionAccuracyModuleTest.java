@@ -3,6 +3,8 @@ package org.transitclock.core.predAccuracy;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.transitclock.db.dao.RouteDAO;
 import org.transitclock.db.structs.*;
 import org.transitclock.gtfs.GtfsData;
 import org.transitclock.gtfs.TitleFormatter;
@@ -39,12 +41,12 @@ public class PredictionAccuracyModuleTest {
         List<TripPattern> tripPatterns = getLongestTripPatternsForRoute(routeId, formatter);
 
         Route route = getRoute(routeId, tripPatterns, formatter);
+        route.setDirectionIds(Arrays.asList("0", "1"));
 
         Route spyRoute = spy(route);
         doReturn(Arrays.asList("0","1")).when(spyRoute).getDirectionIds();
-        doReturn(tripPatterns.get(0)).when(spyRoute).getLongestTripPatternForDirection("0");
-        doReturn(tripPatterns.get(1)).when(spyRoute).getLongestTripPatternForDirection("1");
-
+        MockedStatic<RouteDAO> routeDAOMockedStatic = mockStatic(RouteDAO.class);
+        routeDAOMockedStatic.when(() -> RouteDAO.getLongestTripPatternForEachDirection(route)).thenReturn(tripPatterns);
         routes.add(spyRoute);
 
         List<PredictionAccuracyModule.RouteAndStops> routeAndStops = predictionAccuracyModule.getRoutesAndStops(routes);

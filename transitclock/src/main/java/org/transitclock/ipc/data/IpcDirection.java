@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.transitclock.applications.Core;
+import org.transitclock.db.dao.RouteDAO;
 import org.transitclock.db.structs.Route;
 import org.transitclock.db.structs.Stop;
 import org.transitclock.db.structs.TripPattern;
@@ -57,7 +58,7 @@ public class IpcDirection implements Serializable {
 		// to use but there is no human readable direction name specified in 
 		// GTFS.
 		TripPattern longestTripPattern = 
-				dbRoute.getLongestTripPatternForDirection(directionId);
+				RouteDAO.getLongestTripPatternForDirection(dbRoute.getId(), directionId);
 		this.directionTitle = "To " + longestTripPattern.getHeadsign();
 		
 		// Determine ordered list of stops
@@ -85,7 +86,7 @@ public class IpcDirection implements Serializable {
 		// to use but there is no human readable direction name specified in 
 		// GTFS.
 		TripPattern longestTripPattern = 
-				dbRoute.getLongestTripPatternForDirection(directionId);
+				RouteDAO.getLongestTripPatternForDirection(dbRoute.getId(), directionId);
 		this.directionTitle = "To " + longestTripPattern.getHeadsign();
 		this.stops = ipcStops;
 	}
