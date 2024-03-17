@@ -385,7 +385,7 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 			return null;
 
 		// Determine the blocks for the route for all service IDs
-		List<Block> blocksForRoute = Core.getInstance().getDbConfig()
+		List<BlockInterface> blocksForRoute = Core.getInstance().getBackingStore()
 				.getBlocksForRoute(dbRoute.getId());
 		
 		// Convert blocks to list of IpcSchedule objects and return
@@ -500,9 +500,9 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	 */
 	@Override
 	public List<String> getBlockIds() throws RemoteException {
-		Collection<Block> blocks = Core.getInstance().getDbConfig().getBlocks();
+		Collection<BlockInterface> blocks = Core.getInstance().getBackingStore().getBlocks();
 		Collection<String> blockIds = new HashSet<String>(blocks.size());
-		for (Block block : blocks)
+		for (BlockInterface block : blocks)
 			blockIds.add(block.getId());
 		return new ArrayList<String>(blockIds);
 	}
@@ -517,10 +517,10 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 		if (serviceId == null)
 			return getBlockIds();
 		
-		Collection<Block> blocks =
-				Core.getInstance().getDbConfig().getBlocks(serviceId);
+		Collection<BlockInterface> blocks =
+				Core.getInstance().getBackingStore().getBlocks(serviceId);
 		List<String> blockIds = new ArrayList<String>(blocks.size());
-		for (Block block : blocks)
+		for (BlockInterface block : blocks)
 			blockIds.add(block.getId());
 		return blockIds;
 	}

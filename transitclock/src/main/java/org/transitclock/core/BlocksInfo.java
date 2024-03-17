@@ -21,10 +21,9 @@ import java.util.*;
 
 import org.transitclock.applications.Core;
 import org.transitclock.config.IntegerConfigValue;
-import org.transitclock.core.predictiongenerator.kalman.TripSegment;
-import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.db.structs.Trip;
-import org.transitclock.gtfs.DbConfig;
+import org.transitclock.service.BackingStore;
 import org.transitclock.utils.Time;
 
 /**
@@ -52,9 +51,9 @@ public class BlocksInfo {
 	 * @return blocks that are about to start. Can be empty list but will not be
 	 *         null.
 	 */
-	public static List<Block> getBlocksAboutToStart(int beforeStartTimeSecs) {
+	public static List<BlockInterface> getBlocksAboutToStart(int beforeStartTimeSecs) {
 		// The list to be returned
-		List<Block> aboutToStartBlocks = new ArrayList<Block>(1000);
+		List<BlockInterface> aboutToStartBlocks = new ArrayList<>(1000);
 		
 		Core core = Core.getInstance();
 		if (core == null)
@@ -65,15 +64,14 @@ public class BlocksInfo {
 		Date now = core.getSystemDate();
 		Collection<String> currentServiceIds = 
 				core.getServiceUtils().getServiceIds(now);
-	
+		BackingStore backingStore = core.getBackingStore();
 		// For each service ID ...
 		for (String serviceId : currentServiceIds) {
-			DbConfig dbConfig = core.getDbConfig();
-			Collection<Block> blocks = dbConfig.getBlocks(serviceId);
+			Collection<BlockInterface> blocks = backingStore.getBlocks(serviceId);
 			
 			// If the block is about to be or currently active then
 			// add it to the list to be returned
-			for (Block block : blocks) {
+			for (BlockInterface block : blocks) {
 				if (block.isBeforeStartTime(now, beforeStartTimeSecs))
 					aboutToStartBlocks.add(block);
 			}
@@ -88,7 +86,7 @@ public class BlocksInfo {
 	 * 
 	 * @return List of currently active blocks. Will not be null.
 	 */
-	public static List<Block> getCurrentlyActiveBlocks() {
+	public static List<BlockInterface> getCurrentlyActiveBlocks() {
 		return getCurrentlyActiveBlocks(null, null,blockactiveForTimeBeforeSecs.getValue(), blockactiveForTimeAfterSecs.getValue());
 	}
 	
@@ -114,11 +112,11 @@ public class BlocksInfo {
 	 *            up to the block end time.
      * @return List of currently active blocks. Will not be null.
 	 */
-	public static List<Block> getCurrentlyActiveBlocks(
+	public static List<BlockInterface> getCurrentlyActiveBlocks(
 			Collection<String> routeIds, Set<String> blockIdsToIgnore,
 			int allowableBeforeTimeSecs, int allowableAfterStartTimeSecs) {
 		// The list to be returned
-		List<Block> activeBlocks = new ArrayList<Block>(1000);
+		List<BlockInterface> activeBlocks = new ArrayList<>(1000);
 		
 		Core core = Core.getInstance();
 		if (core == null)
@@ -129,15 +127,14 @@ public class BlocksInfo {
 
 		// Determine which service IDs are currently active
 		Set<String> serviceIds = getAllServiceIds(now, secsInDayForAvlReport, allowableBeforeTimeSecs);
-
+		BackingStore backingStore = core.getBackingStore();
 		// For each service ID ...
 		for (String serviceId : serviceIds) {
-			DbConfig dbConfig = core.getDbConfig();
-			Collection<Block> blocks = dbConfig.getBlocks(serviceId);
+			Collection<BlockInterface> blocks = backingStore.getBlocks(serviceId);
 			
 			// If the block is about to be or currently active then
 			// add it to the list to be returned
-			for (Block block : blocks) {
+			for (BlockInterface block : blocks) {
 				// If this is a block to ignore then simply continue to the 
 				// next one
 				if (blockIdsToIgnore != null
@@ -184,15 +181,14 @@ public class BlocksInfo {
 
 		// Determine which service IDs are currently active
 		Set<String> serviceIds = getAllServiceIds(now, secsInDayForAvlReport, allowableBeforeTimeSecs);
-
+		BackingStore backingStore = core.getBackingStore();
 		// For each service ID ...
 		for (String serviceId : serviceIds) {
-			DbConfig dbConfig = core.getDbConfig();
-			Collection<Block> blocks = dbConfig.getBlocks(serviceId);
+			Collection<BlockInterface> blocks = backingStore.getBlocks(serviceId);
 
 			// If the block is about to be or currently active then
 			// add it to the list to be returned
-			for (Block block : blocks) {
+			for (BlockInterface block : blocks) {
 				// If this is a block to ignore then simply continue to the
 				// next one
 

@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
 import org.transitclock.core.BlocksInfo;
-import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.utils.EmailSender;
 
 import java.util.Date;
@@ -54,7 +54,7 @@ public class ActiveBlocksMonitor extends MonitorBase {
 	protected boolean triggered() {
         Date now = new Date();
         if(now.getTime() - lastUpdate.getTime() > reportingIntervalInMillis){
-            List<Block> blocks = BlocksInfo.getCurrentlyActiveBlocks();
+            List<BlockInterface> blocks = BlocksInfo.getCurrentlyActiveBlocks();
             double activeBlockCount = (blocks != null ? blocks.size() : 0);
             double totalBlockCount = Core.getInstance().getDbConfig().getBlockCount();
             // cloudwatch metrics for active/total moved to PredictabilityMonitor

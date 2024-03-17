@@ -25,7 +25,7 @@ import org.transitclock.config.DoubleConfigValue;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.core.BlocksInfo;
 import org.transitclock.core.dataCache.VehicleDataCache;
-import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.utils.EmailSender;
 import org.transitclock.utils.StringUtils;
 
@@ -89,11 +89,11 @@ public class PredictabilityMonitor extends MonitorBase {
 	 */
 	private double fractionBlocksPredictable(double threshold) {
 		// For creating message
-		List<Block> activeBlocksWithoutVehicle = new ArrayList<Block>();
+		List<BlockInterface> activeBlocksWithoutVehicle = new ArrayList<>();
 		// Determine number of currently active blocks.
 		// If there are no currently active blocks then don't need to be
 		// getting AVL data so return 0
-		List<Block> activeBlocks = BlocksInfo.getCurrentlyActiveBlocks();
+		List<BlockInterface> activeBlocks = BlocksInfo.getCurrentlyActiveBlocks();
 		if (activeBlocks.size() == 0) {
 			setMessage("No currently active blocks so predictability "
 					+ "considered to be OK.");
@@ -103,7 +103,7 @@ public class PredictabilityMonitor extends MonitorBase {
 
 		// Determine number of currently active vehicles
 		int predictableVehicleCount = 0;
-		for (Block block : activeBlocks) {
+		for (BlockInterface block : activeBlocks) {
 			// Determine vehicles associated with the block if there are any
 			Collection<String> vehicleIdsForBlock = VehicleDataCache
 					.getInstance().getVehiclesByBlockId(block.getId());
@@ -139,7 +139,7 @@ public class PredictabilityMonitor extends MonitorBase {
 		if (fraction < threshold) {
 			StringBuilder sb = new StringBuilder();
 			sb.append(" Currently active blocks without vehicles: ");
-			for (Block block : activeBlocksWithoutVehicle) {
+			for (BlockInterface block : activeBlocksWithoutVehicle) {
 	      sb.append("block=")
         .append(block.getId())
         .append(", serviceId=")

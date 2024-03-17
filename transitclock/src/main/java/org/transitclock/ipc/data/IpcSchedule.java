@@ -28,10 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.transitclock.db.structs.Block;
-import org.transitclock.db.structs.Route;
-import org.transitclock.db.structs.ScheduleTime;
-import org.transitclock.db.structs.Trip;
+import org.transitclock.db.structs.*;
 import org.transitclock.utils.MapKey;
 
 /**
@@ -289,13 +286,13 @@ public class IpcSchedule implements Serializable {
 	 * @return
 	 */
 	public static List<IpcSchedule> createSchedules(Route route,
-			List<Block> blocksForRoute) {
+			List<BlockInterface> blocksForRoute) {
 		Map<ServiceDirectionKey, IpcSchedule> schedulesMap = 
 				new HashMap<ServiceDirectionKey, IpcSchedule>();
 		
 		// Go through all the blocks and populate the schedulesMap and the
 		// tripsMap.
-		for (Block block : blocksForRoute) {
+		for (BlockInterface block : blocksForRoute) {
 			String serviceId = block.getServiceId();
 			String serviceName = serviceId;
 			

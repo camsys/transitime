@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.transitclock.applications.Core;
-import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.db.structs.Route;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.utils.Time;
@@ -48,7 +48,7 @@ public class IpcBlock implements Serializable {
 
 	/********************** Member Functions **************************/
 
-	public IpcBlock(Block dbBlock) {
+	public IpcBlock(BlockInterface dbBlock) {
 		configRev = dbBlock.getConfigRev();
 		id = dbBlock.getId();
 		serviceId = dbBlock.getServiceId();

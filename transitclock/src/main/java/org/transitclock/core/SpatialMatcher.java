@@ -28,13 +28,8 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.configData.AvlConfig;
 import org.transitclock.configData.CoreConfig;
-import org.transitclock.db.structs.AvlReport;
-import org.transitclock.db.structs.Block;
-import org.transitclock.db.structs.Location;
-import org.transitclock.db.structs.Route;
-import org.transitclock.db.structs.StopPath;
-import org.transitclock.db.structs.Trip;
-import org.transitclock.db.structs.VectorWithHeading;
+import org.transitclock.db.structs.*;
+import org.transitclock.service.BlockService;
 import org.transitclock.utils.Geo;
 import org.transitclock.utils.Time;
 
@@ -308,10 +303,10 @@ public class SpatialMatcher {
 	 * @return non-null possibly empty list of spatial matches
 	 */
 	public static List<SpatialMatch> getSpatialMatches(
-			VehicleState vehicleState,
-			AvlReport avlReport,
-			Block block, List<Trip> tripsToInvestigate,
-			MatchingType matchingType) {
+					VehicleState vehicleState,
+					AvlReport avlReport,
+					BlockInterface block, List<Trip> tripsToInvestigate,
+					MatchingType matchingType) {
 		List<SpatialMatch> spatialMatchesForAllTrips = 
 				new ArrayList<SpatialMatch>();
 
@@ -378,9 +373,10 @@ public class SpatialMatcher {
 		if (!block.isNoSchedule()) {
 			Iterator<SpatialMatch> iterator =
 					spatialMatchesForAllTrips.iterator();
+			SpatialMatch match = iterator.next();
 			while (iterator.hasNext()) {
-				SpatialMatch match = iterator.next();
-				if (block.nearEndOfBlock(match, CoreConfig
+
+				if (BlockService.nearEndOfBlock(block, match, CoreConfig
 						.getDistanceFromEndOfBlockForInitialMatching())) {
 					// The match is too close to end of block so don't use it
 					logger.debug(
@@ -424,7 +420,7 @@ public class SpatialMatcher {
 	 * @return non-null possibly empty list of spatial matches
 	 */
 	public static List<SpatialMatch> getSpatialMatchesForAutoAssigning(
-			VehicleState vehicleState, AvlReport avlReport, Block block,
+			VehicleState vehicleState, AvlReport avlReport, BlockInterface block,
 			List<Trip> tripsToInvestigate) {
 		// Get all the spatial matches
 		List<SpatialMatch> allSpatialMatches =

@@ -43,7 +43,7 @@ import org.transitclock.core.dataCache.VehicleDataCache;
 import org.transitclock.core.dataCache.VehicleStateManager;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.AvlReport;
-import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.db.dao.TripDAO;
 import org.transitclock.utils.IntervalTimer;
@@ -222,10 +222,10 @@ public class AutoBlockAssigner {
 	 * @return List of blocks that are available for assignment. Can be empty
 	 *         but not null
 	 */
-	private List<Block> unassignedActiveBlocks() {
-		List<Block> currentlyUnassignedBlocks = new ArrayList<Block>();
-		List<Block> activeBlocks = BlocksInfo.getCurrentlyActiveBlocks();
-		for (Block block : activeBlocks) {
+	private List<BlockInterface> unassignedActiveBlocks() {
+		List<BlockInterface> currentlyUnassignedBlocks = new ArrayList<>();
+		List<BlockInterface> activeBlocks = BlocksInfo.getCurrentlyActiveBlocks();
+		for (BlockInterface block : activeBlocks) {
 			if (isBlockUnassigned(block.getId())) {
 				// No vehicles assigned to this active block so should see
 				// if the vehicle currently trying to assign can match to it
@@ -243,7 +243,7 @@ public class AutoBlockAssigner {
 	 * @param block
 	 * @return The best adequate match, or null if there isn't an adequate match
 	 */
-	private TemporalMatch bestNoScheduleMatch(Block block) {
+	private TemporalMatch bestNoScheduleMatch(BlockInterface block) {
 		if (!block.isNoSchedule()) {
 			logger.error("Called bestNoScheduleMatch() on block that has a "
 					+ "schedule. {}", block);
@@ -340,7 +340,7 @@ public class AutoBlockAssigner {
 	 * @return All possible spatial matches
 	 */
 	private List<SpatialMatch> getSpatialMatches(AvlReport avlReport,
-			Block block) {
+			BlockInterface block) {
 		// Convenience variable
 		String vehicleId = avlReport.getVehicleId();
 		
@@ -484,7 +484,7 @@ public class AutoBlockAssigner {
 	 * @return list of spatial matches for the avlReport
 	 */
 	private List<SpatialMatch> getSpatialMatchesWithoutCache(
-			AvlReport avlReport, Block block) {
+			AvlReport avlReport, BlockInterface block) {
 		// Determine which trips are currently active so that don't bother 
 		// looking at all trips
 		List<Trip> activeTrips = block.getTripsCurrentlyActive(avlReport);
@@ -517,7 +517,7 @@ public class AutoBlockAssigner {
 	 * @return The best match if there is one. Null if there is not a valid
 	 *         match
 	 */
-	private TemporalMatch bestTemporalMatch(AvlReport avlReport, Block block,
+	private TemporalMatch bestTemporalMatch(AvlReport avlReport, BlockInterface block,
 			boolean useCache) {
 		// Determine all potential spatial matches for the block
 		List<SpatialMatch> spatialMatches = useCache ? 
@@ -570,7 +570,7 @@ public class AutoBlockAssigner {
 	 * @return Best TemporalMatch to the block assignment, or null if no
 	 *         adequate match
 	 */
-	private TemporalMatch bestScheduleMatch(Block block) {
+	private TemporalMatch bestScheduleMatch(BlockInterface block) {
 		IntervalTimer timer = new IntervalTimer();
 		AvlReport avlReport = getAvlReport();
 		String vehicleId = avlReport.getVehicleId();
@@ -675,7 +675,7 @@ public class AutoBlockAssigner {
 		// blocks are to be exclusive then only look at the ones currently
 		// not used. But if not to be exclusive, such as for no schedule based
 		// routes, then look at all active blocks.
-		List<Block> blocksToExamine = CoreConfig.exclusiveBlockAssignments() ? 
+		List<BlockInterface> blocksToExamine = CoreConfig.exclusiveBlockAssignments() ?
 				unassignedActiveBlocks() : BlocksInfo.getCurrentlyActiveBlocks();
 		
 		if (blocksToExamine.isEmpty()) {
@@ -687,7 +687,7 @@ public class AutoBlockAssigner {
 		}
 		
 		// For each active block that is currently unassigned...
-		for (Block block : blocksToExamine) {
+		for (BlockInterface block : blocksToExamine) {
 			IntervalTimer blockTimer = new IntervalTimer();
 			
 			if (logger.isDebugEnabled()) {

@@ -56,6 +56,7 @@ import org.transitclock.guice.modules.ReportingModule;
 import org.transitclock.ipc.servers.*;
 import org.transitclock.modules.Module;
 import org.transitclock.monitoring.PidFile;
+import org.transitclock.service.BackingStore;
 import org.transitclock.utils.DateRange;
 import org.transitclock.utils.DateUtils;
 import org.transitclock.utils.SettableSystemTime;
@@ -90,6 +91,8 @@ public class Core {
 
 	// Contains the configuration data read from database
 	private final DbConfig configData;
+
+	private final BackingStore backingStore;
 
 	// For logging data such as AVL reports and arrival times to database
 	private final DataDbLogger dataDbLogger;
@@ -187,6 +190,7 @@ public class Core {
 		// Read in all GTFS based config data from the database
 		configData = new DbConfig(agencyId);
 		configData.read(configRev);
+		backingStore = new BackingStore(configData);
 
 		// Create the DataDBLogger so that generated data can be stored
 		// to database via a robust queue. But don't actually log data
@@ -300,6 +304,10 @@ public class Core {
 	 */
 	public DbConfig getDbConfig() {
 		return configData;
+	}
+
+	public BackingStore getBackingStore() {
+		return backingStore;
 	}
 
 	/**

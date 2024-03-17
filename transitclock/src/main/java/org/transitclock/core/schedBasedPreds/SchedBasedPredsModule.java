@@ -34,6 +34,7 @@ import org.transitclock.core.VehicleState;
 import org.transitclock.core.dataCache.VehicleDataCache;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.db.structs.Location;
 import org.transitclock.db.structs.AvlReport.AssignmentType;
 import org.transitclock.ipc.data.IpcVehicle;
@@ -151,14 +152,14 @@ public class SchedBasedPredsModule extends Module {
 		}
 		
 		// Determine which blocks are coming up or currently active
-		List<Block> activeBlocks =
+		List<BlockInterface> activeBlocks =
 				BlocksInfo.getCurrentlyActiveBlocks(null, // Get for all routes
 						blockIdsAlreadyAssigned, 
 						beforeStartTimeMinutes.getValue() * Time.SEC_PER_MIN,
 						afterStartTimeMinutes.getValue() * Time.SEC_PER_MIN);
 		
 		// For each block about to start see if no associated vehicle
-		for (Block block : activeBlocks) {
+		for (BlockInterface block : activeBlocks) {
 			// Is there a vehicle associated with the block?
 			Collection<String> vehiclesForBlock = VehicleDataCache.getInstance()
 					.getVehiclesByBlockId(block.getId());

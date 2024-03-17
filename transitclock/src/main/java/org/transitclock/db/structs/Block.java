@@ -67,7 +67,7 @@ import org.transitclock.utils.Time;
  * @author SkiBu Smith
  */
 @Entity(name="Blocks") @DynamicUpdate @Table(name="Blocks")
-public final class Block implements Serializable {
+public class Block implements Serializable, BlockInterface {
 	
 	@Column 
 	@Id
@@ -286,7 +286,7 @@ public final class Block implements Serializable {
 	 * @param secondsIntoDay
 	 * @return index of trip, or -1 if no match
 	 */
-	private int activeTripIndex(int secondsIntoDay) {
+	public int activeTripIndex(int secondsIntoDay) {
 		List<Trip> trips = getTrips();
 		int previousTripEndTimeSecs = trips.get(0).getStartTime();
 		for (int i=0; i<trips.size(); ++i) {
@@ -688,25 +688,6 @@ public final class Block implements Serializable {
 		return trips;
 	}
 
-	public List<Trip> getTripsFromDb(boolean readOnly) {
-		Session session = HibernateUtils.getSession(readOnly);
-		try {
-			session.update(this);
-			trips.get(0);
-		} catch (HibernateException e) {
-			// Log error to the Core logger
-			Core.getLogger().error("Unable to retrieve trips", e);
-			return null;
-		} finally {
-			// Clean things up. Not sure if this absolutely needed nor if
-			// it might actually be detrimental and slow things down.
-			session.close();
-		}
-
-		return Collections.unmodifiableList(trips);
-
-	}
-	
 
 	/**
 	 * Returns true if block assignment has no schedule (is frequency based)
@@ -743,16 +724,7 @@ public final class Block implements Serializable {
 		return getTrips().get(tripIndex);
 	}
 
-	public Trip getTripFromDb(int tripIndex, boolean readOnly) {
-		List<Trip> trips = getTripsFromDb(readOnly);
-		// If index out of range return null
-		if (tripIndex < 0 || tripIndex >= trips.size())  {
-			return null;
-		}
-		// Return the specified trip
-		return trips.get(tripIndex);
-	}
-	
+
 	/**
 	 * Returns the trip for the block as specified by the tripId parameter
 	 * @param tripId Which trip is to be returned
@@ -1058,6 +1030,13 @@ public final class Block implements Serializable {
 	}
 
 	private transient boolean initialized = false;
+
+	public boolean isInitialized() {
+		return initialized;
+	}
+	public void setInitialized() {
+		initialized = true;
+	}
 	/**
 	 * force any lazy loaded objects to load now before moving to another thread
 	 */

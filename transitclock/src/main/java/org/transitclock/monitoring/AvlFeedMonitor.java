@@ -23,7 +23,7 @@ import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.config.StringConfigValue;
 import org.transitclock.core.AvlProcessor;
 import org.transitclock.core.BlocksInfo;
-import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.utils.EmailSender;
 import org.transitclock.utils.Time;
 
@@ -127,7 +127,7 @@ public class AvlFeedMonitor extends MonitorBase {
 	 */
 	@Override
 	protected boolean acceptableEvenIfTriggered() {
-		List<Block> activeBlocks = BlocksInfo.getCurrentlyActiveBlocks();
+		List<BlockInterface> activeBlocks = BlocksInfo.getCurrentlyActiveBlocks();
 		if (activeBlocks.size() == 0) {
 			setAcceptableEvenIfTriggeredMessage("No currently active blocks "
 					+ "so AVL feed considered to be OK.");

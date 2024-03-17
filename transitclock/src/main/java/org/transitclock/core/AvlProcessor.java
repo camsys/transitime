@@ -693,12 +693,12 @@ public class AvlProcessor {
 		// Determine which blocks are currently active for the route.
 		// Multiple services can be active on a given day. Therefore need
 		// to look at all the active ones to find out what blocks are active...
-		List<Block> allBlocksForRoute = new ArrayList<Block>();
+		List<BlockInterface> allBlocksForRoute = new ArrayList<>();
 		ServiceUtilsImpl serviceUtils = Core.getInstance().getServiceUtils();
 		Collection<String> serviceIds =
 				serviceUtils.getServiceIds(avlReport.getDate());
 		for (String serviceId : serviceIds) {
-			List<Block> blocksForService = Core.getInstance().getDbConfig()
+			List<BlockInterface> blocksForService = Core.getInstance().getBackingStore()
 					.getBlocksForRoute(serviceId, routeId);
 			if (blocksForService != null) {
 				allBlocksForRoute.addAll(blocksForService);
@@ -708,7 +708,7 @@ public class AvlProcessor {
 		List<SpatialMatch> allPotentialSpatialMatchesForRoute = new ArrayList<SpatialMatch>();
 
 		// Go through each block and determine best spatial matches
-		for (Block block : allBlocksForRoute) {
+		for (BlockInterface block : allBlocksForRoute) {
 			// If the block isn't active at this time then ignore it. This way
 			// don't look at each trip to see if it is active which is important
 			// because looking at each trip means all the trip data including

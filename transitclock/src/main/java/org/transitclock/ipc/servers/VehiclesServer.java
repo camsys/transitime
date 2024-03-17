@@ -34,10 +34,7 @@ import org.transitclock.core.BlocksInfo;
 import org.transitclock.core.dataCache.VehicleDataCache;
 import org.transitclock.core.dataCache.canceledTrip.CanceledTripCache;
 import org.transitclock.db.hibernate.HibernateUtils;
-import org.transitclock.db.structs.Block;
-import org.transitclock.db.structs.Route;
-import org.transitclock.db.structs.Trip;
-import org.transitclock.db.structs.VehicleConfig;
+import org.transitclock.db.structs.*;
 import org.transitclock.ipc.data.IpcActiveBlock;
 import org.transitclock.ipc.data.IpcBlock;
 import org.transitclock.ipc.data.IpcVehicle;
@@ -282,11 +279,11 @@ public class VehiclesServer extends AbstractServer
 		List<IpcActiveBlock> results = 
 				new ArrayList<IpcActiveBlock>();
 		// Determine all the active blocks
-		List<Block> blocks =
+		List<BlockInterface> blocks =
 				BlocksInfo.getCurrentlyActiveBlocks(routeIds, null,
 						allowableBeforeTimeSecs, -1);
 		// For each active block determine associated vehicle
-		for (Block block : blocks) {
+		for (BlockInterface block : blocks) {
 			IpcBlock ipcBlock = new IpcBlock(block);
 			
 			// If a block doesn't have a vehicle associated with it need
@@ -329,14 +326,14 @@ public class VehiclesServer extends AbstractServer
       Collection<String> routeIds, int allowableBeforeTimeSecs)
       throws RemoteException {
     // Determine all the active blocks
-    List<Block> blocks =
+    List<BlockInterface> blocks =
         BlocksInfo.getCurrentlyActiveBlocks(routeIds, null,
             allowableBeforeTimeSecs, -1);
 
-	List<Block> filteredBlocks = new ArrayList<>();
+	List<BlockInterface> filteredBlocks = new ArrayList<>();
 
   	// For each active block determine associated active trip
-  	for (Block block : blocks) {
+  	for (BlockInterface block : blocks) {
 		try{
 			  int activeTripIndex = block.activeTripIndex(new Date(), allowableBeforeTimeSecs);
 			  Trip trip = block.getTrip(activeTripIndex);
@@ -364,11 +361,11 @@ public class VehiclesServer extends AbstractServer
         List<IpcActiveBlock> results =
                 new ArrayList<IpcActiveBlock>();
         // Determine all the active blocks
-        List<Block> blocks =
+        List<BlockInterface> blocks =
                 BlocksInfo.getCurrentlyActiveBlocks(routeIds, null,
                         allowableBeforeTimeSecs, -1);
         // For each active block determine associated vehicle
-        for (Block block : blocks) {
+        for (BlockInterface block : blocks) {
             try{
                 IpcBlock ipcBlock = new IpcBlock(block);
                 int activeTripIndex = block.activeTripIndex(new Date(),
@@ -437,11 +434,11 @@ public class VehiclesServer extends AbstractServer
       List<IpcActiveBlock> results =
               new ArrayList<IpcActiveBlock>();
       // Determine all the active blocks
-      List<Block> blocks =
+      List<BlockInterface> blocks =
               BlocksInfo.getCurrentlyActiveBlocks(routeIds, null,
                       allowableBeforeTimeSecs, -1);
       // For each active block determine associated vehicle
-      for (Block block : blocks) {
+      for (BlockInterface block : blocks) {
           IpcBlock ipcBlock = new IpcBlock(block);
           // If a block doesn't have a vehicle associated with it need
           // to determine which route a block is currently associated with
@@ -501,8 +498,8 @@ public class VehiclesServer extends AbstractServer
   @Override
 	public Collection<IpcVehicle> getVehiclesForBlocks() throws RemoteException {
 	  List<String> vehicleIds = new ArrayList<String>();
-	  List<Block> blocks = BlocksInfo.getCurrentlyActiveBlocks();
-	  for (Block block : blocks) {
+	  List<BlockInterface> blocks = BlocksInfo.getCurrentlyActiveBlocks();
+	  for (BlockInterface block : blocks) {
 	    Collection<String> vehicleIdsForBlock = VehicleDataCache
           .getInstance().getVehiclesByBlockId(block.getId());
 	    vehicleIds.addAll(vehicleIdsForBlock);
