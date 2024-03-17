@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.configData.DbSetupConfig;
 import org.transitclock.db.dao.*;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.db.structs.*;
 import org.transitclock.utils.IntervalTimer;
 
@@ -146,7 +147,7 @@ public class DbWriter {
 		
 		logger.info("Saving agencies to database...");
 		AgencyDAO.deleteFromRev(session, configRev);
-		for (Agency agency : gtfsData.getAgencies()) {
+		for (AgencyInterface agency : gtfsData.getAgencies()) {
 			writeObject(session, agency);
 		}
 

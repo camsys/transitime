@@ -28,6 +28,7 @@ import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.StopPathDAO;
 import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.*;
 import org.transitclock.gtfs.gtfsStructs.*;
@@ -146,7 +147,7 @@ public class GtfsData {
 	// since each trip can be listed in frequencies.txt file multiple times in
 	// order to define a different headway for different time ranges.
 	private Map<String, List<Frequency>> frequencyMap;
-	private List<Agency> agencies;
+	private List<AgencyInterface> agencies;
 	private List<FareAttribute> fareAttributes;
 	private List<FareRule> fareRules;
 	private List<Transfer> transfers;
@@ -1871,7 +1872,7 @@ public class GtfsData {
 		logger.info("Processing agency.txt data...");
 		
 		// Create the array where the data is going to go
-		agencies = new ArrayList<Agency>();
+		agencies = new ArrayList<>();
 
 		// Read in the agency.txt GTFS data from file
 		GtfsAgencyReader agencyReader = new GtfsAgencyReader(gtfsDirectoryName);
@@ -2503,7 +2504,7 @@ public class GtfsData {
 		return blocks;
 	}
 	
-	public List<Agency> getAgencies() {
+	public List<AgencyInterface> getAgencies() {
 		return agencies;
 	}
 	

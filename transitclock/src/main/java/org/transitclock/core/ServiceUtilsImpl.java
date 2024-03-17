@@ -28,12 +28,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
 import org.transitclock.config.IntegerConfigValue;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.db.structs.*;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.utils.Time;
@@ -76,7 +76,7 @@ public class ServiceUtilsImpl implements RunTimeServiceUtils{
 	 */
 	public ServiceUtilsImpl(DbConfig dbConfig) {
 
-		Agency agency = dbConfig.getFirstAgency();
+		AgencyInterface agency = dbConfig.getFirstAgency();
 		this.calendar =
 				agency != null ?
 						new GregorianCalendar(agency.getTimeZone())

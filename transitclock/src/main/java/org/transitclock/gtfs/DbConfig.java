@@ -29,6 +29,7 @@ import org.transitclock.core.ServiceUtilsImpl;
 
 import org.transitclock.db.dao.*;
 import org.transitclock.db.hibernate.HibernateUtils;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.*;
 import org.transitclock.utils.IntervalTimer;
@@ -128,7 +129,7 @@ public class DbConfig {
 	private Set<String> tripNameSet = null;
 
 
-	private List<Agency> agencies;
+	private List<AgencyInterface> agencies;
 	private List<Calendar> calendars;
 	private List<CalendarDate> calendarDates;
 	// So can efficiently look up calendar dates
@@ -1242,11 +1243,11 @@ public class DbConfig {
 	 * 
 	 * @return The first agency, or null if no agencies configured
 	 */
-	public Agency getFirstAgency() {		
+	public AgencyInterface getFirstAgency() {
 		return agencies.size() > 0 ? agencies.get(0) : null;
 	}
 
-	public List<Agency> getAgencies() {
+	public List<AgencyInterface> getAgencies() {
 		return Collections.unmodifiableList(agencies);
 	}
 

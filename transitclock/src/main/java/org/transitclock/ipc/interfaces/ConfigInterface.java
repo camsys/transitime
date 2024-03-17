@@ -17,7 +17,7 @@
 
 package org.transitclock.ipc.interfaces;
 
-import org.transitclock.db.structs.Agency;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.ipc.data.*;
 
 import java.rmi.Remote;
@@ -165,7 +165,7 @@ public interface ConfigInterface extends Remote {
 	 * @return
 	 * @throws RemoteException
 	 */
-	public List<Agency> getAgencies() throws RemoteException;
+	public List<AgencyInterface> getAgencies() throws RemoteException;
 
 	/* (non-Javadoc)
 	 * @see org.transitclock.ipc.interfaces.ConfigInterface#getSchedulesForTrip(java.lang.String)

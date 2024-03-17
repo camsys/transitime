@@ -27,14 +27,11 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import org.hibernate.HibernateException;
-import org.hibernate.Query;
-import org.hibernate.Session;
 import org.hibernate.annotations.DynamicUpdate;
 import org.transitclock.db.hibernate.HibernateUtils;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.gtfs.gtfsStructs.GtfsAgency;
 import org.transitclock.utils.Time;
-import org.transitclock.db.dao.AgencyDAO;
 
 /**
  * Contains data from the agency.txt GTFS file. This class is
@@ -44,7 +41,7 @@ import org.transitclock.db.dao.AgencyDAO;
  *
  */
 @Entity @DynamicUpdate @Table(name="Agencies")
-public class Agency implements Serializable {
+public class Agency implements Serializable, AgencyInterface {
 
 	@Column 
 	@Id
@@ -148,6 +145,7 @@ public class Agency implements Serializable {
 	 * 
 	 * @return Time object
 	 */
+	@Override
 	public Time getTime() {
 		if (time == null)
 			time = new Time(agencyTimezone);
@@ -261,6 +259,7 @@ public class Agency implements Serializable {
 	/**
 	 * @return the configRev
 	 */
+	@Override
 	public int getConfigRev() {
 		return configRev;
 	}
@@ -271,6 +270,7 @@ public class Agency implements Serializable {
 	 * 
 	 * @return the agencyId
 	 */
+	@Override
 	public String getId() {
 		return agencyId;
 	}
@@ -278,6 +278,7 @@ public class Agency implements Serializable {
 	/**
 	 * @return the agencyName
 	 */
+	@Override
 	public String getName() {
 		return agencyName;
 	}
@@ -285,6 +286,7 @@ public class Agency implements Serializable {
 	/**
 	 * @return the agencyUrl
 	 */
+	@Override
 	public String getUrl() {
 		return agencyUrl;
 	}
@@ -294,6 +296,7 @@ public class Agency implements Serializable {
 	 * 
 	 * @return the agencyTimezone as a String
 	 */
+	@Override
 	public String getTimeZoneStr() {
 		return agencyTimezone;
 	}
@@ -301,6 +304,7 @@ public class Agency implements Serializable {
 	/**
 	 * @return the agencyLang
 	 */
+	@Override
 	public String getLang() {
 		return agencyLang;
 	}
@@ -308,6 +312,7 @@ public class Agency implements Serializable {
 	/**
 	 * @return the agencyPhone
 	 */
+	@Override
 	public String getPhone() {
 		return agencyPhone;
 	}
@@ -315,6 +320,7 @@ public class Agency implements Serializable {
 	/**
 	 * @return the agencyFareUrl
 	 */
+	@Override
 	public String getFareUrl() {
 		return agencyFareUrl;
 	}
@@ -322,6 +328,7 @@ public class Agency implements Serializable {
 	/**
 	 * @return The extent of all the stops for the agency
 	 */
+	@Override
 	public Extent getExtent() {
 		return extent;
 	}
@@ -332,6 +339,7 @@ public class Agency implements Serializable {
 	 *
 	 * @return The TimeZone object for this agency
 	 */
+	@Override
 	public TimeZone getTimeZone() {
 		if (timezone == null)
 			timezone = TimeZone.getTimeZone(agencyTimezone);

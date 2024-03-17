@@ -28,7 +28,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.transitclock.api.rootResources.TransitimeApi.UiMode;
-import org.transitclock.db.structs.Agency;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.db.webstructs.WebAgency;
 import org.transitclock.ipc.data.IpcVehicle;
 import org.transitclock.utils.Time;
@@ -78,7 +78,7 @@ public class ApiVehiclesDetails {
 							  SpeedFormat speedFormat) throws IllegalAccessException, InvocationTargetException {
 		// Get Time object based on timezone for agency
 		WebAgency webAgency = WebAgency.getCachedWebAgency(agencyId);
-		Agency agency = webAgency.getAgency();
+		AgencyInterface agency = webAgency.getAgency();
 		Time timeForAgency = agency != null ?
 				agency.getTime() : new Time((String) null);
 

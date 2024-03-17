@@ -22,7 +22,7 @@ import java.util.TimeZone;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
-import org.transitclock.db.structs.Agency;
+import org.transitclock.db.model.AgencyInterface;
 
 /**
  * Contains API info for an agency.
@@ -75,7 +75,7 @@ public class ApiAgency {
      */
     protected ApiAgency() {}
 
-    public ApiAgency(String agencyId, Agency agency) {
+    public ApiAgency(String agencyId, AgencyInterface agency) {
 	this.agencyId = agencyId;
 	this.id = agency.getId();
 	this.name = agency.getName();

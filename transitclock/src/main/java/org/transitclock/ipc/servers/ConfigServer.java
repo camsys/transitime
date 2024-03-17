@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
 import org.transitclock.core.dataCache.VehicleDataCache;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.db.structs.*;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.ipc.data.*;
@@ -368,7 +369,7 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	 * @see org.transitclock.ipc.interfaces.ConfigInterface#getAgencies()
 	 */
 	@Override
-	public List<Agency> getAgencies() throws RemoteException {
+	public List<AgencyInterface> getAgencies() throws RemoteException {
 		return Core.getInstance().getDbConfig().getAgencies();
 	}
 

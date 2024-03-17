@@ -41,7 +41,7 @@ import org.transitclock.api.predsByLoc.PredsByLoc;
 import org.transitclock.api.utils.StandardParameters;
 import org.transitclock.api.utils.WebUtils;
 import org.transitclock.core.TemporalDifference;
-import org.transitclock.db.structs.Agency;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.db.structs.Location;
 import org.transitclock.ipc.data.IpcActiveBlock;
 import org.transitclock.ipc.data.IpcBlock;
@@ -57,7 +57,6 @@ import org.transitclock.ipc.data.IpcServerStatus;
 import org.transitclock.ipc.data.IpcTrip;
 import org.transitclock.ipc.data.IpcTripPattern;
 import org.transitclock.ipc.data.IpcVehicle;
-import org.transitclock.ipc.data.IpcVehicleComplete;
 import org.transitclock.ipc.data.IpcVehicleConfig;
 import org.transitclock.ipc.interfaces.ConfigInterface;
 import org.transitclock.ipc.interfaces.PredictionsInterface;
@@ -70,8 +69,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.servers.Server;
-import io.swagger.v3.oas.annotations.servers.ServerVariable;
-import io.swagger.v3.oas.annotations.servers.Servers;
 
 //import io.swagger.annotations.Api;
 //import io.swagger.annotations.ApiOperation;
@@ -682,7 +679,7 @@ public class TransitimeApi {
 			ConfigInterface inter = stdParameters.getConfigInterface();
 			
 			// Get agency info so can also return agency name
-			List<Agency> agencies = inter.getAgencies();
+			List<AgencyInterface> agencies = inter.getAgencies();
 			
 			// Get route data from server
 			ApiRoutes routesData;
@@ -772,7 +769,7 @@ public class TransitimeApi {
 			ConfigInterface inter = stdParameters.getConfigInterface();
 
 			// Get agency info so can also return agency name
-			List<Agency> agencies = inter.getAgencies();
+			List<AgencyInterface> agencies = inter.getAgencies();
 
 			// Get headsigns data from server
 			ApiHeadsigns headsignsData;
@@ -845,7 +842,7 @@ public class TransitimeApi {
 			ConfigInterface inter = stdParameters.getConfigInterface();
 
 			// Get agency info so can also return agency name
-			List<Agency> agencies = inter.getAgencies();
+			List<AgencyInterface> agencies = inter.getAgencies();
 			
 			List<IpcRoute> ipcRoutes;
 
@@ -1777,11 +1774,11 @@ public class TransitimeApi {
 		try {
 			// Get block data from server
 			ConfigInterface inter = stdParameters.getConfigInterface();
-			List<Agency> agencies = inter.getAgencies();
+			List<AgencyInterface> agencies = inter.getAgencies();
 
 			// Create and return ApiAgencies response
 			List<ApiAgency> apiAgencyList = new ArrayList<ApiAgency>();
-			for (Agency agency : agencies) {
+			for (AgencyInterface agency : agencies) {
 				apiAgencyList.add(new ApiAgency(stdParameters.getAgencyId(), agency));
 			}
 			ApiAgencies apiAgencies = new ApiAgencies(apiAgencyList);

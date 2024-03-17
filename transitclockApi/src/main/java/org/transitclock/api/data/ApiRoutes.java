@@ -24,7 +24,7 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.transitclock.db.structs.Agency;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.ipc.data.IpcRoute;
 import org.transitclock.ipc.data.IpcRouteSummary;
 
@@ -61,7 +61,7 @@ public class ApiRoutes {
 	 * @param routes
 	 * @param agency so can get agency name
 	 */
-	public ApiRoutes(Collection<IpcRouteSummary> routes, Agency agency) {
+	public ApiRoutes(Collection<IpcRouteSummary> routes, AgencyInterface agency) {
 		routesData = new ArrayList<ApiRoute>();
 		for (IpcRouteSummary route : routes) {
 			ApiRoute routeSummary = new ApiRoute(route);
@@ -79,7 +79,7 @@ public class ApiRoutes {
 	 * @param agency
 	 *            so can get agency name
 	 */
-	public ApiRoutes(List<IpcRoute> routes, Agency agency) {
+	public ApiRoutes(List<IpcRoute> routes, AgencyInterface agency) {
 		routesData = new ArrayList<ApiRoute>();
 		for (IpcRouteSummary route : routes) {
 			ApiRoute routeSummary = new ApiRoute(route);

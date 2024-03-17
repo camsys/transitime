@@ -22,7 +22,7 @@ import java.util.*;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.transitclock.db.structs.Agency;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.ipc.data.IpcTripPattern;
 
 /**
@@ -58,7 +58,7 @@ public class ApiHeadsigns{
      * @param tripPatterns
      * @param agency so can get agency name
      */
-    public ApiHeadsigns(Collection<IpcTripPattern> tripPatterns, Agency agency, boolean formatLabel) {
+    public ApiHeadsigns(Collection<IpcTripPattern> tripPatterns, AgencyInterface agency, boolean formatLabel) {
         headsignsData = new TreeSet<>();
         for (IpcTripPattern tripPattern : tripPatterns) {
             ApiHeadsign headsign = new ApiHeadsign(tripPattern, formatLabel);

@@ -33,7 +33,7 @@ import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.dao.MatchDAO;
-import org.transitclock.db.structs.Agency;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Match;
 import org.transitclock.utils.IntervalTimer;
@@ -98,7 +98,7 @@ public class DataFetcher {
 		// Create the member calendar using timezone specified in db for the 
 		// agency. Use the currently active config rev.
 		int configRev = ActiveRevisionDAO.get(dbName).getConfigRev();
-		List<Agency> agencies = AgencyDAO.getAgencies(dbName, configRev);
+		List<AgencyInterface> agencies = AgencyDAO.getAgencies(dbName, configRev);
 		TimeZone timezone = agencies.get(0).getTimeZone();
 		calendar = new GregorianCalendar(timezone);		
 	}

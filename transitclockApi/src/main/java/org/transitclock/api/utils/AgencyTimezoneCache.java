@@ -24,7 +24,7 @@ import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.transitclock.db.structs.Agency;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.ipc.clients.ConfigInterfaceFactory;
 import org.transitclock.ipc.interfaces.ConfigInterface;
 
@@ -55,7 +55,7 @@ public class AgencyTimezoneCache {
 		// If timezone not already in cache then get it and cache it
 		if (timezone == null) {
 			ConfigInterface inter = ConfigInterfaceFactory.get(agencyId);
-			List<Agency> agencies;
+			List<AgencyInterface> agencies;
 			try {
 				agencies = inter.getAgencies();
 			} catch (RemoteException e) {

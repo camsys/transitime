@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.config.ConfigFileReader;
 import org.transitclock.configData.DbSetupConfig;
 import org.transitclock.db.hibernate.HibernateUtils;
-import org.transitclock.db.structs.Agency;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.ipc.clients.ConfigInterfaceFactory;
 import org.transitclock.ipc.interfaces.ConfigInterface;
 import org.transitclock.utils.Encryption;
@@ -89,7 +89,7 @@ public class WebAgency {
 
 	// For getting GTFS data about agency
 	@Transient
-	private Agency agency;
+	private AgencyInterface agency;
 
 	@Transient
 	private String agencyName;
@@ -174,7 +174,7 @@ public class WebAgency {
 	 * 
 	 * @return The Agency object, or null if can't access the agency via RMI
 	 */
-	public Agency getAgency() {
+	public AgencyInterface getAgency() {
 		// If agency hasn't been accessed yet do so now...
 		if (agency == null) {
 			ConfigInterface inter = ConfigInterfaceFactory.get(agencyId);
@@ -188,7 +188,7 @@ public class WebAgency {
 				
 				try {
 					// Get the agencies via RMI
-					List<Agency> agencies = inter.getAgencies();
+					List<AgencyInterface> agencies = inter.getAgencies();
 
 					// Use the first agency if there are multiple ones
 					agency = agencies.isEmpty() ? null : agencies.get(0);
@@ -217,7 +217,7 @@ public class WebAgency {
 			return agencyName;
 		
 		// Get agency object via RMI
-		Agency agency = getAgency();
+		AgencyInterface agency = getAgency();
 		
 		// Get the agency name. If couldn't connect via RMI then use the
 		// agency ID. Cache the results so don't try to keep accessing via

@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.transitclock.db.structs.Agency;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.db.structs.Extent;
 import org.transitclock.db.structs.Location;
 import org.transitclock.db.webstructs.WebAgency;
@@ -68,7 +68,7 @@ public class PredsByLoc {
 		
 		// For each agency get the extent
 		for (WebAgency webAgency : webAgencies) {
-			Agency agency = webAgency.getAgency();
+			AgencyInterface agency = webAgency.getAgency();
 			if (agency != null) {
 				agencyExtentsCache.put(webAgency.getAgencyId(),
 						agency.getExtent());

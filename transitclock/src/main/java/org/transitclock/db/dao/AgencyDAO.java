@@ -4,8 +4,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.transitclock.db.hibernate.HibernateUtils;
-import org.transitclock.db.structs.ActiveRevisions;
-import org.transitclock.db.structs.Agency;
+import org.transitclock.db.model.AgencyInterface;
 
 import java.util.List;
 import java.util.TimeZone;
@@ -37,7 +36,7 @@ public class AgencyDAO {
      * @param configRev
      * @return
      */
-    public static List<Agency> getAgencies(String agencyId, int configRev) {
+    public static List<AgencyInterface> getAgencies(String agencyId, int configRev) {
         // Get the database session. This is supposed to be pretty light weight
         Session session = HibernateUtils.getSession(agencyId);
         try {
@@ -57,7 +56,7 @@ public class AgencyDAO {
      * @throws HibernateException
      */
     @SuppressWarnings("unchecked")
-    public static List<Agency> getAgencies(Session session, int configRev)
+    public static List<AgencyInterface> getAgencies(Session session, int configRev)
             throws HibernateException {
         String hql = "FROM Agency " +
                 "    WHERE configRev = :configRev";
@@ -75,7 +74,7 @@ public class AgencyDAO {
     public static TimeZone getTimeZoneFromDb(String agencyId) {
         int configRev = ActiveRevisionDAO.get(agencyId).getConfigRev();
 
-        List<Agency> agencies = getAgencies(agencyId, configRev);
+        List<AgencyInterface> agencies = getAgencies(agencyId, configRev);
         if (agencies.size() != 0)
             return agencies.get(0).getTimeZone();
         else

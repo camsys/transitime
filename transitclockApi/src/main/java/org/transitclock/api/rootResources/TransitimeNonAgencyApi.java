@@ -39,7 +39,7 @@ import org.transitclock.api.data.ApiPredictions;
 import org.transitclock.api.predsByLoc.PredsByLoc;
 import org.transitclock.api.utils.StandardParameters;
 import org.transitclock.api.utils.WebUtils;
-import org.transitclock.db.structs.Agency;
+import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.db.structs.Location;
 import org.transitclock.db.webstructs.WebAgency;
 import org.transitclock.ipc.clients.ConfigInterfaceFactory;
@@ -49,8 +49,6 @@ import org.transitclock.ipc.interfaces.ConfigInterface;
 import org.transitclock.ipc.interfaces.PredictionsInterface;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.servers.Server;
-import io.swagger.v3.oas.annotations.servers.Servers;
 
 /**
  * Contains the API commands for the Transitime API for system wide commands,
@@ -108,8 +106,8 @@ public class TransitimeNonAgencyApi {
 					continue;
 				}
 
-				List<Agency> agencies = inter.getAgencies();
-				for (Agency agency : agencies) {
+				List<AgencyInterface> agencies = inter.getAgencies();
+				for (AgencyInterface agency : agencies) {
 					apiAgencyList.add(new ApiAgency(agencyId, agency));
 				}
 			}
