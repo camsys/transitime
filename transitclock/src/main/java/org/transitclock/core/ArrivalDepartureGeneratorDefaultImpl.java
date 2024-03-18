@@ -285,7 +285,7 @@ public class ArrivalDepartureGeneratorDefaultImpl
 	 * @param tripIndex
 	 * @param stopPathIndex
 	 */
-	protected Departure createDepartureTime(VehicleState vehicleState, long departureTime, Block block,
+	protected Departure createDepartureTime(VehicleState vehicleState, long departureTime, BlockInterface block,
 											int tripIndex, int stopPathIndex, Long dwellTime) {
 
 		Date freqStartDate=null;
@@ -351,7 +351,7 @@ public class ArrivalDepartureGeneratorDefaultImpl
 	 * @param stopPathIndex
 	 */
 	protected Arrival createArrivalTime(VehicleState vehicleState,
-			long arrivalTime, Block block, int tripIndex, int stopPathIndex) {
+			long arrivalTime, BlockInterface block, int tripIndex, int stopPathIndex) {
 		// Store the arrival in the database via the db logger
 
 		Date freqStartDate=null;
@@ -668,7 +668,7 @@ public class ArrivalDepartureGeneratorDefaultImpl
 				newMatch.getStopPathIndex() < getMaxStopsWhenNoPreviousMatch()) {
 			// Couple more convenience variables
 			Date avlReportTime = vehicleState.getAvlReport().getDate();
-			Block block = newMatch.getBlock();
+			BlockInterface block = newMatch.getBlock();
 			final int tripIndex = 0;
 			int stopPathIndex = 0;
 
@@ -745,7 +745,7 @@ public class ArrivalDepartureGeneratorDefaultImpl
 	 * @param vehicleState
 	 * @return
 	 */
-	private Departure createDeparturePostArrival(VehicleState vehicleState, long departureTime, Block block,
+	private Departure createDeparturePostArrival(VehicleState vehicleState, long departureTime, BlockInterface block,
 											   int tripIndex, int stopPathIndex, long departureTimeBasedOnNewMatch) {
 		Integer arrivalStopPathIndex;
 		String vehicleId = vehicleState.getVehicleId();
@@ -1286,7 +1286,7 @@ public class ArrivalDepartureGeneratorDefaultImpl
 		logger.debug("For vehicleId={} determining if it traversed stops " +
 				"in between the new and the old AVL report...",
 				vehicleId);
-		Block block = indices.getBlock();
+		BlockInterface block = indices.getBlock();
 		while (indices.isEarlierStopPathThan(endIndices)) {
 			// Determine arrival time for current stop
 			ArrivalDeparture arrival = createArrivalTime(vehicleState,

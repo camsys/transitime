@@ -98,7 +98,7 @@ public class RunTimeGenerator {
 	}
 
 	boolean hasCrossedToNextTrip(VehicleState vehicleState, TemporalMatch currentMatch) {
-		Block currentMatchBlock = currentMatch.getBlock();
+		BlockInterface currentMatchBlock = currentMatch.getBlock();
 		Integer currentTripIndex = currentMatch.getTripIndex();
 		String lastValidBlockId = vehicleState.getLastBlockId();
 		Integer lastValidTripIndex = vehicleState.getLastTripIndex();
@@ -160,7 +160,7 @@ public class RunTimeGenerator {
 	}
 
 	int getLastStopIndex(SpatialMatch matchAtPreviousStop){
-		Block block = matchAtPreviousStop.getBlock();
+		BlockInterface block = matchAtPreviousStop.getBlock();
 		int tripIndex = matchAtPreviousStop.getTripIndex();
 		return block.numStopPaths(tripIndex) - 1;
 	}

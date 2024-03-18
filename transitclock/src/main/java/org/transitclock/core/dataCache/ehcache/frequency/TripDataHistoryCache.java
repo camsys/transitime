@@ -14,10 +14,12 @@ import org.transitclock.core.dataCache.ehcache.CacheManagerFactory;
 import org.transitclock.core.dataCache.frequency.FrequencyBasedHistoricalAverageCache;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.gtfs.GtfsData;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
+import org.transitclock.service.BackingStore;
 import org.transitclock.utils.DateUtils;
 import org.transitclock.utils.Time;
 
@@ -108,11 +110,11 @@ public class TripDataHistoryCache implements TripDataHistoryCacheInterface{
 	@SuppressWarnings("unchecked")
 	public TripKey putArrivalDeparture(ArrivalDeparture arrivalDeparture) {
 		
-		Block block=null;
+		BlockInterface block=null;
 		if(arrivalDeparture.getBlock()==null)
 		{
-			DbConfig dbConfig = Core.getInstance().getDbConfig();
-			block=dbConfig.getBlock(arrivalDeparture.getServiceId(), arrivalDeparture.getBlockId());								
+			BackingStore backingStore = Core.getInstance().getBackingStore();
+			block=backingStore.getBlock(arrivalDeparture.getServiceId(), arrivalDeparture.getBlockId());
 		}else
 		{
 			block=arrivalDeparture.getBlock();

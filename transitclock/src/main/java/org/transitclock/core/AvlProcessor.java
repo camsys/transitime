@@ -591,7 +591,7 @@ public class AvlProcessor {
 		// If got a valid match then keep track of state
 		BlockAssignmentMethod blockAssignmentMethod = null;
 		boolean predictable = false;
-		Block block = null;
+		BlockInterface block = null;
 		if (bestMatch != null) {
 			blockAssignmentMethod = possibleBlockAssignmentMethod;
 			predictable = true;
@@ -926,7 +926,7 @@ public class AvlProcessor {
 			return false;
 		
 		// If matches don't need to be exclusive then don't have a problem
-		Block block = match.getBlock();
+		BlockInterface block = match.getBlock();
 		if (!block.shouldBeExclusive())
 			return false;
 		
@@ -1032,7 +1032,7 @@ public class AvlProcessor {
 	 * @param newVehicleId
 	 *            for logging message
 	 */
-	private void unassignOtherVehiclesFromBlock(Block block, String newVehicleId) {
+	private void unassignOtherVehiclesFromBlock(BlockInterface block, String newVehicleId) {
 		// Determine vehicles assigned to block
 		Collection<String> vehiclesAssignedToBlock = VehicleDataCache
 				.getInstance().getVehiclesByBlockId(block.getId());

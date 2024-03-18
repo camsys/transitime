@@ -884,7 +884,7 @@ public class SpatialMatcher {
 		// matching to it. So only add the final stop for the block as a 
 		// potential spatial match if the previous match was reasonably close to
 		// it.
-		Block block = previousMatch.getBlock();
+		BlockInterface block = previousMatch.getBlock();
 		if (!block.isNoSchedule()
 				&& previousMatch.isLastTripOfBlock()
 				&& previousMatch.withinDistanceOfEndOfTrip(

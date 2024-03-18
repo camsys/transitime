@@ -219,7 +219,7 @@ public class SchedBasedPredsModule extends Module {
 					vehicleState);
 			return null;
 		}
-		Block block = vehicleState.getBlock();
+		BlockInterface block = vehicleState.getBlock();
 		if (block == null) {
 			logger.error("Called SchedBasedPredictionsModule.shouldTimeoutVehicle() "
 					+ "for vehicle that does not have a block assigned. {}", 

@@ -19,9 +19,11 @@ import org.transitclock.core.dataCache.frequency.FrequencyBasedHistoricalAverage
 import org.transitclock.core.predictiongenerator.scheduled.dwell.rls.TransitClockRLS;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.db.structs.Headway;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
+import org.transitclock.service.BackingStore;
 import org.transitclock.utils.Time;
 
 public class DwellTimeModelCache implements org.transitclock.core.dataCache.DwellTimeModelCacheInterface {
@@ -92,11 +94,11 @@ public class DwellTimeModelCache implements org.transitclock.core.dataCache.Dwel
 		try {
 			if(departure!=null && !departure.isArrival())
 			{
-				Block block=null;
+				BlockInterface block=null;
 				if(departure.getBlock()==null)
 				{
-					DbConfig dbConfig = Core.getInstance().getDbConfig();
-					block=dbConfig.getBlock(departure.getServiceId(), departure.getBlockId());								
+					BackingStore backingStore = Core.getInstance().getBackingStore();
+					block=backingStore.getBlock(departure.getServiceId(), departure.getBlockId());
 				}else
 				{
 					block=departure.getBlock();

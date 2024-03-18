@@ -41,7 +41,7 @@ import java.util.*;
 public class VehicleState {
 
 	private final String vehicleId;
-	private Block block;
+	private BlockInterface block;
 	private BlockAssignmentMethod assignmentMethod;
 	// Will be set to block ID (even if used trip to determine assignment) or route ID
 	private String assignmentId;
@@ -75,7 +75,7 @@ public class VehicleState {
 	// So can keep track of whether assigning vehicle to same block that
 	// just got unassigned for. The unassignedTime member is the time when the
 	// vehicle was unassigned.
-	private Block previousBlockBeforeUnassigned = null;
+	private BlockInterface previousBlockBeforeUnassigned = null;
 	private Date unassignedTime = null;
 
 	// For determining if should use a previous assignment if the current
@@ -154,7 +154,7 @@ public class VehicleState {
 	 * @param predictable
 	 *            Whether vehicle is predictable
 	 */
-	public void setBlock(Block newBlock, BlockAssignmentMethod assignmentMethod,
+	public void setBlock(BlockInterface newBlock, BlockAssignmentMethod assignmentMethod,
 			String assignmentId, boolean predictable) {
 		// When vehicle is made unpredictable remember the previous assignment
 		// so can tell if getting assigned to same block again (which could
@@ -772,7 +772,7 @@ public class VehicleState {
 	 *
 	 * @return
 	 */
-	public Block getBlock() {
+	public BlockInterface getBlock() {
 		return block;
 	}
 

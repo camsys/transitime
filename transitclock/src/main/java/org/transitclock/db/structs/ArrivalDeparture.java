@@ -197,7 +197,7 @@ public class ArrivalDeparture implements Lifecycle, Serializable, ArrivalDepartu
 	
 	// So can easily create copy constructor withUpdatedTime()
 	@Transient
-	private final Block block;
+	private final BlockInterface block;
 
 	// Record of dwell time for departures
 	@Column
@@ -262,7 +262,7 @@ public class ArrivalDeparture implements Lifecycle, Serializable, ArrivalDepartu
 	 * @param stopPathIndex
 	 * @param isArrival
 	 */
-	public ArrivalDeparture(int configRev, String vehicleId, Date time, Date avlTime, Block block,
+	public ArrivalDeparture(int configRev, String vehicleId, Date time, Date avlTime, BlockInterface block,
 							   int tripIndex, int stopPathIndex, boolean isArrival, Date freqStartTime, Long dwellTime,
 							   String stopPathId, boolean scheduleAdherenceStop, Date scheduledTime) {
 		this.vehicleId = vehicleId;
@@ -343,14 +343,14 @@ public class ArrivalDeparture implements Lifecycle, Serializable, ArrivalDepartu
 		}
 	}
 
-	public ArrivalDeparture(int configRev, String vehicleId, Date time, Date avlTime, Block block,
+	public ArrivalDeparture(int configRev, String vehicleId, Date time, Date avlTime, BlockInterface block,
 							int tripIndex, int stopPathIndex, boolean isArrival, Date freqStartTime, Long dwellTime,
 							String stopPathId, boolean scheduleAdherenceStop) {
 		this(configRev, vehicleId, time, avlTime, block, tripIndex, stopPathIndex,isArrival, freqStartTime,
 				dwellTime, stopPathId, scheduleAdherenceStop, null);
 	}
 
-	protected ArrivalDeparture(String vehicleId, Date time, Date avlTime, Block block,
+	protected ArrivalDeparture(String vehicleId, Date time, Date avlTime, BlockInterface block,
 							   int tripIndex, int stopPathIndex, boolean isArrival, Date freqStartTime, Long dwellTime,
 							   String stopPathId, boolean scheduleAdherenceStop) {
 
@@ -835,7 +835,7 @@ public class ArrivalDeparture implements Lifecycle, Serializable, ArrivalDepartu
 	 * 
 	 * @return
 	 */
-	public Block getBlock() {
+	public BlockInterface getBlock() {
 		return block;
 	}
 

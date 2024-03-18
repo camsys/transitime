@@ -27,16 +27,15 @@ import org.transitclock.core.VehicleState;
 import org.transitclock.core.dataCache.*;
 import org.transitclock.core.predictiongenerator.datafilter.TravelTimeDataFilter;
 import org.transitclock.core.predictiongenerator.datafilter.TravelTimeFilterFactory;
-import org.transitclock.db.structs.ArrivalDeparture;
-import org.transitclock.db.structs.Block;
-import org.transitclock.db.structs.PredictionEvent;
-import org.transitclock.db.structs.Trip;
+import org.transitclock.db.structs.*;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
 import org.transitclock.monitoring.MonitoringService;
+import org.transitclock.service.BackingStore;
 import org.transitclock.utils.DateUtils;
 
 import java.util.*;
+import java.util.Calendar;
 
 /**
  * Commonly-used methods for PredictionGenerators that use historical cached data.
@@ -155,7 +154,8 @@ public class HistoricalPredictionLibrary {
 			List<IpcArrivalDeparture> currentStopList = StopArrivalDepartureCacheFactory.getInstance().getStopHistory(currentStopKey);
 
 			List<IpcArrivalDeparture> nextStopList = StopArrivalDepartureCacheFactory.getInstance().getStopHistory(nextStopKey);
-
+			DbConfig dbConfig = Core.getInstance().getDbConfig();
+			BackingStore backingStore = Core.getInstance().getBackingStore();
 			if (currentStopList != null && nextStopList != null) {
 				// lists are already sorted when put into cache.
 				for (IpcArrivalDeparture currentArrivalDeparture : currentStopList) {
@@ -168,12 +168,12 @@ public class HistoricalPredictionLibrary {
 						if ((found = findMatchInList(nextStopList, currentArrivalDeparture)) != null) {
 							if(found.getTime().getTime() - currentArrivalDeparture.getTime().getTime()>0)
 							{
-								Block currentBlock=null;
+								BlockInterface currentBlock=null;
 								/* block is transient in arrival departure so when read from database need to get from dbconfig. */
 
-								DbConfig dbConfig = Core.getInstance().getDbConfig();
 
-								currentBlock=dbConfig.getBlock(currentArrivalDeparture.getServiceId(), currentArrivalDeparture.getBlockId());
+
+								currentBlock=backingStore.getBlock(currentArrivalDeparture.getServiceId(), currentArrivalDeparture.getBlockId());
 
 								if(currentBlock!=null)
 									return new Indices(currentBlock, currentArrivalDeparture.getTripIndex(), found.getStopPathIndex(), 0);

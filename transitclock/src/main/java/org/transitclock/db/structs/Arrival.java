@@ -47,13 +47,13 @@ public class Arrival extends ArrivalDeparture {
 	 * @param pathIndex
 	 * @param freqStartTime
 	 */
-	public Arrival(String vehicleId, Date time, Date avlTime, Block block,
+	public Arrival(String vehicleId, Date time, Date avlTime, BlockInterface block,
 			int tripIndex, int pathIndex, Date freqStartTime, String stopPathId, boolean isScheduleAdherenceStop) {
 		super(vehicleId, time, avlTime, block, tripIndex, pathIndex, 
 				true, freqStartTime, null, stopPathId, isScheduleAdherenceStop); // isArrival
 	}
 	
-	public Arrival(int configRev, String vehicleId, Date time, Date avlTime, Block block,
+	public Arrival(int configRev, String vehicleId, Date time, Date avlTime, BlockInterface block,
 			int tripIndex, int pathIndex, Date freqStartTime, String stopPathId, boolean isScheduleAdherenceStop) {
 		super(configRev, vehicleId, time, avlTime, block, tripIndex, pathIndex, 
 				true, freqStartTime, null, stopPathId, isScheduleAdherenceStop); // isArrival

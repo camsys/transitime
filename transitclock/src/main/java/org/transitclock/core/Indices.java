@@ -20,16 +20,10 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.transitclock.applications.Core;
-import org.transitclock.db.structs.ArrivalDeparture;
-import org.transitclock.db.structs.Block;
-import org.transitclock.db.structs.Route;
-import org.transitclock.db.structs.ScheduleTime;
-import org.transitclock.db.structs.StopPath;
-import org.transitclock.db.structs.Trip;
-import org.transitclock.db.structs.TripPattern;
-import org.transitclock.db.structs.VectorWithHeading;
+import org.transitclock.db.structs.*;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
+import org.transitclock.service.BackingStore;
 
 /**
  * This private class is for keeping track of the trip, path, and segment
@@ -39,7 +33,7 @@ import org.transitclock.ipc.data.IpcArrivalDeparture;
  * 
  */
 public class Indices implements Serializable {
-	private Block block;
+	private BlockInterface block;
 	private int tripIndex;
 	private int stopPathIndex;
 	private int segmentIndex;	
@@ -56,7 +50,7 @@ public class Indices implements Serializable {
 	 * @throws IndexOutOfBoundsException
 	 *             If any of the parameters are not valid for the block
 	 */
-	public Indices(Block block, int tripIndex, int stopPathIndex,
+	public Indices(BlockInterface block, int tripIndex, int stopPathIndex,
 			int segmentIndex) throws IndexOutOfBoundsException {
 		this.block = block;
 		this.tripIndex = tripIndex;
@@ -98,10 +92,10 @@ public class Indices implements Serializable {
 
 	public Indices(IpcArrivalDeparture event) {
 				
-		Block block=null;
+		BlockInterface block=null;
 		
-		DbConfig dbConfig = Core.getInstance().getDbConfig();
-		block=dbConfig.getBlock(event.getServiceId(), event.getBlockId());								
+		BackingStore backingStore = Core.getInstance().getBackingStore();
+		block=backingStore.getBlock(event.getServiceId(), event.getBlockId());
 		
 		this.block=block;
 		this.tripIndex = event.getTripIndex();
@@ -112,11 +106,11 @@ public class Indices implements Serializable {
 	public Indices(ArrivalDeparture event) {
 		
 		
-		Block block=null;
+		BlockInterface block=null;
 		if(event.getBlock()==null)
 		{
-			DbConfig dbConfig = Core.getInstance().getDbConfig();
-			block=dbConfig.getBlock(event.getServiceId(), event.getBlockId());								
+			BackingStore backingStore = Core.getInstance().getBackingStore();
+			block=backingStore.getBlock(event.getServiceId(), event.getBlockId());
 		}else
 		{
 			block=event.getBlock();
@@ -130,9 +124,7 @@ public class Indices implements Serializable {
 	/**
 	 * Creates a copy of the Indices parameter. Useful if need to increment() or
 	 * decrement() but don't want to affect the original object.
-	 * 
-	 * @param indices
-	 *            The object to clone
+	 *
 	 * @return
 	 */
 	@Override
@@ -261,7 +253,7 @@ public class Indices implements Serializable {
 	 * noSchedule assignment then will use the proper trip depending on the time
 	 * of day. Assumes that there is only single trip defined for a route/loop.
 	 * 
-	 * @param time
+	 * @param epochTime
 	 *            The current time so can determine time of day and return the
 	 *            proper trip index. Only needed for no schedule assignments.
 	 * @return Indices for the next StopPath for the assignment
@@ -488,8 +480,6 @@ public class Indices implements Serializable {
 	/**
 	 * Returns the schedule time for the trip and path indices specified
 	 * 
-	 * @param tripIndex
-	 * @param stopPathIndex
 	 * @return the schedule time for the specified stop. Returns null if no
 	 *         schedule time associated with stop
 	 */
@@ -587,7 +577,7 @@ public class Indices implements Serializable {
 
 	/********************** Getter Methods ****************************/
 
-	public Block getBlock() {
+	public BlockInterface getBlock() {
 		return block;
 	}
 

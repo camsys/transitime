@@ -47,7 +47,7 @@ public class Departure extends ArrivalDeparture {
 	 * @param freqStartTime
 	 * @param dwellTime
 	 */
-	public Departure(String vehicleId, Date time, Date avlTime, Block block,
+	public Departure(String vehicleId, Date time, Date avlTime, BlockInterface block,
 					 int tripIndex, int stopPathIndex, Date freqStartTime, Long dwellTime, String stopPathId,
 					 boolean isScheduleAdherenceStop) {
 		super(vehicleId, time, avlTime, block, tripIndex, stopPathIndex, 

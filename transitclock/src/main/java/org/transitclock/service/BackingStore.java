@@ -58,4 +58,8 @@ public class BackingStore {
     }
     return blocks;
   }
+
+  public BlockInterface getBlock(String serviceId, String blockId) {
+    return config.getBlock(serviceId, blockId);
+  }
 }

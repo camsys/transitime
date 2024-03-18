@@ -20,14 +20,7 @@ import java.util.List;
 
 import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
-import org.transitclock.db.structs.Block;
-import org.transitclock.db.structs.Location;
-import org.transitclock.db.structs.Route;
-import org.transitclock.db.structs.ScheduleTime;
-import org.transitclock.db.structs.StopPath;
-import org.transitclock.db.structs.Trip;
-import org.transitclock.db.structs.Vector;
-import org.transitclock.db.structs.VectorWithHeading;
+import org.transitclock.db.structs.*;
 import org.transitclock.utils.Geo;
 import org.transitclock.utils.Time;
 import org.slf4j.Logger;
@@ -41,7 +34,7 @@ import org.slf4j.Logger;
 public class SpatialMatch {
 
 	protected final long avlTime;
-	protected final Block block;
+	protected final BlockInterface block;
 	protected final int tripIndex;
 	protected final int stopPathIndex;
 	protected final int segmentIndex;
@@ -62,7 +55,7 @@ public class SpatialMatch {
 
 	/********************** Member Functions **************************/
 
-	public SpatialMatch(long avlTime, Block block,
+	public SpatialMatch(long avlTime, BlockInterface block,
 			int tripIndex, int stopPathIndex, int segmentIndex,
 			double distanceToSegment, double distanceAlongSegment, MatchType type) {
 		this.avlTime = avlTime;
@@ -833,7 +826,7 @@ public class SpatialMatch {
 		int stopIdxInFirstTrip = match1.getStopPathIndex();
 
 		// Stops for intermediate trips
-		Block block = match2.getBlock();
+		BlockInterface block = match2.getBlock();
 		int numIntermediateTripsStops = 0;
 		for (int tripIndex = match1.getTripIndex(); 
 				tripIndex < match2.getTripIndex(); 
@@ -882,7 +875,7 @@ public class SpatialMatch {
 		return new Indices(this);
 	}
 	
-	public Block getBlock() {
+	public BlockInterface getBlock() {
 		return block;
 	}
 	

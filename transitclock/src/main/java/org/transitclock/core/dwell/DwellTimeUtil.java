@@ -3,6 +3,7 @@ package org.transitclock.core.dwell;
 import org.transitclock.applications.Core;
 import org.transitclock.config.LongConfigValue;
 import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.utils.Time;
 
@@ -37,8 +38,8 @@ public class DwellTimeUtil {
                     "Specify maximum allowable time in msec when calculating dwell time for departures.");
 
 
-    public static Long getDwellTime(Long arrivalTime, Long departureTime,Block block,int tripIndex,
-                              int departureStopPathIndex, Integer arrivalStopPathIndex){
+    public static Long getDwellTime(Long arrivalTime, Long departureTime, BlockInterface block, int tripIndex,
+                                    int departureStopPathIndex, Integer arrivalStopPathIndex){
 
         if (departureStopPathIndex == 0 && departureTime != null) {
             Trip trip = block.getTrip(tripIndex);

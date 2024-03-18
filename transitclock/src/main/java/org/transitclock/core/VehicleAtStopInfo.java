@@ -20,6 +20,7 @@ package org.transitclock.core;
 import org.transitclock.applications.Core;
 import org.transitclock.configData.CoreConfig;
 import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.db.structs.Trip;
 
 /**
@@ -38,7 +39,7 @@ public class VehicleAtStopInfo extends Indices {
 	 * @param tripIndex
 	 * @param stopPathIndex
 	 */
-	public VehicleAtStopInfo(Block block, int tripIndex, int stopPathIndex) {
+	public VehicleAtStopInfo(BlockInterface block, int tripIndex, int stopPathIndex) {
 		super(block, tripIndex, stopPathIndex, 
 				0); // segment index
 	}
@@ -88,7 +89,7 @@ public class VehicleAtStopInfo extends Indices {
 	 */
 	@Override
   public boolean atEndOfBlock() {
-		Block block = getBlock();
+		BlockInterface block = getBlock();
 		if (block.isNoSchedule()) {
 		  // frequency based blocks last until the last trip completes
 		  Trip trip = getTrip();
