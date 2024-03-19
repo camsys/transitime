@@ -133,7 +133,7 @@ public class GtfsData {
 	private Set<String> serviceIdsWithTrips;
 	
 	// List of all the blocks, random order
-	private List<Block> blocks;
+	private List<BlockInterface> blocks;
 
 	// Keyed on tripPatternId and pathId using getPathMapKey(tripPatternId, pathId)
 	private HashMap<String, StopPath> pathsMap;
@@ -2500,7 +2500,7 @@ public class GtfsData {
 		return properRouteIdMap.get(routeId);
 	}
 	
-	public List<Block> getBlocks() {
+	public List<BlockInterface> getBlocks() {
 		return blocks;
 	}
 	
@@ -2835,7 +2835,7 @@ public class GtfsData {
 
 		if (System.getProperty("transitclock.core.integrationTest") != null) {
 			System.err.println("\nBlocks:");
-			for (Block b : getBlocks()) {
+			for (BlockInterface b : getBlocks()) {
 				System.err.println("  " + b.toShortString());
 			}
 

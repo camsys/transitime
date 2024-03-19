@@ -28,6 +28,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.db.structs.TripPattern;
 import org.transitclock.gtfs.gtfsStructs.GtfsRoute;
@@ -75,7 +76,7 @@ public class BlocksProcessor {
 	 * @param serviceIdsUsed The service IDs that the unscheduled blocks should 
 	 * be created for.
 	 */
-	private void addUnscheduledBlocks(int configRev, List<Block> blocks,
+	private void addUnscheduledBlocks(int configRev, List<BlockInterface> blocks,
 			Set<String> serviceIdsUsed) {
 		// Create unscheduled blocks for the routes that have 
 		// create_unschedule_block set in GTFS route.txt file
@@ -135,7 +136,7 @@ public class BlocksProcessor {
 					// a route is defined for weekdays want the unscheduled blocks to be
 					// available for any day.
 					for (String serviceId : serviceIdsUsed) {
-						Block block = new Block(configRev, blockId, serviceId,
+						BlockInterface block = new Block(configRev, blockId, serviceId,
 								startTimeForBlock, endTimeForBlock,
 								tripsListForBlock);
 						
@@ -154,9 +155,9 @@ public class BlocksProcessor {
 	 * @param configRev
 	 * @return List of Block assignments.
 	 */
-	public List<Block> process(int configRev) {
+	public List<BlockInterface> process(int configRev) {
 		// Create list for blocks
-		List<Block> blocks = new ArrayList<Block>();
+		List<BlockInterface> blocks = new ArrayList<BlockInterface>();
 		
 		// Go through trips map, which was created using data from stop_times.txt
 		// GTFS file. Then can go through each Trip and construct the
@@ -230,7 +231,7 @@ public class BlocksProcessor {
 				int endTimeForBlock = lastTripForBlock.getEndTime();
 
 				// Create the Block
-				Block block = new Block(configRev, blockId, serviceId,
+				BlockInterface block = new Block(configRev, blockId, serviceId,
 						startTimeForBlock, endTimeForBlock, tripsListForBlock);
 				
 				// Add the new block to the list of blocks

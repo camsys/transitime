@@ -259,7 +259,7 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	@Override
 	public IpcBlock getBlock(String blockId, String serviceId)
 			throws RemoteException {
-		Block dbBlock = 
+		BlockInterface dbBlock =
 				Core.getInstance().getDbConfig().getBlock(serviceId, blockId);
 		
 		// If no such block then return null since can't create a IpcBlock
@@ -279,12 +279,12 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 		Collection<IpcBlock> ipcBlocks = new ArrayList<IpcBlock>();
 		
 		// Get the blocks with specified ID
-		Collection<Block> dbBlocks = 
-				Core.getInstance().getDbConfig().getBlocksForAllServiceIds(blockId);
+		Collection<BlockInterface> dbBlocks =
+				Core.getInstance().getBackingStore().getBlocksForAllServiceIds(blockId);
 		
 		// Convert blocks from DB into IpcBlocks
-		for (Block dbBlock : dbBlocks) {
-			ipcBlocks.add(new IpcBlock(dbBlock));
+		for (BlockInterface aBlock : dbBlocks) {
+			ipcBlocks.add(new IpcBlock(aBlock));
 		}
 		
 		// Return result
