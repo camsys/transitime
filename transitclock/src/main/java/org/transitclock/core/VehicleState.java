@@ -690,7 +690,7 @@ public class VehicleState {
 		// Not block assignment so try trip ID or trip short name assignment
 		if (avlReport.isTripIdAssignmentType()
 				|| avlReport.isTripShortNameAssignmentType()) {
-			Block avlBlock =
+			BlockInterface avlBlock =
 					BlockAssigner.getInstance().getBlockAssignment(avlReport);
 			return block != avlBlock;
 		}

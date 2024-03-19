@@ -76,7 +76,7 @@ public class RunTimeGenerator {
 			int lastStopIndex = getLastStopIndex(prevMatch);
 			String vehicleId= vehicleState.getVehicleId();
 			Trip trip = prevMatch.getTrip();
-			Block block = trip.getBlock();
+			BlockInterface block = trip.getBlock();
 
 			ServiceUtilsImpl serviceUtils = Core.getInstance().getServiceUtils();
 			return processor.processRunTimesForTrip(vehicleId, trip, block, arrivalDeparturesForStop,

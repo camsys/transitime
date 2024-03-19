@@ -26,6 +26,7 @@ import org.transitclock.config.StringConfigValue;
 import org.transitclock.core.blockAssigner.BlockAssigner;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.feed.gtfsRt.GtfsRtVehiclePositionsReader;
 import org.transitclock.gtfs.DbConfig;
@@ -120,9 +121,9 @@ public class GtfsRealtimeModule extends PollUrlAvlModule {
 			Trip trip = getTrip(dbConfig, avlReport.getAssignmentId());
 							getTripWithServiceIdSuffix(dbConfig, avlReport.getAssignmentId());
 			if (trip == null) return;
-			Block block = trip.getBlock();
-			if (block != null)
-				block.initialize();
+			BlockInterface block = trip.getBlock();
+			if (block != null && block instanceof Block)
+				((Block) block).initialize();
 		}
 	}
 

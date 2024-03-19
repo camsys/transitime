@@ -10,7 +10,7 @@ import org.transitclock.configData.CoreConfig;
 import org.transitclock.core.blockAssigner.BlockAssignerCache;
 import org.transitclock.core.blockAssigner.BlockAssignerUpdater;
 import org.transitclock.db.structs.AvlReport;
-import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -114,7 +114,7 @@ public class ExternalBlockAssigner {
                 if (agencySeparator != -1) {
                     assignmentId = assignmentId.substring(agencySeparator+1);
                 }
-                Block requestedBlock = getActiveBlock(assignmentId, avlReport.getDate());
+                BlockInterface requestedBlock = getActiveBlock(assignmentId, avlReport.getDate());
                 if (requestedBlock != null) {
                     logger.info("found active block {} for vehicle {}", assignmentId, avlReport.getVehicleId());
                     return assignmentId;
@@ -135,16 +135,16 @@ public class ExternalBlockAssigner {
      * @param avlReportDate
      * @return
      */
-    Block getActiveBlock(String assignmentId, Date avlReportDate) {
-        Collection<Block> dbBlocks =
-                Core.getInstance().getDbConfig().getBlocksForAllServiceIds(assignmentId);
+    BlockInterface getActiveBlock(String assignmentId, Date avlReportDate) {
+        Collection<BlockInterface> dbBlocks =
+                Core.getInstance().getBackingStore().getBlocksForAllServiceIds(assignmentId);
         if (dbBlocks == null) {
             logger.warn("no block found for {}", assignmentId);
             return null;
         }
         logger.info("getActiveBlock({}, {}) found {} potential blocks: {}",
                 assignmentId, avlReportDate, dbBlocks.size(), dbBlocks);
-        for (Block requestedBlock : dbBlocks) {
+        for (BlockInterface requestedBlock : dbBlocks) {
             if (requestedBlock.isActive(avlReportDate,
                     CoreConfig.getAllowableEarlySeconds(),
                     -1 /* use endTime*/)) {

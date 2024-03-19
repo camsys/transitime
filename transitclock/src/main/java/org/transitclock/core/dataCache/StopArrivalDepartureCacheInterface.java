@@ -12,12 +12,7 @@ import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.transitclock.applications.Core;
-import org.transitclock.db.structs.Arrival;
-import org.transitclock.db.structs.ArrivalDeparture;
-import org.transitclock.db.structs.Block;
-import org.transitclock.db.structs.Departure;
-import org.transitclock.db.structs.StopPath;
-import org.transitclock.db.structs.Trip;
+import org.transitclock.db.structs.*;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
 import org.transitclock.utils.Time;
 
@@ -214,7 +209,7 @@ public abstract class StopArrivalDepartureCacheInterface {
 	}
 
 	private ArrivalDeparture createArrivalDeparture(IpcArrivalDeparture ad) {
-		Block block = Core.getInstance().getDbConfig().getBlock(ad.getServiceId(), ad.getBlockId());
+		BlockInterface block = Core.getInstance().getBackingStore().getBlock(ad.getServiceId(), ad.getBlockId());
 		Trip trip = block.getTrip(ad.getTripId());
 		int tripIndex = block.getTripIndex(trip);
 

@@ -21,7 +21,7 @@ public class RunTimeProcessorState {
   private Integer firstStopPathIndex = null;
   private Integer finalStopPathIndex = null;
   private Trip trip;
-  private Block block;
+  private BlockInterface block;
   private List<IpcArrivalDeparture> arrivalDeparturesForStop;
   RunTimesForRoutes runTimesForRoutes = null;
   List<RunTimesForStops> runTimesForStops = new ArrayList<>();
@@ -30,7 +30,7 @@ public class RunTimeProcessorState {
 
   public RunTimeProcessorState(RunTimeCache cache,
                                Trip trip,
-                               Block block,
+                               BlockInterface block,
                                List<IpcArrivalDeparture> arrivalDeparturesForStop) {
     this.cache = cache;
     this.trip = trip;

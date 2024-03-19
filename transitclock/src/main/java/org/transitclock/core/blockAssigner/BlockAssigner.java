@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.applications.Core;
 import org.transitclock.core.ServiceUtilsImpl;
 import org.transitclock.db.structs.AvlReport;
-import org.transitclock.db.structs.Block;
+import org.transitclock.db.structs.BlockInterface;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.utils.Time;
@@ -76,7 +76,7 @@ public class BlockAssigner {
      * @return Block corresponding to the time and blockId from AVL report, or
      *         null if could not determine block.
      */
-    public Block getBlockAssignment(AvlReport avlReport) {
+    public BlockInterface getBlockAssignment(AvlReport avlReport) {
         // If vehicle has assignment...
         if (avlReport != null && avlReport.getAssignmentId() != null) {
             DbConfig config = Core.getInstance().getDbConfig();
@@ -88,9 +88,9 @@ public class BlockAssigner {
                         serviceUtis.getServiceIds(avlReport.getDate());
                 // Go through all current service IDs to find the block
                 // that is currently active
-                Block activeBlock = null;
+                BlockInterface activeBlock = null;
                 for (String serviceId : serviceIds) {
-                    Block blockForServiceId = config.getBlock(serviceId,
+                    BlockInterface blockForServiceId = config.getBlock(serviceId,
                             avlReport.getAssignmentId());
                     // If there is a block for the current service ID
                     if (blockForServiceId != null) {
@@ -121,7 +121,7 @@ public class BlockAssigner {
                 // Using trip ID
                 Trip trip = config.getTrip(avlReport.getAssignmentId());
                 if (trip != null && trip.getBlock() != null) {
-                    Block block = trip.getBlock();
+                    BlockInterface block = trip.getBlock();
                     logger.debug("For vehicleId={} the trip assignment from "
                                     + "the AVL feed is tripId={} which corresponds to "
                                     + "blockId={}",
@@ -135,7 +135,7 @@ public class BlockAssigner {
                             Trip tripPrefix = getTripWithServiceIdSuffix(config, avlReport.getAssignmentId());
 
                             if (tripPrefix != null){
-                                Block blockPrefix = tripPrefix.getBlock();
+                                BlockInterface blockPrefix = tripPrefix.getBlock();
                                 logger.debug("For vehicleId={} the trip assigngment from "
                                                 + "the AVL feed is tripId={} and serviceId={} which corresponds to "
                                                 + "blockId={}",
@@ -157,7 +157,7 @@ public class BlockAssigner {
                 String tripShortName = avlReport.getAssignmentId();
                 Trip trip = config.getTripUsingTripShortName(tripShortName);
                 if (trip != null) {
-                    Block block = trip.getBlock();
+                    BlockInterface block = trip.getBlock();
                     logger.debug("For vehicleId={} the trip assignment from "
                                     + "the AVL feed is tripShortName={} which "
                                     + "corresponds to blockId={}",

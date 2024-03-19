@@ -777,7 +777,7 @@ public class AvlProcessor {
 	 * @param vehicleState
 	 * @return True if successfully matched vehicle to block assignment
 	 */
-	private boolean matchVehicleToBlockAssignment(Block block,
+	private boolean matchVehicleToBlockAssignment(BlockInterface block,
 			VehicleState vehicleState) {
 		// Make sure params are good
 		if (block == null) {
@@ -803,10 +803,13 @@ public class AvlProcessor {
 		List<Trip> potentialTrips = block.getTripsCurrentlyActive(avlReport);
 		// hydrate trips and attach to this session
 		potentialTrips = TripDAO.refreshTrips(potentialTrips, session);
+		if (block instanceof Block) {
+			block = ((Block) block).initialize(session);
+		}
 
 		List<SpatialMatch> spatialMatches =
 				SpatialMatcher.getSpatialMatches(vehicleState, vehicleState.getAvlReport(),
-						block.initialize(session), potentialTrips, MatchingType.STANDARD_MATCHING);
+						block, potentialTrips, MatchingType.STANDARD_MATCHING);
 		logger.debug("For vehicleId={} and blockId={} spatial matches={}",
 				avlReport.getVehicleId(), block.getId(), spatialMatches);
 
@@ -1089,7 +1092,7 @@ public class AvlProcessor {
 
 		// If the vehicle has a block assignment from the AVLFeed
 		// then use it.
-		Block block = BlockAssigner.getInstance().getBlockAssignment(avlReport);
+		BlockInterface block = BlockAssigner.getInstance().getBlockAssignment(avlReport);
 		if (block != null) {
 			// There is a block assignment from AVL feed so use it.
 			return matchVehicleToBlockAssignment(block, vehicleState);

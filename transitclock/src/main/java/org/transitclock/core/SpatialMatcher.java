@@ -141,7 +141,7 @@ public class SpatialMatcher {
 
 	private List<SpatialMatch> getSpatialMatchesForTripViaDefaultMatching(AvlReport avlReport,
 																																				Trip trip, MatchingType matchingType) {
-		Block block = trip.getBlock();
+		BlockInterface block = trip.getBlock();
 		
 		// The matches to be returned
 		List<SpatialMatch> spatialMatches = new ArrayList<SpatialMatch>();

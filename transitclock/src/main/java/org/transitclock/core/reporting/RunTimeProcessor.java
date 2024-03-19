@@ -6,11 +6,7 @@ import org.transitclock.applications.Core;
 import org.transitclock.core.RunTimeServiceUtils;
 import org.transitclock.core.ServiceType;
 import org.transitclock.core.ServiceUtilsImpl;
-import org.transitclock.core.TemporalMatch;
-import org.transitclock.db.structs.Block;
-import org.transitclock.db.structs.RunTimesForRoutes;
-import org.transitclock.db.structs.RunTimesForStops;
-import org.transitclock.db.structs.Trip;
+import org.transitclock.db.structs.*;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
 import org.transitclock.utils.IntervalTimer;
 
@@ -38,7 +34,7 @@ public class RunTimeProcessor {
    */
   public boolean processRunTimesForTrip(String vehicleId,
                                         Trip trip,
-                                        Block block,
+                                        BlockInterface block,
                                         List<IpcArrivalDeparture> arrivalDeparturesForStop,
                                         Integer lastStopIndex,
                                         ServiceUtilsImpl serviceUtils) {
@@ -71,7 +67,7 @@ public class RunTimeProcessor {
   public RunTimeProcessorResult processRunTimesForTrip(RunTimeCache cache,
                                                        String vehicleId,
                                                        Trip trip,
-                                                       Block block,
+                                                       BlockInterface block,
                                                        List<IpcArrivalDeparture> arrivalDeparturesForStop,
                                                        Integer lastStopIndex,
                                                        Double clampingSpeed,
