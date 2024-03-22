@@ -1164,10 +1164,10 @@ public class DbConfig {
 	 * Returns list of calendars that are currently active
 	 * @return current calendars
 	 */
-	public List<Calendar> getCurrentCalendars() {
+	public List<CalendarInterface> getCurrentCalendars() {
 		// Get list of currently active calendars
 		ServiceUtilsImpl serviceUtils = Core.getInstance().getServiceUtils();
-		List<Calendar> calendarList =
+		List<CalendarInterface> calendarList =
 				serviceUtils.getCurrentCalendars(Core.getInstance().getSystemTime());
 		return calendarList;
 	}
@@ -1226,7 +1226,7 @@ public class DbConfig {
 	 */
 	public List<String> getCurrentServiceIds() {
 		List<String> serviceIds = new ArrayList<String>();
-		for (Calendar calendar : getCurrentCalendars()) {
+		for (CalendarInterface calendar : getCurrentCalendars()) {
 			serviceIds.add(calendar.getServiceId());
 		}
 		return serviceIds;

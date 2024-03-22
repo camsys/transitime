@@ -50,7 +50,7 @@ import org.transitclock.utils.Time;
  */
 @Immutable
 @Entity @DynamicUpdate @Table(name="Calendars")
-public class Calendar implements Serializable {
+public class Calendar implements CalendarInterface, Serializable {
 
 	@Column 
 	@Id

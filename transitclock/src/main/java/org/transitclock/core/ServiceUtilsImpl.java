@@ -36,6 +36,7 @@ import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.db.structs.*;
 import org.transitclock.gtfs.DbConfig;
+import org.transitclock.service.BackingStore;
 import org.transitclock.utils.Time;
 
 import static org.transitclock.core.ServiceTypeUtil.*;
@@ -52,6 +53,8 @@ public class ServiceUtilsImpl implements RunTimeServiceUtils{
 	private final GregorianCalendar calendar;
 	
 	private final DbConfig dbConfig;
+
+	private final BackingStore backingStore;
 	
 	private static IntegerConfigValue minutesIntoMorningToIncludePreviousServiceIds =
 			new IntegerConfigValue(
@@ -71,10 +74,9 @@ public class ServiceUtilsImpl implements RunTimeServiceUtils{
 	/**
 	 * ServiceUtils constructor. Creates reusable GregorianCalendar and sets the
 	 * timezone so that the calendar can be reused.
-	 * 
-	 * @param timezoneName See http://en.wikipedia.org/wiki/List_of_tz_zones
+	 *
 	 */
-	public ServiceUtilsImpl(DbConfig dbConfig) {
+	public ServiceUtilsImpl(DbConfig dbConfig, BackingStore backingStore) {
 
 		AgencyInterface agency = dbConfig.getFirstAgency();
 		this.calendar =
@@ -83,6 +85,7 @@ public class ServiceUtilsImpl implements RunTimeServiceUtils{
 						: new GregorianCalendar();
 
 		this.dbConfig = dbConfig;
+		this.backingStore = backingStore;
 	}
 
 	/**
@@ -114,13 +117,13 @@ public class ServiceUtilsImpl implements RunTimeServiceUtils{
 	 *            For determining which Calendars are currently active
 	 * @return List of active Calendars
 	 */
-	private List<Calendar> getActiveCalendars(Date epochTime) {
-		List<Calendar> originalCalendarList = dbConfig.getCalendars();
-		List<Calendar> activeCalendarList = new ArrayList<Calendar>();
+	private List<CalendarInterface> getActiveCalendars(Date epochTime) {
+		List<CalendarInterface> originalCalendarList = backingStore.getCalendars();
+		List<CalendarInterface> activeCalendarList = new ArrayList<>();
 		long maxEndTime = 0;
 		
 		// Go through calendar and find currently active ones
-		for (Calendar calendar : originalCalendarList) {
+		for (CalendarInterface calendar : originalCalendarList) {
 			// If calendar is currently active then add it to list of active ones
 			if (epochTime.getTime() >= calendar.getStartDate().getTime()
 					&& epochTime.getTime() <= calendar.getEndDate().getTime()) {
@@ -139,7 +142,7 @@ public class ServiceUtilsImpl implements RunTimeServiceUtils{
 		if (activeCalendarList.size() == 0) {
 			// Use most recent calendar to keep system running
 			long earliestStartTime = Long.MAX_VALUE;
-			for (Calendar calendar : originalCalendarList) {
+			for (CalendarInterface calendar : originalCalendarList) {
 				if (calendar.getEndDate().getTime() == maxEndTime) {
 					activeCalendarList.add(calendar);
 					
@@ -215,12 +218,12 @@ public class ServiceUtilsImpl implements RunTimeServiceUtils{
 		List<String> serviceIds = new ArrayList<String>();
 		
 		// Make sure haven't accidentally let all calendars expire
-		List<Calendar> activeCalendars = getActiveCalendars(epochTime);
+		List<CalendarInterface> activeCalendars = getActiveCalendars(epochTime);
 		
 		// Go through calendars and determine which ones match. For those that
 		// match, add them to the list of service IDs.
 		int dateOfWeek = getDayOfWeek(epochTime);
-		for (Calendar calendar : activeCalendars) {			
+		for (CalendarInterface calendar : activeCalendars) {
 			// If calendar for the current day of the week then add the 
 			// serviceId
 			if ((dateOfWeek == java.util.Calendar.MONDAY && calendar.getMonday())   ||
@@ -238,10 +241,10 @@ public class ServiceUtilsImpl implements RunTimeServiceUtils{
 		
 		// Go through calendar_dates to see if there is special service for 
 		// this date. Add or remove the special service.
-		List<CalendarDate> calendarDatesForNow =
-				dbConfig.getCalendarDates(epochTime);
+		List<CalendarDateInterface> calendarDatesForNow =
+				backingStore.getCalendarDates(epochTime);
 		if (calendarDatesForNow != null) {
-			for (CalendarDate calendarDate : calendarDatesForNow) {
+			for (CalendarDateInterface calendarDate : calendarDatesForNow) {
 				// Handle special service for this date
 				if (calendarDate.addService()) {
 					// Add the service for this date
@@ -336,18 +339,18 @@ public class ServiceUtilsImpl implements RunTimeServiceUtils{
 	 * @param epochTime
 	 * @return List of calendars that are currently active.
 	 */
-	public List<Calendar> getCurrentCalendars(long epochTime) {
+	public List<CalendarInterface> getCurrentCalendars(long epochTime) {
 		// Result to be returned
-		List<Calendar> currentCalendars = new ArrayList<Calendar>();
+		List<CalendarInterface> currentCalendars = new ArrayList<>();
 
 		// Get list of all calendars that are configured
-		List<Calendar> allCalendars = dbConfig.getCalendars();
+		List<CalendarInterface> allCalendars = backingStore.getCalendars();
 		
 		// For each service ID that is currently active...
 		Collection<String> currentServiceIds = getServiceIds(epochTime);
 		for (String serviceId : currentServiceIds) {
 			// Find corresponding calendar
-			for (Calendar calendar : allCalendars) {
+			for (CalendarInterface calendar : allCalendars) {
 				if (calendar.getServiceId().equals(serviceId)) {
 					// Found the calendar that corresponds to the service ID 
 					// so add it to the list
@@ -382,13 +385,13 @@ public class ServiceUtilsImpl implements RunTimeServiceUtils{
 
 	public boolean isServiceIdValidForDate(ServiceType serviceType, Trip trip, Date date){
 		String serviceId = trip.getServiceId();
-		Calendar calendar = getCalendarForServiceId(serviceId);
+		CalendarInterface calendar = getCalendarForServiceId(serviceId);
 		if(isServiceTypeActiveForServiceCal(serviceType, calendar)){
 			return true;
 		} else{
-			List<CalendarDate> calendarDatesForNow = getCalendarDatesForDate(date);
+			List<CalendarDateInterface> calendarDatesForNow = getCalendarDatesForDate(date);
 			if (calendarDatesForNow != null) {
-				for (CalendarDate calendarDate : calendarDatesForNow) {
+				for (CalendarDateInterface calendarDate : calendarDatesForNow) {
 					// Handle special service for this date
 					if (calendarDate.addService() && calendarDate.getServiceId().equals(serviceId)) {
 						return true;
@@ -399,12 +402,12 @@ public class ServiceUtilsImpl implements RunTimeServiceUtils{
 		return false;
 	}
 
-	private Calendar getCalendarForServiceId(String serviceId){
-		return dbConfig.getCalendarByServiceId(serviceId);
+	private CalendarInterface getCalendarForServiceId(String serviceId){
+		return backingStore.getCalendarByServiceId(serviceId);
 	}
 
-	private List<CalendarDate> getCalendarDatesForDate(Date date){
-		return dbConfig.getCalendarDates(date);
+	private List<CalendarDateInterface> getCalendarDatesForDate(Date date){
+		return backingStore.getCalendarDates(date);
 	}
 
 

@@ -18,7 +18,7 @@ package org.transitclock.ipc.data;
 
 import java.io.Serializable;
 
-import org.transitclock.db.structs.Calendar;
+import org.transitclock.db.structs.CalendarInterface;
 
 /**
  * A calendar object for IPC via RMI
@@ -41,7 +41,7 @@ public class IpcCalendar implements Serializable {
 	
 	private static final long serialVersionUID = 7248540190574905163L;
 	
-	public IpcCalendar(Calendar calendar) {
+	public IpcCalendar(CalendarInterface calendar) {
 		super();
 		this.serviceId = calendar.getServiceId();
 		this.monday = calendar.getMonday();

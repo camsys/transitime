@@ -210,7 +210,7 @@ public class Core {
 		timeoutHandlerModule = new TimeoutHandlerModule(AgencyConfig.getAgencyId());
 		timeoutHandlerModule.start();
 
-		service = new ServiceUtilsImpl(configData);
+		service = new ServiceUtilsImpl(configData, backingStore);
 		time = new Time(configData);
 
 		try {

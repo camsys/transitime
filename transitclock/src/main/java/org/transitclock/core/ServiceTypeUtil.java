@@ -6,6 +6,8 @@ import org.transitclock.db.dao.CalendarDateDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.CalendarDate;
+import org.transitclock.db.structs.CalendarDateInterface;
+import org.transitclock.db.structs.CalendarInterface;
 import org.transitclock.utils.Time;
 
 import java.time.DayOfWeek;
@@ -33,7 +35,7 @@ public class ServiceTypeUtil {
         }
     }
 
-    public static boolean isServiceTypeActiveForServiceCal(ServiceType serviceType, Calendar calendar){
+    public static boolean isServiceTypeActiveForServiceCal(ServiceType serviceType, CalendarInterface calendar){
         if(serviceType != null && calendar != null) {
             if (serviceType.equals(ServiceType.SUNDAY) && calendar.getSunday()) {
                 return Boolean.TRUE;
@@ -64,7 +66,7 @@ public class ServiceTypeUtil {
         return updatedTime;
     }
 
-    public static boolean isCalendarValidForServiceType(Calendar calendar, ServiceType serviceType){
+    public static boolean isCalendarValidForServiceType(CalendarInterface calendar, ServiceType serviceType){
         if(calendar != null){
             if(serviceType.equals(ServiceType.WEEKDAY) && calendar.isOnWeekDay()){
                 return true;
@@ -77,7 +79,7 @@ public class ServiceTypeUtil {
         return false;
     }
 
-    public static ServiceType getServiceTypeForCalendar(Calendar calendar){
+    public static ServiceType getServiceTypeForCalendar(CalendarInterface calendar){
         if(calendar != null){
             if(calendar.isOnWeekDay()){
                 return ServiceType.WEEKDAY;
@@ -90,7 +92,7 @@ public class ServiceTypeUtil {
         return null;
     }
 
-    public static ServiceType getServiceTypeForCalendarDate(CalendarDate calendarDate){
+    public static ServiceType getServiceTypeForCalendarDate(CalendarDateInterface calendarDate){
         if(calendarDate != null){
             DayOfWeek dayOfWeek = Instant.ofEpochMilli(calendarDate.getDate().getTime())
                     .atZone(ZoneId.systemDefault())
@@ -100,9 +102,9 @@ public class ServiceTypeUtil {
         return null;
     }
 
-    public static boolean isCalendarDatesForServiceType(List<CalendarDate> calendarDates, ServiceType serviceType){
+    public static boolean isCalendarDatesForServiceType(List<CalendarDateInterface> calendarDates, ServiceType serviceType){
         if(calendarDates != null){
-            for(CalendarDate calendarDate : calendarDates){
+            for(CalendarDateInterface calendarDate : calendarDates){
                 DayOfWeek dayOfWeek = Instant.ofEpochMilli(calendarDate.getDate().getTime())
                         .atZone(ZoneId.systemDefault())
                         .toLocalDate().getDayOfWeek();
@@ -126,7 +128,7 @@ public class ServiceTypeUtil {
         Date calendarEndDate = Time.getLocalDateAsDate(endDate.plusDays(1));
 
         // Process Calendars
-        List<Calendar> calendars = CalendarDAO.getCalendars(session, configRev);
+        List<Calendar> calendars = CalendarDAO.getCalendars(session, configRev); // TODO this should be from backingStory
         for(Calendar calendar : calendars){
             Set<ServiceType> serviceTypes = serviceTypesByServiceId.get(calendar.getServiceId());
             if(serviceTypes == null){
@@ -139,8 +141,8 @@ public class ServiceTypeUtil {
 
         // Process Calendar Dates
 
-        List<CalendarDate> calendarDates = CalendarDateDAO.getCalendarDates(session, configRev);
-        for(CalendarDate calendarDate : calendarDates){
+        List<CalendarDate> calendarDates = CalendarDateDAO.getCalendarDates(session, configRev); //todo switch this to BackingStore
+        for(CalendarDateInterface calendarDate : calendarDates){
             Set<ServiceType> serviceTypes = serviceTypesByServiceId.get(calendarDate.getServiceId());
             // Only add if service id doesn't already exist
             // We want to add unique service ids from Calendar Dates, not exceptions

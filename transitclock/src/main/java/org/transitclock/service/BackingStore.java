@@ -1,11 +1,11 @@
 package org.transitclock.service;
 
-import org.transitclock.db.structs.Block;
-import org.transitclock.db.structs.BlockInterface;
+import org.transitclock.db.structs.*;
 import org.transitclock.gtfs.DbConfig;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -61,5 +61,25 @@ public class BackingStore {
 
   public BlockInterface getBlock(String serviceId, String blockId) {
     return config.getBlock(serviceId, blockId);
+  }
+
+  public List<CalendarInterface> getCalendars() {
+    List<CalendarInterface> calendars = new ArrayList<>();
+    for (Calendar calendar : config.getCalendars()) {
+      calendars.add(calendar);
+    }
+    return calendars;
+  }
+
+  public CalendarInterface getCalendarByServiceId(String serviceId) {
+    return config.getCalendarByServiceId(serviceId);
+  }
+
+  public List<CalendarDateInterface> getCalendarDates(Date epochTime) {
+    List<CalendarDateInterface> list = new ArrayList<>();
+    for (CalendarDate calendarDate : config.getCalendarDates(epochTime)) {
+      list.add(calendarDate);
+    }
+    return list;
   }
 }

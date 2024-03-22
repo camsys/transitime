@@ -418,12 +418,12 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	@Override
 	public List<IpcCalendar> getCurrentCalendars() {
 		// Get list of currently active calendars
-		List<Calendar> calendarList =
+		List<CalendarInterface> calendarList =
 				Core.getInstance().getDbConfig().getCurrentCalendars();
 
 		// Convert Calendar list to IpcCalendar list
 		List<IpcCalendar> ipcCalendarList = new ArrayList<IpcCalendar>();
-		for (Calendar calendar : calendarList) {
+		for (CalendarInterface calendar : calendarList) {
 			ipcCalendarList.add(new IpcCalendar(calendar));
 		}
 
@@ -436,12 +436,12 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	@Override
 	public List<IpcCalendar> getAllCalendars() {		
 		// Get list of currently active calendars
-		List<Calendar> calendarList =
-				Core.getInstance().getDbConfig().getCalendars();
+		List<CalendarInterface> calendarList =
+				Core.getInstance().getBackingStore().getCalendars();
 
 		// Convert Calendar list to IpcCalendar list
 		List<IpcCalendar> ipcCalendarList = new ArrayList<IpcCalendar>();
-		for (Calendar calendar : calendarList) {
+		for (CalendarInterface calendar : calendarList) {
 			ipcCalendarList.add(new IpcCalendar(calendar));
 		}
 

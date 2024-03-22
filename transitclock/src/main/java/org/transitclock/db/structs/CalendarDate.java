@@ -46,7 +46,7 @@ import org.transitclock.gtfs.gtfsStructs.GtfsCalendarDate;
  *
  */
 @Entity @DynamicUpdate @Table(name="CalendarDates")
-public class CalendarDate implements Serializable{
+public class CalendarDate implements CalendarDateInterface, Serializable{
 
 	@Column @Id
 	private final int configRev;
@@ -176,6 +176,7 @@ public class CalendarDate implements Serializable{
 	/**
 	 * @return the configRev
 	 */
+	@Override
 	public int getConfigRev() {
 		return configRev;
 	}
@@ -183,6 +184,7 @@ public class CalendarDate implements Serializable{
 	/**
 	 * @return the serviceId
 	 */
+	@Override
 	public String getServiceId() {
 		return serviceId;
 	}
@@ -192,6 +194,7 @@ public class CalendarDate implements Serializable{
 	 * 
 	 * @return the date
 	 */
+	@Override
 	public Date getDate() {
 		return date;
 	}
@@ -201,6 +204,7 @@ public class CalendarDate implements Serializable{
 	 * 
 	 * @return the epoch time
 	 */
+	@Override
 	public long getTime() {
 		return date.getTime();
 	}
@@ -212,6 +216,7 @@ public class CalendarDate implements Serializable{
 	 * 
 	 * @return the exceptionType
 	 */
+	@Override
 	public String getExceptionType() {
 		return exceptionType;
 	}
@@ -221,6 +226,7 @@ public class CalendarDate implements Serializable{
 	 * Otherwise should subtract this service for this date.
 	 * @return True if should add service for this calendar date.
 	 */
+	@Override
 	public boolean addService() {
 		return "1".equals(exceptionType);
 	}
