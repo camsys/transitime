@@ -26,10 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.transitclock.applications.Core;
-import org.transitclock.db.structs.Route;
-import org.transitclock.db.structs.Stop;
-import org.transitclock.db.structs.Trip;
-import org.transitclock.db.structs.TripPattern;
+import org.transitclock.db.structs.*;
 import org.transitclock.utils.Geo;
 
 import org.transitclock.utils.TrimmableArrayList;
@@ -117,7 +114,7 @@ public class IpcPredictionsForRouteStopDest implements Serializable {
 			double distanceToStop) {
 		this.routeId = tripPattern.getRouteId();
 		this.routeShortName = tripPattern.getRouteShortName();		
-		Route route = Core.getInstance().getDbConfig()
+		RouteInterface route = Core.getInstance().getBackingStore()
 				.getRouteById(tripPattern.getRouteId());
 		if (route == null) {
 			throw new IllegalArgumentException("RouteId="
@@ -231,7 +228,7 @@ public class IpcPredictionsForRouteStopDest implements Serializable {
 	 */
 	public IpcPredictionsForRouteStopDest(String routeShortName,
 			String directionId, String stopId, double distanceToStop) {
-		Route route = Core.getInstance().getDbConfig().getRouteByShortName(routeShortName);
+		RouteInterface route = Core.getInstance().getBackingStore().getRouteByShortName(routeShortName);
 		if (route == null) {
 			throw new IllegalArgumentException("routeShortName="
 					+ routeShortName + " does not exist.");

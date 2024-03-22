@@ -611,7 +611,7 @@ public class Indices implements Serializable {
 	 * 
 	 * @return
 	 */
-	public Route getRoute() {
+	public RouteInterface getRoute() {
 		String routeId = getTrip().getRouteId();
 		return Core.getInstance().getDbConfig().getRouteById(routeId);
 	}

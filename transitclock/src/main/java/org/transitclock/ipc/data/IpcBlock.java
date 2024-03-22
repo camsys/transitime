@@ -23,7 +23,7 @@ import java.util.List;
 
 import org.transitclock.applications.Core;
 import org.transitclock.db.structs.BlockInterface;
-import org.transitclock.db.structs.Route;
+import org.transitclock.db.structs.RouteInterface;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.utils.Time;
 
@@ -62,9 +62,9 @@ public class IpcBlock implements Serializable {
 		
 		routeSummaries = new ArrayList<IpcRouteSummary>();
 		for (String routeId : dbBlock.getRouteIds()) {
-			Route dbRoute = 
-					Core.getInstance().getDbConfig().getRouteById(routeId);
-			routeSummaries.add(new IpcRouteSummary(dbRoute));
+			RouteInterface aRoute =
+					Core.getInstance().getBackingStore().getRouteById(routeId);
+			routeSummaries.add(new IpcRouteSummary(aRoute));
 		}
 	}
 

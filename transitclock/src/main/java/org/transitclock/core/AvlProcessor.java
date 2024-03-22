@@ -1324,7 +1324,7 @@ public class AvlProcessor {
 			// Create description for VehicleEvent
 			String stopId = vehicleState.getMatch().getStopPath().getStopId();
 			Stop stop = Core.getInstance().getDbConfig().getStop(stopId);
-			Route route = vehicleState.getMatch().getRoute();
+			RouteInterface route = vehicleState.getMatch().getRoute();
 			VehicleAtStopInfo stopInfo = vehicleState.getMatch().getAtStop();
 			Integer scheduledDepartureTime = stopInfo.getScheduleTime()
 					.getDepartureTime();

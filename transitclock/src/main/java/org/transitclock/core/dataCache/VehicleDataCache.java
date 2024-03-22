@@ -25,7 +25,7 @@ import org.transitclock.configData.AgencyConfig;
 import org.transitclock.core.VehicleState;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.AvlReport;
-import org.transitclock.db.structs.Route;
+import org.transitclock.db.structs.RouteInterface;
 import org.transitclock.db.structs.VehicleConfig;
 import org.transitclock.ipc.data.IpcVehicleComplete;
 import org.transitclock.utils.ConcurrentHashMapNullKeyOk;
@@ -304,7 +304,7 @@ public class VehicleDataCache {
 		// If couldn't get vehicles by route short name try using
 		// the route ID.
 		if (vehicleMapForRoute == null) {
-			Route route = Core.getInstance().getDbConfig()
+			RouteInterface route = Core.getInstance().getBackingStore()
 					.getRouteById(routeIdOrShortName);
 			if (route != null) {
 				vehicleMapForRoute = 

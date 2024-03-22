@@ -134,7 +134,7 @@ public class DbWriter {
 		}
 		
 		logger.info("Saving routes to database...");
-		Route.deleteFromRev(session, configRev);
+		RouteDAO.deleteFromRev(session, configRev);
 		for (Route route : gtfsData.getRoutes()) {
 			writeObject(session, route);
 		}

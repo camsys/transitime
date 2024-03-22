@@ -24,10 +24,7 @@ import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.core.dataCache.PredictionDataCache;
 import org.transitclock.db.dao.RouteDAO;
-import org.transitclock.db.structs.ArrivalDeparture;
-import org.transitclock.db.structs.PredictionAccuracy;
-import org.transitclock.db.structs.Route;
-import org.transitclock.db.structs.TripPattern;
+import org.transitclock.db.structs.*;
 import org.transitclock.ipc.data.IpcPrediction;
 import org.transitclock.ipc.data.IpcPredictionsForRouteStopDest;
 import org.transitclock.modules.Module;
@@ -210,9 +207,9 @@ public class PredictionAccuracyModule extends Module {
 
 		    logger.info("processing prediction accuracy....");
 		    	if(getIncludeStopsFromAllTripPatterns()){
-					getAndProcessData(getAllRoutesAndStops(Core.getInstance().getDbConfig().getRoutes()), Core.getInstance().getSystemDate());
+					getAndProcessData(getAllRoutesAndStops(Core.getInstance().getBackingStore().getRoutes()), Core.getInstance().getSystemDate());
 				} else {
-					getAndProcessData(getRoutesAndStops(Core.getInstance().getDbConfig().getRoutes()), Core.getInstance().getSystemDate());
+					getAndProcessData(getRoutesAndStops(Core.getInstance().getBackingStore().getRoutes()), Core.getInstance().getSystemDate());
 				}
 				logger.info("processing prediction accuracy complete.");
 
@@ -245,12 +242,12 @@ public class PredictionAccuracyModule extends Module {
 	 *
 	 * @return
 	 */
-	public List<RouteAndStops> getRoutesAndStops(List<Route> routes) {
+	public List<RouteAndStops> getRoutesAndStops(List<RouteInterface> routes) {
 		// The value to be returned
 		List<RouteAndStops> list = new ArrayList<RouteAndStops>();
 		
 		// For each route...
-		for (Route route : routes) {
+		for (RouteInterface route : routes) {
 			RouteAndStops routeStopInfo = new RouteAndStops();
 			list.add(routeStopInfo);
 			
@@ -300,12 +297,12 @@ public class PredictionAccuracyModule extends Module {
 	 *
 	 * @return
 	 */
-	public List<RouteAndStops> getAllRoutesAndStops(List<Route> routes) {
+	public List<RouteAndStops> getAllRoutesAndStops(List<RouteInterface> routes) {
 		// The value to be returned
 		List<RouteAndStops> list = new ArrayList<RouteAndStops>();
 
 		// For each route...
-		for (Route route : routes) {
+		for (RouteInterface route : routes) {
 			RouteAndStops routeStopInfo = new RouteAndStops();
 			list.add(routeStopInfo);
 

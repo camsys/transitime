@@ -30,13 +30,14 @@ import org.transitclock.applications.Core;
 import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.core.PredictionGeneratorDefaultImpl;
 import org.transitclock.core.VehicleState;
-import org.transitclock.db.structs.Route;
+import org.transitclock.db.structs.RouteInterface;
 import org.transitclock.db.structs.Stop;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.ipc.data.IpcPrediction;
 import org.transitclock.ipc.data.IpcPredictionsForRouteStopDest;
 import org.transitclock.ipc.interfaces.PredictionsInterface.RouteStop;
+import org.transitclock.service.BackingStore;
 import org.transitclock.utils.MapKey;
 import org.transitclock.utils.Time;
 
@@ -145,6 +146,7 @@ public class PredictionDataCache {
 			String routeIdOrShortName, String directionId, String stopIdOrCode,
 			int maxPredictionsPerStop, double distanceToStop) {
 		DbConfig dbConfig = Core.getInstance().getDbConfig();
+		BackingStore backingStore = Core.getInstance().getBackingStore();
 		
 		// Determine the routeShortName so can be used for maps in
 		// the low-level methods of this class. Can be null to specify
@@ -152,7 +154,7 @@ public class PredictionDataCache {
 		String routeShortName = routeIdOrShortName;
 		if (routeIdOrShortName != null) {
 			// See if it is route ID or a short name
-			Route route = dbConfig.getRouteById(routeIdOrShortName);
+			RouteInterface route = backingStore.getRouteById(routeIdOrShortName);
 			if (route != null)
 				// routeIdOrShortName was route ID so get the short name
 				routeShortName = route.getShortName();
@@ -645,9 +647,9 @@ public class PredictionDataCache {
 			// No route specified so get predictions for all routes for the stop
 			predictionsForStop =
 					new ArrayList<IpcPredictionsForRouteStopDest>();
-			Collection<Route> routes = 
-					Core.getInstance().getDbConfig().getRoutesForStop(stopId);
-			for (Route route : routes) {
+			Collection<RouteInterface> routes =
+					Core.getInstance().getBackingStore().getRoutesForStop(stopId);
+			for (RouteInterface route : routes) {
 				MapKey key = MapKey.create(route.getShortName(), stopId);
 				 List<IpcPredictionsForRouteStopDest> predsForRoute = 
 						 predictionsMap.get(key);

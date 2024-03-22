@@ -35,7 +35,7 @@ public class PredictionAccuracyModuleTest {
     @Test
     public void testGetRoutesAndStops(){
         PredictionAccuracyModule predictionAccuracyModule = new PredictionAccuracyModule("1");
-        List<Route> routes = new ArrayList<>();
+        List<RouteInterface> routes = new ArrayList<>();
         String routeId = "A";
         TitleFormatter formatter = getTitleFormatter();
         List<TripPattern> tripPatterns = getLongestTripPatternsForRoute(routeId, formatter);
@@ -65,7 +65,7 @@ public class PredictionAccuracyModuleTest {
     public void testGetAllRoutesAndStops(){
         PredictionAccuracyModule predictionAccuracyModule = new PredictionAccuracyModule("1");
 
-        List<Route> routes = new ArrayList<>();
+        List<RouteInterface> routes = new ArrayList<>();
         String routeId = "A";
         TitleFormatter formatter = getTitleFormatter();
         List<TripPattern> tripPatterns = getAllTripPatterns(routeId, formatter);

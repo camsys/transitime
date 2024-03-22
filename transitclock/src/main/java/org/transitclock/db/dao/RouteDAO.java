@@ -163,7 +163,7 @@ public class RouteDAO {
    *
    * @return
    */
-  public static List<TripPattern> getLongestTripPatternForEachDirection(Route r) {
+  public static List<TripPattern> getLongestTripPatternForEachDirection(RouteInterface r) {
     List<TripPattern> tripPatterns = new ArrayList<TripPattern>();
 
     List<String> directionIds = r.getDirectionIds();
@@ -190,5 +190,22 @@ public class RouteDAO {
     return 	Core.getInstance()
             .getDbConfig().getTripPatternsForRoute(id);
   }
+
+  /**
+   * Deletes rev from the Routes table
+   *
+   * @param session
+   * @param configRev
+   * @return Number of rows deleted
+   * @throws HibernateException
+   */
+  public static int deleteFromRev(Session session, int configRev)
+          throws HibernateException {
+    // Note that hql uses class name, not the table name
+    String hql = "DELETE Route WHERE configRev=" + configRev;
+    int numUpdates = session.createQuery(hql).executeUpdate();
+    return numUpdates;
+  }
+
 
 }

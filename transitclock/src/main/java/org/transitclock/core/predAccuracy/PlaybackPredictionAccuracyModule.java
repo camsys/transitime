@@ -31,7 +31,7 @@ public class PlaybackPredictionAccuracyModule extends PredictionAccuracyModule {
 			{
 				try {
 					// Process data
-					getAndProcessData(getRoutesAndStops(Core.getInstance().getDbConfig().getRoutes()), Core.getInstance().getSystemDate());
+					getAndProcessData(getRoutesAndStops(Core.getInstance().getBackingStore().getRoutes()), Core.getInstance().getSystemDate());
 					
 					// Make sure old predictions that were never matched to an
 					// arrival/departure don't stick around taking up memory.

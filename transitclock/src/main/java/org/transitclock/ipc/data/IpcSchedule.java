@@ -74,7 +74,7 @@ public class IpcSchedule implements Serializable {
 	 * @param serviceId
 	 * @param serviceName
 	 */
-	private IpcSchedule(Route route, String directionId, String directionName,
+	private IpcSchedule(RouteInterface route, String directionId, String directionName,
 			String serviceId, String serviceName) {
 		super();
 		this.routeId = route.getId();
@@ -285,7 +285,7 @@ public class IpcSchedule implements Serializable {
 	 * @param blocksForRoute
 	 * @return
 	 */
-	public static List<IpcSchedule> createSchedules(Route route,
+	public static List<IpcSchedule> createSchedules(RouteInterface route,
 			List<BlockInterface> blocksForRoute) {
 		Map<ServiceDirectionKey, IpcSchedule> schedulesMap = 
 				new HashMap<ServiceDirectionKey, IpcSchedule>();
@@ -348,7 +348,7 @@ public class IpcSchedule implements Serializable {
 
 		String directionId = trip.getDirectionId();
 		String directionName = trip.getHeadsign();
-		Route route = trip.getRoute();
+		RouteInterface route = trip.getRoute();
 
 		IpcSchedule ipcSchedule = new IpcSchedule(route, directionId,
 					directionName, serviceId, serviceName);

@@ -27,6 +27,7 @@ import org.transitclock.gtfs.DbConfig;
 import org.transitclock.ipc.data.*;
 import org.transitclock.ipc.interfaces.ConfigInterface;
 import org.transitclock.ipc.rmi.AbstractServer;
+import org.transitclock.service.BackingStore;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -96,14 +97,14 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	 * @param routeIdOrShortName
 	 * @return The Route, or null if no such route
 	 */
-	private Route getRoute(String routeIdOrShortName) {
+	private RouteInterface getRoute(String routeIdOrShortName) {
 		DbConfig dbConfig = Core.getInstance().getDbConfig();
-		Route dbRoute = 
+		RouteInterface aRoute =
 				dbConfig.getRouteByShortName(routeIdOrShortName);
-		if (dbRoute == null)
-			dbRoute = dbConfig.getRouteById(routeIdOrShortName);
-		if (dbRoute != null)
-			return dbRoute;
+		if (aRoute == null)
+			aRoute = dbConfig.getRouteById(routeIdOrShortName);
+		if (aRoute != null)
+			return aRoute;
 		else return null;
 	}
 	
@@ -113,15 +114,15 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	@Override
 	public Collection<IpcRouteSummary> getRoutes() throws RemoteException {
 		// Get the db route info
-		DbConfig dbConfig = Core.getInstance().getDbConfig();
-		Collection<org.transitclock.db.structs.Route> dbRoutes = 
-				dbConfig.getRoutes();
+		BackingStore backingStore = Core.getInstance().getBackingStore();
+		Collection<RouteInterface> routes = backingStore
+				.getRoutes();
 		
 		// Convert the db routes into ipc routes
 		Collection<IpcRouteSummary> ipcRoutes = 
-				new ArrayList<IpcRouteSummary>(dbRoutes.size());
-		for (org.transitclock.db.structs.Route dbRoute : dbRoutes) {
-			IpcRouteSummary ipcRoute = new IpcRouteSummary(dbRoute);
+				new ArrayList<IpcRouteSummary>(routes.size());
+		for (org.transitclock.db.structs.RouteInterface aRoute : routes) {
+			IpcRouteSummary ipcRoute = new IpcRouteSummary(aRoute);
 			ipcRoutes.add(ipcRoute);
 		}
 		
@@ -137,13 +138,13 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	public IpcRoute getRoute(String routeIdOrShortName, String directionId,
 			String stopId, String tripPatternId) throws RemoteException {
 		// Determine the route
-		Route dbRoute = getRoute(routeIdOrShortName);		
-		if (dbRoute == null)
+		RouteInterface aRoute = getRoute(routeIdOrShortName);
+		if (aRoute == null)
 			return null;
 		
 		// Convert db route into an ipc route and return it
 		IpcRoute ipcRoute =
-				new IpcRoute(dbRoute, directionId, stopId, tripPatternId);
+				new IpcRoute(aRoute, directionId, stopId, tripPatternId);
 		return ipcRoute;
 	}
 
@@ -154,31 +155,31 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	@Override
 	public List<IpcRoute> getRoutes(List<String> routeIdsOrShortNames)
 			throws RemoteException {
-		List<IpcRoute> routes = new ArrayList<IpcRoute>();
+		List<IpcRoute> filteredRoutes = new ArrayList<IpcRoute>();
 
 		// If no route specified then return data for all routes
 		if (routeIdsOrShortNames == null || routeIdsOrShortNames.isEmpty()) {
-			DbConfig dbConfig = Core.getInstance().getDbConfig();
-			List<org.transitclock.db.structs.Route> dbRoutes =
-					dbConfig.getRoutes();
-			for (Route dbRoute : dbRoutes) {
-				IpcRoute ipcRoute = new IpcRoute(dbRoute, null, null, null);
-				routes.add(ipcRoute);
+			BackingStore backingStore = Core.getInstance().getBackingStore();
+			List<RouteInterface> allRoutes =
+					backingStore.getRoutes();
+			for (RouteInterface aRoute : allRoutes) {
+				IpcRoute ipcRoute = new IpcRoute(aRoute, null, null, null);
+				filteredRoutes.add(ipcRoute);
 			}
 		} else {
 			// Routes specified so return data for those routes
 			for (String routeIdOrShortName : routeIdsOrShortNames) {
 				// Determine the route
-				Route dbRoute = getRoute(routeIdOrShortName);
-				if (dbRoute == null)
+				RouteInterface aRoute = getRoute(routeIdOrShortName);
+				if (aRoute == null)
 					continue;
 
-				IpcRoute ipcRoute = new IpcRoute(dbRoute, null, null, null);
-				routes.add(ipcRoute);
+				IpcRoute ipcRoute = new IpcRoute(aRoute, null, null, null);
+				filteredRoutes.add(ipcRoute);
 			}
 		}
 		
-		return routes;
+		return filteredRoutes;
 	}
 
 	/* (non-Javadoc)
@@ -187,10 +188,10 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	@Override
 	public List<IpcRoute> getRoutesForStop(String stopId) throws RemoteException{
 		List<IpcRoute> routes = new ArrayList<>();
-		DbConfig dbConfig = Core.getInstance().getDbConfig();
-		Collection<Route> routesForStop = dbConfig.getRoutesForStop(stopId);
+		BackingStore backingStore = Core.getInstance().getBackingStore();
+		Collection<RouteInterface> routesForStop = backingStore.getRoutesForStop(stopId);
 		if(routesForStop != null){
-			for(Route route : routesForStop){
+			for(RouteInterface route : routesForStop){
 				routes.add(new IpcRoute(route, null, null, null));
 			}
 		}
@@ -204,12 +205,12 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	public IpcDirectionsForRoute getStops(String routeIdOrShortName)
 			throws RemoteException {
 		// Get the db route info 
-		Route dbRoute = getRoute(routeIdOrShortName);		
-		if (dbRoute == null)
+		RouteInterface aRoute = getRoute(routeIdOrShortName);
+		if (aRoute == null)
 			return null;
 		
 		// Convert db route into an ipc route
-		IpcDirectionsForRoute ipcStopsForRoute = new IpcDirectionsForRoute(dbRoute);
+		IpcDirectionsForRoute ipcStopsForRoute = new IpcDirectionsForRoute(aRoute);
 		
 		// Return the ipc route
 		return ipcStopsForRoute;
@@ -221,32 +222,32 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	@Override
 	public List<IpcDirectionsForRoute> getStops(List<String> routeIdsOrShortNames)
 			throws RemoteException{
-		List<Route> routes = new ArrayList<>();
+		List<RouteInterface> routes = new ArrayList<>();
 
 		// If no route specified then return data for all routes
 		if (routeIdsOrShortNames == null || routeIdsOrShortNames.isEmpty()) {
-			DbConfig dbConfig = Core.getInstance().getDbConfig();
-			List<org.transitclock.db.structs.Route> dbRoutes =
-				dbConfig.getRoutes();
-			for (Route dbRoute : dbRoutes) {
-				routes.add(dbRoute);
+			BackingStore backingStore = Core.getInstance().getBackingStore();
+			List<RouteInterface> allRoutes =
+							backingStore.getRoutes();
+			for (RouteInterface aRoute : routes) {
+				routes.add(aRoute);
 			}
 		} else {
 			// Routes specified so return data for those routes
 			for (String routeIdOrShortName : routeIdsOrShortNames) {
 				// Determine the route
-				Route dbRoute = getRoute(routeIdOrShortName);
-				if (dbRoute == null)
+				RouteInterface aRoute = getRoute(routeIdOrShortName);
+				if (aRoute == null)
 					continue;
-				routes.add(dbRoute);
+				routes.add(aRoute);
 			}
 		}
 
 		List<IpcDirectionsForRoute> ipcStopsForRoutes = new ArrayList<>();
 
 		// Convert db route into an ipc route
-		for(Route dbRoute : routes){
-			ipcStopsForRoutes.add(new IpcDirectionsForRoute(dbRoute));
+		for(RouteInterface aRoute : routes){
+			ipcStopsForRoutes.add(new IpcDirectionsForRoute(aRoute));
 		}
 
 		// Return the ipc routes list
@@ -321,12 +322,12 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 			throws RemoteException {
 		DbConfig dbConfig = Core.getInstance().getDbConfig();
 		
-		Route dbRoute = getRoute(routeIdOrShortName);		
-		if (dbRoute == null)
+		RouteInterface aRoute = getRoute(routeIdOrShortName);
+		if (aRoute == null)
 			return null;
 
 		List<TripPattern> dbTripPatterns = 
-				dbConfig.getTripPatternsForRoute(dbRoute.getId());
+				dbConfig.getTripPatternsForRoute(aRoute.getId());
 		if (dbTripPatterns == null)
 			return null;
 		
@@ -341,12 +342,12 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	public List<IpcTripPattern> getTripPatterns(String routeIdOrShortName, String headSign, String directionId)
 			throws RemoteException {
 		DbConfig dbConfig = Core.getInstance().getDbConfig();
-		Route dbRoute = getRoute(routeIdOrShortName);
-		if (dbRoute == null)
+		RouteInterface aRoute = getRoute(routeIdOrShortName);
+		if (aRoute == null)
 			return null;
 
 		List<TripPattern> dbTripPatterns =
-				dbConfig.getTripPatternsForRouteAndHeadSign(dbRoute.getId(), headSign);
+				dbConfig.getTripPatternsForRouteAndHeadSign(aRoute.getId(), headSign);
 		if (dbTripPatterns == null)
 			return null;
 
@@ -380,17 +381,17 @@ public class ConfigServer extends AbstractServer implements ConfigInterface {
 	public List<IpcSchedule> getSchedules(String routeIdOrShortName)
 			throws RemoteException {
 		// Determine the route
-		Route dbRoute = getRoute(routeIdOrShortName);		
-		if (dbRoute == null)
+		RouteInterface aRoute = getRoute(routeIdOrShortName);
+		if (aRoute == null)
 			return null;
 
 		// Determine the blocks for the route for all service IDs
 		List<BlockInterface> blocksForRoute = Core.getInstance().getBackingStore()
-				.getBlocksForRoute(dbRoute.getId());
+				.getBlocksForRoute(aRoute.getId());
 		
 		// Convert blocks to list of IpcSchedule objects and return
 		List<IpcSchedule> ipcSchedules = 
-				IpcSchedule.createSchedules(dbRoute, blocksForRoute);
+				IpcSchedule.createSchedules(aRoute, blocksForRoute);
 		return ipcSchedules;
 	}
 

@@ -82,4 +82,28 @@ public class BackingStore {
     }
     return list;
   }
+
+  public List<RouteInterface> getRoutes() {
+    List<RouteInterface> list = new ArrayList<>();
+    for (Route route : config.getRoutes()) {
+      list.add(route);
+    }
+    return list;
+  }
+
+  public RouteInterface getRouteById(String routeId) {
+    return config.getRouteById(routeId);
+  }
+
+  public RouteInterface getRouteByShortName(String routeShortName) {
+    return config.getRouteByShortName(routeShortName);
+  }
+
+  public Collection<RouteInterface> getRoutesForStop(String stopId) {
+    List<RouteInterface> list = new ArrayList<>();
+    for (Route route : config.getRoutesForStop(stopId)) {
+      list.add(route);
+    }
+    return list;
+  }
 }

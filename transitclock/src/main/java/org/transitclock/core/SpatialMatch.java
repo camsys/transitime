@@ -883,7 +883,7 @@ public class SpatialMatch {
 		return block.getTrips().get(tripIndex);
 	}
 
-	public Route getRoute() {
+	public RouteInterface getRoute() {
 		return getTrip().getRoute();
 	}
 	

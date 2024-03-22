@@ -449,7 +449,7 @@ public class SpatialMatcher {
 	 *            for keeping track of what kind of spatial matching being done
 	 * @return max distance that AVL report is allowed to be from segment
 	 */
-	private double getMaxAllowableDistanceFromSegment(Route route,
+	private double getMaxAllowableDistanceFromSegment(RouteInterface route,
 			MatchingType matchingType) {
 		if (matchingType == MatchingType.AUTO_ASSIGNING_MATCHING) {
 			return CoreConfig.getMaxDistanceFromSegmentForAutoAssigning();
@@ -477,7 +477,7 @@ public class SpatialMatcher {
 			MatchingType matchingType) {
 		if(indices.getStopPath().getMaxDistance()!=null)
 			return indices.getStopPath().getMaxDistance();
-		Route route = indices.getRoute();
+		RouteInterface route = indices.getRoute();
 		return getMaxAllowableDistanceFromSegment(route, matchingType);
 	}
 	

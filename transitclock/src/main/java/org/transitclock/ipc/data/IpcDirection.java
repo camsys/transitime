@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.transitclock.applications.Core;
 import org.transitclock.db.dao.RouteDAO;
-import org.transitclock.db.structs.Route;
+import org.transitclock.db.structs.RouteInterface;
 import org.transitclock.db.structs.Stop;
 import org.transitclock.db.structs.TripPattern;
 
@@ -50,7 +50,7 @@ public class IpcDirection implements Serializable {
 	 * @param dbRoute
 	 * @param directionId
 	 */
-	public IpcDirection(Route dbRoute, String directionId) {
+	public IpcDirection(RouteInterface dbRoute, String directionId) {
 		this.directionId = directionId;
 
 		// Use the headsign name for the longest trip pattern for the 
@@ -74,11 +74,11 @@ public class IpcDirection implements Serializable {
 	 * Constructor for when already have list of IpcStops. Useful for when have
 	 * already determined whether an IpcStop is for UiMode or note.
 	 * 
-	 * @param dbRoute
+	 * @param aRoute
 	 * @param directionId
 	 * @param ipcStops
 	 */
-	public IpcDirection(Route dbRoute, String directionId, List<IpcStop> ipcStops) {
+	public IpcDirection(RouteInterface aRoute, String directionId, List<IpcStop> ipcStops) {
 		this.directionId = directionId;
 
 		// Use the headsign name for the longest trip pattern for the 
@@ -86,7 +86,7 @@ public class IpcDirection implements Serializable {
 		// to use but there is no human readable direction name specified in 
 		// GTFS.
 		TripPattern longestTripPattern = 
-				RouteDAO.getLongestTripPatternForDirection(dbRoute.getId(), directionId);
+				RouteDAO.getLongestTripPatternForDirection(aRoute.getId(), directionId);
 		this.directionTitle = "To " + longestTripPattern.getHeadsign();
 		this.stops = ipcStops;
 	}

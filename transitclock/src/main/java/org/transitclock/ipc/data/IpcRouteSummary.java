@@ -20,7 +20,7 @@ package org.transitclock.ipc.data;
 import java.io.Serializable;
 
 import org.transitclock.db.structs.Extent;
-import org.transitclock.db.structs.Route;
+import org.transitclock.db.structs.RouteInterface;
 
 /**
  * Contains configuration information for a single route. For providing info to
@@ -51,7 +51,7 @@ public class IpcRouteSummary implements Serializable {
 	 * 
 	 * @param dbRoute
 	 */
-	public IpcRouteSummary(Route dbRoute) {
+	public IpcRouteSummary(RouteInterface dbRoute) {
 		this.id = dbRoute.getId();
 		this.name = dbRoute.getName();
 		this.shortName = dbRoute.getShortName();

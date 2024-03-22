@@ -159,7 +159,7 @@ public class PredictionAccuracy implements Lifecycle, Serializable {
 		super();
 		this.routeId = routeId;
 		
-		Route route = Core.getInstance().getDbConfig().getRouteById(routeId);
+		RouteInterface route = Core.getInstance().getBackingStore().getRouteById(routeId);
 		this.routeShortName = route.getShortName();
 		this.directionId = directionId;
 		this.stopId = stopId;

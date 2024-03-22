@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.transitclock.db.structs.Route;
+import org.transitclock.db.structs.RouteInterface;
 
 /**
  * Contains each direction for route, along with each stop for each direction.
@@ -41,18 +41,18 @@ public class IpcDirectionsForRoute implements Serializable {
 
 	/********************** Member Functions **************************/
 
-	public IpcDirectionsForRoute(Route dbRoute) {
-		this.routeId = dbRoute.getId();
-		this.routeShortName = dbRoute.getShortName();
+	public IpcDirectionsForRoute(RouteInterface aRoute) {
+		this.routeId = aRoute.getId();
+		this.routeShortName = aRoute.getShortName();
 
 		directions = new ArrayList<IpcDirection>();
 		
 		// Determine the directions
-		List<String> directionIds = dbRoute.getDirectionIds();
+		List<String> directionIds = aRoute.getDirectionIds();
 		
 		// For each directionId...
 		for (String directionId : directionIds) {
-			IpcDirection ipcDirection = new IpcDirection(dbRoute, directionId);
+			IpcDirection ipcDirection = new IpcDirection(aRoute, directionId);
 			directions.add(ipcDirection);
 		}
 	}

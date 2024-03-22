@@ -41,7 +41,7 @@ import java.util.*;
  *
  */
 @Entity @DynamicUpdate @Table(name="Routes")
-public class Route implements Serializable {
+public class Route implements RouteInterface, Serializable {
 	
 	@Column 
 	@Id
@@ -226,30 +226,17 @@ public class Route implements Serializable {
 		maxDistance = null;
 	}
 	
-	/**
-	 * Deletes rev from the Routes table
-	 * 
-	 * @param session
-	 * @param configRev
-	 * @return Number of rows deleted
-	 * @throws HibernateException
-	 */
-	public static int deleteFromRev(Session session, int configRev) 
-			throws HibernateException {
-		// Note that hql uses class name, not the table name
-		String hql = "DELETE Route WHERE configRev=" + configRev;
-		int numUpdates = session.createQuery(hql).executeUpdate();
-		return numUpdates;
-	}	
-	
+
 	// For dealing with route order
 	private static final int BEGINNING_OF_LIST_ROUTE_ORDER = 1000;
 	private static final int END_OF_LIST_ROUTE_ORDER = 1000000;
-	
+
+	@Override
 	public boolean atBeginning() {
 		return routeOrder != null && routeOrder < BEGINNING_OF_LIST_ROUTE_ORDER;
 	}
-	
+
+	@Override
 	public boolean atEnd() {
 		return routeOrder != null && END_OF_LIST_ROUTE_ORDER >= 1000000;
 	}
@@ -445,6 +432,7 @@ public class Route implements Serializable {
 	 * 
 	 * @return
 	 */
+	@Override
 	public synchronized Collection<Stop> getStops() {
 		// If stop collection already determined then simply return it
 		if (stops != null)
@@ -460,6 +448,7 @@ public class Route implements Serializable {
 	 * @param directionId
 	 * @return
 	 */
+	@Override
 	public List<TripPattern> getTripPatterns(String directionId) {
 		List<TripPattern> tripPatternsForRoute = getTripPatterns();
 			List<TripPattern> tripPatternsForDir = new ArrayList<TripPattern>();
@@ -471,6 +460,7 @@ public class Route implements Serializable {
 		return tripPatternsForDir;
 	}
 
+	@Override
 	public List<TripPattern> getTripPatterns() {
 		if (tripPatternsForRoute == null) {
 			tripPatternsForRoute = RouteDAO.getTripPatterns(getId());
@@ -491,6 +481,7 @@ public class Route implements Serializable {
 	 * 
 	 * @return
 	 */
+	@Override
 	public List<String> getDirectionIds() {
 		if (directionIds == null) {
 			directionIds = RouteDAO.getDirectionIds(id);
@@ -510,6 +501,7 @@ public class Route implements Serializable {
 	 * Returns unordered collection of path vectors associated with route
 	 * @return
 	 */
+	@Override
 	public synchronized Collection<Vector> getPathSegments() {
 		// If stop paths collection already determined then simply return it
 		if (stopPaths != null)
@@ -526,6 +518,7 @@ public class Route implements Serializable {
 	 *
 	 * @return Map keyed by direction ID and value of List of ordered stop IDs.
 	 */
+	@Override
 	public Map<String, List<String>> getUnorderedUniqueStopsByDirection() {
 		synchronized (unorderedStopsLock) {
 			// If already determined the stops return the cached map
@@ -562,6 +555,7 @@ public class Route implements Serializable {
 	 * 
 	 * @return Map keyed by direction ID and value of List of ordered stop IDs.
 	 */
+	@Override
 	public synchronized Map<String, List<String>> getOrderedStopsByDirection() {
 		// If already determined the stops return the cached map
 		if (orderedStopsPerDirectionMap != null)
@@ -645,6 +639,7 @@ public class Route implements Serializable {
 	 *            so that can handle stop being on trip multiple times
 	 * @return the stop order for the stop for the direction for the route
 	 */
+	@Override
 	public int getStopOrder(String directionId, String stopId, int stopIndex) {
 		// Make sure initialized
 		createStopOrderByDirectionMapIfNeedTo();
@@ -687,6 +682,7 @@ public class Route implements Serializable {
 	/**
 	 * @return the configRev
 	 */
+	@Override
 	public int getConfigRev() {
 		return configRev;
 	}
@@ -697,6 +693,7 @@ public class Route implements Serializable {
 	 * 
 	 * @return the processed name of the route
 	 */
+	@Override
 	public String getName() {
 		return name;
 	}
@@ -707,6 +704,7 @@ public class Route implements Serializable {
 	 * 
 	 * @return the short name for the route
 	 */
+	@Override
 	public String getShortName() {
 		return shortName != null ? shortName : name;
 	}
@@ -717,6 +715,7 @@ public class Route implements Serializable {
 	 * 
 	 * @return the long name for the route
 	 */
+	@Override
 	public String getLongName() {		
 		return longName != null ? longName : name;
 	}
@@ -724,6 +723,7 @@ public class Route implements Serializable {
 	/**
 	 * @return the id
 	 */
+	@Override
 	public String getId() {
 		return id;
 	}
@@ -731,6 +731,7 @@ public class Route implements Serializable {
 	/**
 	 * @return the color
 	 */
+	@Override
 	public String getColor() {
 		return color;
 	}
@@ -738,6 +739,7 @@ public class Route implements Serializable {
 	/**
 	 * @return the textColor
 	 */
+	@Override
 	public String getTextColor() {
 		return textColor;
 	}
@@ -745,6 +747,7 @@ public class Route implements Serializable {
 	/**
 	 * @return the routeOrder or null if not set
 	 */
+	@Override
 	public Integer getRouteOrder() {
 		return routeOrder;
 	}
@@ -762,6 +765,7 @@ public class Route implements Serializable {
 	/**
 	 * @return the hidden
 	 */
+	@Override
 	public boolean isHidden() {
 		return hidden;
 	}
@@ -769,6 +773,7 @@ public class Route implements Serializable {
 	/**
 	 * @return the type
 	 */
+	@Override
 	public String getType() {
 		return type;
 	}
@@ -776,6 +781,7 @@ public class Route implements Serializable {
 	/**
 	 * @return the description
 	 */
+	@Override
 	public String getDescription() {
 		return description;
 	}
@@ -793,6 +799,7 @@ public class Route implements Serializable {
 	 * 
 	 * @return the max distance if set, otherwise NaN
 	 */
+	@Override
 	public double getMaxAllowableDistanceFromSegment() {
 		if (maxDistance != null)
 			return maxDistance;
