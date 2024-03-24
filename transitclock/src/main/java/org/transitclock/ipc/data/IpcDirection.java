@@ -25,7 +25,7 @@ import java.util.List;
 import org.transitclock.applications.Core;
 import org.transitclock.db.dao.RouteDAO;
 import org.transitclock.db.structs.RouteInterface;
-import org.transitclock.db.structs.Stop;
+import org.transitclock.db.structs.StopInterface;
 import org.transitclock.db.structs.TripPattern;
 
 /**
@@ -65,7 +65,7 @@ public class IpcDirection implements Serializable {
 		this.stops = new ArrayList<IpcStop>();
 		List<String> stopIds = dbRoute.getOrderedStopsByDirection().get(directionId);
 		for (String stopId : stopIds) {
-			Stop stop = Core.getInstance().getDbConfig().getStop(stopId);
+			StopInterface stop = Core.getInstance().getBackingStore().getStop(stopId);
 			this.stops.add(new IpcStop(stop, directionId));
 		}
 	}

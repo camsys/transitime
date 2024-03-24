@@ -111,7 +111,7 @@ public class SpatialMatcher {
 	 */
 	private List<SpatialMatch> getSpatialMatchesForTrip(VehicleState vehicleState,
 					AvlReport avlReport,
-																											Trip trip, MatchingType matchingType) {
+																											TripInterface trip, MatchingType matchingType) {
 		if (CoreConfig.useBarefootSpatialMatcher.getValue()) {
 			return getSpatialMatchesForTripViaBarefootMatching(vehicleState, avlReport, trip, matchingType);
 		}
@@ -120,7 +120,7 @@ public class SpatialMatcher {
 
 	private List<SpatialMatch> getSpatialMatchesForTripViaBarefootMatching(VehicleState vehicleState,
 																																				 AvlReport avlReport,
-																																				 Trip trip, MatchingType matchingType) {
+																																				 TripInterface trip, MatchingType matchingType) {
 		// here is where we hook up Barefoot
 		MapMatcher mapMatcher = vehicleState.getMapMatcher();
 		if (mapMatcher == null) {
@@ -140,7 +140,7 @@ public class SpatialMatcher {
 	}
 
 	private List<SpatialMatch> getSpatialMatchesForTripViaDefaultMatching(AvlReport avlReport,
-																																				Trip trip, MatchingType matchingType) {
+																																				TripInterface trip, MatchingType matchingType) {
 		BlockInterface block = trip.getBlock();
 		
 		// The matches to be returned
@@ -305,7 +305,7 @@ public class SpatialMatcher {
 	public static List<SpatialMatch> getSpatialMatches(
 					VehicleState vehicleState,
 					AvlReport avlReport,
-					BlockInterface block, List<Trip> tripsToInvestigate,
+					BlockInterface block, List<TripInterface> tripsToInvestigate,
 					MatchingType matchingType) {
 		List<SpatialMatch> spatialMatchesForAllTrips = 
 				new ArrayList<SpatialMatch>();
@@ -317,7 +317,7 @@ public class SpatialMatcher {
 		// So can reuse spatial matches if looking at same trip pattern
 		Set<String> tripPatternIdsCovered = new HashSet<String>();
 
-		for (Trip trip : tripsToInvestigate) {
+		for (TripInterface trip : tripsToInvestigate) {
 			if (tripPatternIdsCovered.contains(trip.getTripPattern().getId())) {
 				// Already found spatial matches for this trip pattern
 				// so use them instead of going through the whole trip
@@ -421,7 +421,7 @@ public class SpatialMatcher {
 	 */
 	public static List<SpatialMatch> getSpatialMatchesForAutoAssigning(
 			VehicleState vehicleState, AvlReport avlReport, BlockInterface block,
-			List<Trip> tripsToInvestigate) {
+			List<TripInterface> tripsToInvestigate) {
 		// Get all the spatial matches
 		List<SpatialMatch> allSpatialMatches =
 				getSpatialMatches(vehicleState, avlReport, block, tripsToInvestigate,

@@ -27,7 +27,7 @@ public interface BlockInterface {
 
   Trip getTrip(String tripId);
 
-  int getTripIndex(Trip trip);
+  int getTripIndex(TripInterface trip);
 
   Set<String> getRouteIds();
 
@@ -63,7 +63,6 @@ public interface BlockInterface {
                    int allowableAfterStartTimeSecs);
   boolean isActive(long epochTime, int allowableBeforeTimeSecs,
                    int allowableAfterStartTimeSecs);
-  List<Trip> getTripsCurrentlyActive(AvlReport avlReport);
   boolean isBeforeStartTime(Date date, int allowableBeforeTimeSecs);
   boolean shouldBeExclusive();
   int activeTripIndex(int secondsIntoDay);

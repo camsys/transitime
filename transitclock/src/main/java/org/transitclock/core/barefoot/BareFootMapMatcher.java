@@ -8,9 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.core.MapMatcher;
 import org.transitclock.core.SpatialMatch;
-import org.transitclock.db.structs.AvlReport;
-import org.transitclock.db.structs.Block;
-import org.transitclock.db.structs.Location;
+import org.transitclock.db.structs.*;
 
 import com.bmwcarit.barefoot.matcher.Matcher;
 import com.bmwcarit.barefoot.matcher.MatcherCandidate;
@@ -24,7 +22,6 @@ import com.bmwcarit.barefoot.spatial.Geography;
 import com.bmwcarit.barefoot.spatial.SpatialOperator;
 import com.bmwcarit.barefoot.topology.Dijkstra;
 import com.esri.core.geometry.Point;
-import org.transitclock.db.structs.Trip;
 import org.transitclock.utils.Geo;
 
 /**
@@ -49,35 +46,37 @@ public class BareFootMapMatcher implements MapMatcher {
     private static final Logger logger = LoggerFactory.getLogger(BareFootMapMatcher.class);
 
     @Override
-    public void intialize(Trip trip) {
-        if (trip != null) {
-            long start = System.currentTimeMillis();
-            this.trip = trip;
-            Block block = trip.getBlock();
-            tripIndex = block.getTripIndex(trip);
-            TransitClockRoadReader roadReader = cache.get(trip);
-            if (roadReader == null) {
-                roadReader = new TransitClockRoadReader(trip);
-                barefootMap = RoadMap.Load(roadReader);
-                logger.info("cache miss");
-                cache.put(trip, roadReader);
+    public void intialize(TripInterface aTrip) {
+        if (aTrip instanceof Trip) {
+            if (trip != null) {
+                long start = System.currentTimeMillis();
+                this.trip = (Trip)aTrip;
+                Block block = trip.getBlock();
+                tripIndex = block.getTripIndex(trip);
+                TransitClockRoadReader roadReader = cache.get(trip);
+                if (roadReader == null) {
+                    roadReader = new TransitClockRoadReader(trip);
+                    barefootMap = RoadMap.Load(roadReader);
+                    logger.info("cache miss");
+                    cache.put(trip, roadReader);
+                } else {
+                    logger.info("cache hit");
+                    // should we ensure roadReader is in a good state?
+                }
+                logger.debug("reader load in {}", (System.currentTimeMillis() - start));
+                if (barefootMap != null) {
+                    barefootMap.construct();
+                }
+                logger.debug("reader construct in {}", (System.currentTimeMillis() - start));
+                barefootMatcher = new Matcher(barefootMap, new Dijkstra<Road, RoadPoint>(), new TimePriority(),
+                        new Geography());
+                barefootMatcher.shortenTurns(false);
+                barefootState = new MatcherKState();
+                isInitialized = true;
+                logger.debug("init complete in {}", (System.currentTimeMillis() - start));
             } else {
-                logger.info("cache hit");
-                // should we ensure roadReader is in a good state?
+                logger.debug("nothing to do");
             }
-            logger.debug("reader load in {}", (System.currentTimeMillis() - start));
-            if (barefootMap != null){
-                barefootMap.construct();
-            }
-            logger.debug("reader construct in {}", (System.currentTimeMillis() - start));
-            barefootMatcher = new Matcher(barefootMap, new Dijkstra<Road, RoadPoint>(), new TimePriority(),
-                    new Geography());
-            barefootMatcher.shortenTurns(false);
-            barefootState = new MatcherKState();
-            isInitialized = true;
-            logger.debug("init complete in {}", (System.currentTimeMillis() - start));
-        } else {
-            logger.debug("nothing to do");
         }
     }
 
@@ -125,7 +124,7 @@ public class BareFootMapMatcher implements MapMatcher {
         return isInitialized;
     }
 
-    public boolean isTrip(Trip trip) {
+    public boolean isTrip(TripInterface trip) {
         return this.trip.equals(trip);
     }
 }

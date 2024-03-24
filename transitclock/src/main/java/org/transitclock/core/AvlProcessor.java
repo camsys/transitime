@@ -33,6 +33,7 @@ import org.transitclock.core.dataCache.PredictionDataCache;
 import org.transitclock.core.dataCache.VehicleDataCache;
 import org.transitclock.core.dataCache.VehicleStateManager;
 import org.transitclock.core.dataCache.canceledTrip.CanceledTripCache;
+import org.transitclock.db.dao.BlockDAO;
 import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.dao.VehicleEventDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
@@ -729,8 +730,8 @@ public class AvlProcessor {
 
 			// Determine which trips for the block are active. If none then
 			// continue to the next block
-			List<Trip> potentialTrips = block
-					.getTripsCurrentlyActive(avlReport);
+			List<TripInterface> potentialTrips = BlockDAO
+					.getTripsCurrentlyActive(avlReport, block);
 			if (potentialTrips.isEmpty())
 				continue;
 
@@ -800,7 +801,7 @@ public class AvlProcessor {
 		// MatchingType.AUTO_ASSIGNING_MATCHING, because the AVL feed is
 		// specifying the block assignment so it should find a match even
 		// if it pretty far off.
-		List<Trip> potentialTrips = block.getTripsCurrentlyActive(avlReport);
+		List<TripInterface> potentialTrips = BlockDAO.getTripsCurrentlyActive(avlReport, block);
 		// hydrate trips and attach to this session
 		potentialTrips = TripDAO.refreshTrips(potentialTrips, session);
 		if (block instanceof Block) {
@@ -851,7 +852,7 @@ public class AvlProcessor {
 					+ "match so will try to match to layover stop.",
 					avlReport.getVehicleId());
 
-			Trip trip = TemporalMatcher.getInstance()
+			TripInterface trip = TemporalMatcher.getInstance()
 					.matchToLayoverStopEvenIfOffRoute(avlReport, potentialTrips);
 			if (trip != null) {
 				// Determine distance to first stop of trip
@@ -1323,7 +1324,7 @@ public class AvlProcessor {
 				&& vehicleState.getMatch().getAtStop() != null) {
 			// Create description for VehicleEvent
 			String stopId = vehicleState.getMatch().getStopPath().getStopId();
-			Stop stop = Core.getInstance().getDbConfig().getStop(stopId);
+			StopInterface stop = Core.getInstance().getBackingStore().getStop(stopId);
 			RouteInterface route = vehicleState.getMatch().getRoute();
 			VehicleAtStopInfo stopInfo = vehicleState.getMatch().getAtStop();
 			Integer scheduledDepartureTime = stopInfo.getScheduleTime()

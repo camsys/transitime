@@ -14,6 +14,7 @@ import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.query.TripQuery;
 import org.transitclock.db.structs.Block;
 import org.transitclock.db.structs.Trip;
+import org.transitclock.db.structs.TripInterface;
 import org.transitclock.utils.IntervalTimer;
 
 import java.math.BigInteger;
@@ -91,9 +92,9 @@ public class TripDAO {
 
 
   // fully load trip/block on this thread
-  public static synchronized List<Trip> refreshTrips(List<Trip> potentialTrips, Session sessionForThread) {
-    List<Trip> loadedTrips = new ArrayList<>();
-    for (Trip potentialTrip : potentialTrips) {
+  public static synchronized List<TripInterface> refreshTrips(List<TripInterface> potentialTrips, Session sessionForThread) {
+    List<TripInterface> loadedTrips = new ArrayList<>();
+    for (TripInterface potentialTrip : potentialTrips) {
       if (potentialTrip.getBlock() != null) {
         Block potentialBlock = potentialTrip.getBlock().initialize(sessionForThread);
         Trip loadedTrip = potentialBlock.getTrip(potentialTrip.getId());

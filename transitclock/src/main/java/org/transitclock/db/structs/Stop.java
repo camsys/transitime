@@ -46,7 +46,7 @@ import org.transitclock.gtfs.gtfsStructs.GtfsStop;
  * @author SkiBu Smith
  */
 @Entity @DynamicUpdate @Table(name="Stops")
-public class Stop implements Serializable {
+public class Stop implements StopInterface, Serializable {
 
 	@Column 
 	@Id
@@ -271,6 +271,7 @@ public class Stop implements Serializable {
 	/**
 	 * @return the configRev
 	 */
+	@Override
 	public int getConfigRev() {
 		return configRev;
 	}
@@ -278,6 +279,7 @@ public class Stop implements Serializable {
 	/**
 	 * @return the id
 	 */
+	@Override
 	public String getId() {
 		return id;
 	}
@@ -285,6 +287,7 @@ public class Stop implements Serializable {
 	/**
 	 * @return the code. Null if not set.
 	 */
+	@Override
 	public Integer getCode() {
 		return code;
 	}
@@ -292,6 +295,7 @@ public class Stop implements Serializable {
 	/**
 	 * @return the name
 	 */
+	@Override
 	public String getName() {
 		return name;
 	}
@@ -299,6 +303,7 @@ public class Stop implements Serializable {
 	/**
 	 * @return the loc
 	 */
+	@Override
 	public Location getLoc() {
 		return loc;
 	}
@@ -312,6 +317,7 @@ public class Stop implements Serializable {
 	 * of stops.
      * @return the timepointStop
 	 */
+	@Override
 	public boolean isTimepointStop() {
 		return timepointStop;
 	}
@@ -322,6 +328,7 @@ public class Stop implements Serializable {
 	 * 
 	 * @return the layoverStop. Can be true, false, or null
 	 */
+	@Override
 	public Boolean isLayoverStop() {
 		return layoverStop;
 	}
@@ -332,6 +339,7 @@ public class Stop implements Serializable {
 	 * 
 	 * @return the waitStop. Can be true, false, or null
 	 */
+	@Override
 	public Boolean isWaitStop() {
 		return waitStop;
 	}
@@ -339,6 +347,7 @@ public class Stop implements Serializable {
 	/**
 	 * @return the hidden
 	 */
+	@Override
 	public boolean isHidden() {
 		return hidden;
 	}

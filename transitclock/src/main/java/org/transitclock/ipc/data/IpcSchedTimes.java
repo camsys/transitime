@@ -21,7 +21,7 @@ import java.io.Serializable;
 
 import org.transitclock.applications.Core;
 import org.transitclock.db.structs.ScheduleTime;
-import org.transitclock.db.structs.Stop;
+import org.transitclock.db.structs.StopInterface;
 import org.transitclock.utils.Time;
 
 /**
@@ -45,7 +45,7 @@ public class IpcSchedTimes implements Serializable {
 		this.arrivalTime = dbScheduleTime.getArrivalTime();
 		this.departureTime = dbScheduleTime.getDepartureTime();
 		this.stopId = stopId;
-		Stop stop = Core.getInstance().getDbConfig().getStop(stopId);
+		StopInterface stop = Core.getInstance().getBackingStore().getStop(stopId);
 		this.stopName = stop.getName();
 	}
 

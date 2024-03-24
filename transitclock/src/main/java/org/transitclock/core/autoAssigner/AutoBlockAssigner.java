@@ -41,11 +41,12 @@ import org.transitclock.core.TravelTimes;
 import org.transitclock.core.VehicleState;
 import org.transitclock.core.dataCache.VehicleDataCache;
 import org.transitclock.core.dataCache.VehicleStateManager;
+import org.transitclock.db.dao.BlockDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.db.structs.BlockInterface;
-import org.transitclock.db.structs.Trip;
 import org.transitclock.db.dao.TripDAO;
+import org.transitclock.db.structs.TripInterface;
 import org.transitclock.utils.IntervalTimer;
 import org.transitclock.utils.Time;
 
@@ -254,7 +255,7 @@ public class AutoBlockAssigner {
 		// not layovers. Won't be a layover match anyways since this method
 		// is only for use with no schedule assignments.
 		AvlReport avlReport = getAvlReport();
-		List<Trip> potentialTrips = block.getTripsCurrentlyActive(avlReport);
+		List<TripInterface> potentialTrips = BlockDAO.getTripsCurrentlyActive(avlReport, block);
 		potentialTrips = TripDAO.refreshTrips(potentialTrips,
 						HibernateUtils.getSessionForThread(AgencyConfig.getAgencyId()));
 		List<SpatialMatch> spatialMatches = SpatialMatcher
@@ -349,19 +350,19 @@ public class AutoBlockAssigner {
 		
 		// Determine which trips are currently active so that don't bother 
 		// looking at all trips
-		List<Trip> activeTrips = block.getTripsCurrentlyActive(avlReport);
+		List<TripInterface> activeTrips = BlockDAO.getTripsCurrentlyActive(avlReport, block);
 		activeTrips = TripDAO.refreshTrips(activeTrips,
 						HibernateUtils.getSessionForThread(AgencyConfig.getAgencyId()));
 		// Determine trips that need to look at for spatial matches because 
 		// haven't looked at the associated trip pattern yet.
-		List<Trip> tripsNeedToInvestigate = new ArrayList<Trip>();
+		List<TripInterface> tripsNeedToInvestigate = new ArrayList<>();
 		
 		// Go through the activeTrips and determine which ones actually need
 		// to be investigated. If the associated trip pattern was already 
 		// examined then use the spatial match (or null) previous found
 		// and cached. If it is a new trip pattern then add the trip to the
 		// list of trips that need to be investigated.
-		for (Trip trip : activeTrips) {
+		for (TripInterface trip : activeTrips) {
 			String tripPatternId = trip.getTripPattern().getId();
 			
 			logger.debug("For vehicleId={} checking tripId={} with "
@@ -440,7 +441,7 @@ public class AutoBlockAssigner {
 		// when don't find a spatial match for a trip pattern don't want to 
 		// waste time searching it again to find out again that it doesn't 
 		// have a match.
-		for (Trip tripInvestigated : tripsNeedToInvestigate) {
+		for (TripInterface tripInvestigated : tripsNeedToInvestigate) {
 			// If the trip that was investigated did not result in spatial
 			// match then remember that by storing a null spatial match
 			// for the trip pattern
@@ -487,7 +488,7 @@ public class AutoBlockAssigner {
 			AvlReport avlReport, BlockInterface block) {
 		// Determine which trips are currently active so that don't bother 
 		// looking at all trips
-		List<Trip> activeTrips = block.getTripsCurrentlyActive(avlReport);
+		List<TripInterface> activeTrips = BlockDAO.getTripsCurrentlyActive(avlReport, block);
 		activeTrips = TripDAO.refreshTrips(activeTrips,
 						HibernateUtils.getSessionForThread(AgencyConfig.getAgencyId()));
 

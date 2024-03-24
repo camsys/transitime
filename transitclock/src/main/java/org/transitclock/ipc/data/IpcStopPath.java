@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.transitclock.applications.Core;
 import org.transitclock.db.structs.Location;
-import org.transitclock.db.structs.Stop;
+import org.transitclock.db.structs.StopInterface;
 import org.transitclock.db.structs.StopPath;
 import org.transitclock.utils.Geo;
 
@@ -54,7 +54,7 @@ public class IpcStopPath implements Serializable {
 		this.configRev = dbStopPath.getConfigRev();
 		this.stopPathId = dbStopPath.getStopPathId();
 		this.stopId = dbStopPath.getStopId();
-		Stop stop = getStop(dbStopPath);
+		StopInterface stop = getStop(dbStopPath);
 		if(stop != null){
 			this.stopName = stop.getName();
 		} else {
@@ -69,7 +69,7 @@ public class IpcStopPath implements Serializable {
 		this.pathLength = dbStopPath.getLength();		
 	}
 
-	public IpcStopPath(StopPath dbStopPath, Stop stop) {
+	public IpcStopPath(StopPath dbStopPath, StopInterface stop) {
 		this.configRev = dbStopPath.getConfigRev();
 		this.stopPathId = dbStopPath.getStopPathId();
 		this.stopId = dbStopPath.getStopId();
@@ -87,8 +87,8 @@ public class IpcStopPath implements Serializable {
 		this.pathLength = dbStopPath.getLength();
 	}
 
-	private Stop getStop(StopPath dbStopPath) {
-		return Core.getInstance().getDbConfig().getStop(dbStopPath.getStopId());
+	private StopInterface getStop(StopPath dbStopPath) {
+		return Core.getInstance().getBackingStore().getStop(dbStopPath.getStopId());
 	}
 
 	@Override

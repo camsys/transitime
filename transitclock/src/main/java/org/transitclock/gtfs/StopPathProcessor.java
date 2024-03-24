@@ -26,16 +26,10 @@ import java.util.Map;
 import com.amazonaws.services.kinesis.model.InvalidArgumentException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.StringConfigValue;
-import org.transitclock.db.structs.Location;
-import org.transitclock.db.structs.Stop;
-import org.transitclock.db.structs.StopPath;
-import org.transitclock.db.structs.TripPattern;
-import org.transitclock.db.structs.Vector;
+import org.transitclock.db.structs.*;
 import org.transitclock.gtfs.gtfsStructs.GtfsShape;
 import org.transitclock.gtfs.gtfsStructs.GtfsStopTime;
-import org.transitclock.utils.DistanceConverter;
 import org.transitclock.utils.DistanceType;
 import org.transitclock.utils.Geo;
 import org.transitclock.utils.IntervalTimer;
@@ -51,7 +45,7 @@ public class StopPathProcessor {
 
 	// Data passed in to constructor
 	private final Map<String, List<GtfsShape>> gtfsShapesMap;  // Keyed on shapeId
-	private final Map<String, Stop> stopsMap;
+	private final Map<String, StopInterface> stopsMap;
 	private final Collection<TripPattern> tripPatterns;
 	private final Map<String, List<GtfsStopTime>> gtfsStopTimesForTripMap;
 	private final double offsetDistance;
@@ -91,7 +85,7 @@ public class StopPathProcessor {
 	 * @param trimPathBeforeFirstStopOfTrip
 	 */
 	public StopPathProcessor(Collection<GtfsShape> gtfsShapes, 
-			Map<String, Stop> stopsMap, 
+			Map<String, StopInterface> stopsMap,
 			Collection<TripPattern> tripPatterns,
 		  Map<String, List<GtfsStopTime>> gtfsStopTimesForTripMap,
 			double offsetDistance,
@@ -138,7 +132,7 @@ public class StopPathProcessor {
 		// Create a path segment to the first stop
 		StopPath firstPath = tripPattern.getStopPath(0);
 		String firstStopIdForTrip = tripPattern.getStopId(0);
-		Stop firstStopForTrip = stopsMap.get(firstStopIdForTrip);
+		StopInterface firstStopForTrip = stopsMap.get(firstStopIdForTrip);
 		ArrayList<Location> locList = new ArrayList<Location>();
 		locList.add(firstStopForTrip.getLoc());
 		locList.add(firstStopForTrip.getLoc());		
@@ -148,11 +142,11 @@ public class StopPathProcessor {
 		for (int stopIndex=0; stopIndex<tripPattern.getStopPaths().size()-1; ++stopIndex) {
 			// Determine the locations of the two stops that define the path
 			String stopId0 = tripPattern.getStopId(stopIndex);
-			Stop stop0 = stopsMap.get(stopId0);
+			StopInterface stop0 = stopsMap.get(stopId0);
 			Location loc0 = stop0.getLoc();
 			
 			String stopId1 = tripPattern.getStopId(stopIndex+1);
-			Stop stop1 = stopsMap.get(stopId1);
+			StopInterface stop1 = stopsMap.get(stopId1);
 			Location loc1 = stop1.getLoc();
 
 			locList = new ArrayList<Location>();
@@ -238,7 +232,7 @@ public class StopPathProcessor {
 		Location matchLocation;
 		TripPattern tripPattern;
 		int stopIndex;
-		Stop stop;
+		StopInterface stop;
 
 		@Override
 		public String toString() {
@@ -281,10 +275,10 @@ public class StopPathProcessor {
 		// NOTE: this has issues with loops and with S-shapes between
 		// stops that are close together
 		String stopId = tripPattern.getStopId(stopIndex);
-		Stop stop = stopsMap.get(stopId);
+		StopInterface stop = stopsMap.get(stopId);
 		
 		// Determine the previous stop for the trip pattern (can be null)
-		Stop previousStop = null;
+		StopInterface previousStop = null;
 		if (stopIndex > 0) {
 			String previousStopId = tripPattern.getStopId(stopIndex-1);
 			previousStop = stopsMap.get(previousStopId);
@@ -463,7 +457,7 @@ public class StopPathProcessor {
 
 		// Determine the stop for the trip pattern
 		String stopId = tripPattern.getStopId(stopIndex);
-		Stop stop = stopsMap.get(stopId);
+		StopInterface stop = stopsMap.get(stopId);
 		Double minDistanceToShapeDistanceTravelled = Double.MAX_VALUE;
 		BestMatch bestMatch = new BestMatch();
 		bestMatch.tripPattern = tripPattern;
@@ -532,7 +526,7 @@ public class StopPathProcessor {
 		return sb.substring(0, sb.length()-3);
 	}
 
-	private String debugStopLoc(Stop stop) {
+	private String debugStopLoc(StopInterface stop) {
 		return stop.getLoc().getLat() + "%2C" + stop.getLoc().getLon();
 	}
 
@@ -577,7 +571,7 @@ public class StopPathProcessor {
 
 			// Determine which stop currently working on
 			String stopId = tripPattern.getStopId(stopIndex);
-			Stop stop = stopsMap.get(stopId);
+			StopInterface stop = stopsMap.get(stopId);
 			
 			// The list of locations defining the segments for the stop path
 			ArrayList<Location> locList = new ArrayList<Location>();

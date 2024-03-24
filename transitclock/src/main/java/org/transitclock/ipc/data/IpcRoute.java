@@ -244,8 +244,8 @@ public class IpcRoute extends IpcRouteSummary {
 				}
 				// Create the IpcStop and add it to the list of stops for the 
 				// current direction
-				Stop stop = 
-						Core.getInstance().getDbConfig().getStop(currentStopId);
+				StopInterface stop =
+						Core.getInstance().getBackingStore().getStop(currentStopId);
 				IpcStop ipcStop =
 						new IpcStop(stop, isUiStop, currentDirectionId,stopPathLength);
 				ipcStopsForDirection.add(ipcStop);

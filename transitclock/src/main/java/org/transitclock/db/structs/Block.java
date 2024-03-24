@@ -528,114 +528,7 @@ public class Block implements Serializable, BlockInterface {
 						&& secsInDayForAvlReport < startTime+Time.SEC_PER_DAY);
 	}
 	
-	/**
-	 * If the trip is active at the secsInDayForAvlReport then it is
-	 * added to the tripsThatMatchTime list. Trip is considered active
-	 * if it is within start time of trip minus 
-	 * CoreConfig.getAllowableEarlyForLayoverSeconds() and within the end
-	 * time of the trip. No leniency is made for the end time since once
-	 * a trip is over really don't want to assign vehicle to that trip.
-	 * Yes, vehicles often run late, but that should only be taken account
-	 * when matching to already predictable vehicle.
-	 * 
-	 * @param vehicleId for logging messages
-	 * @param secsInDayForAvlReport
-	 * @param trip
-	 * @param tripsThatMatchTime
-	 * @return
-	 */
-	private static boolean addTripIfActive(String vehicleId,
-			int secsInDayForAvlReport, Trip trip, 
-			List<Trip> tripsThatMatchTime) {
-		int startTime = trip.getStartTime();
-		int endTime = trip.getEndTime();
 
-		int allowableEarlyTimeSecs = 
-				CoreConfig.getAllowableEarlyForLayoverSeconds();
-		if (secsInDayForAvlReport > startTime - allowableEarlyTimeSecs 
-				&& secsInDayForAvlReport < endTime + CoreConfig.getAllowableLateSeconds()) {
-			tripsThatMatchTime.add(trip);
-
-			if (logger.isDebugEnabled()) {
-				logger.debug("Determined that for blockId={} that a trip is " +
-						"considered to be active for AVL time. " + 
-						"TripId={}, tripIndex={} AVLTime={}, " + 
-						"startTime={}, endTime={}, " + 
-						"allowableEarlyForLayover={} secs, allowableLate={} secs, " +
-						"vehicleId={}",
-						trip.getBlock().getId(),
-						trip.getId(), 
-						trip.getBlock().getTripIndex(trip),
-						Time.timeOfDayStr(secsInDayForAvlReport),
-						Time.timeOfDayStr(trip.getStartTime()),
-						Time.timeOfDayStr(trip.getEndTime()),
-						CoreConfig.getAllowableEarlyForLayoverSeconds(),
-						CoreConfig.getAllowableLateSeconds(),
-						vehicleId);
-			}
-			
-			return true;
-		}
-		
-		if (logger.isDebugEnabled())
-		  logger.debug("block {} is not active for vehicleId {}", trip.getBlock().getId(), vehicleId);
-
-    // Not a match so return false
-		return false;
-	}
-	
-	/**
-	 * For this block determines which trips are currently active. Should work
-	 * even for trips that start before midnight or go till after midnight. Trip
-	 * is considered active if it is within start time of trip minus
-	 * CoreConfig.getAllowableEarlyForLayoverSeconds() and within the end time
-	 * of the trip. No leniency is made for the end time since once a trip is
-	 * over really don't want to assign vehicle to that trip.
-	 * 
-	 * @param avlReport
-	 * @return List of Trips that are active. If none are active an empty list
-	 *         is returned.
-	 */
-	public List<Trip> getTripsCurrentlyActive(AvlReport avlReport) {
-		// Set for returning results
-		List<Trip> tripsThatMatchTime = new ArrayList<Trip>();
-		
-		// Convenience variable
-		String vehicleId = avlReport.getVehicleId();
-		
-		// Go through trips and find ones 
-		List<Trip> trips = getTrips();
-		for (Trip trip : trips) {			
-			// If time of avlReport is within reasonable time of the trip
-			// time then this trip should be returned.  
-			int secsInDayForAvlReport = 
-					Core.getInstance().getTime().getSecondsIntoDay(avlReport.getDate());
-
-			// If the trip is active then add it to the list of active trips 
-			boolean tripIsActive = 
-					addTripIfActive(vehicleId, secsInDayForAvlReport, trip, tripsThatMatchTime);
-			
-			// if trip wasn't active might be because trip actually starts before
-			// midnight so should check for that special case.
-			if (!tripIsActive)
-				tripIsActive = 
-					addTripIfActive(vehicleId, 
-							secsInDayForAvlReport - Time.SEC_PER_DAY, 
-							trip, tripsThatMatchTime);
-			
-			// if trip still wasn't active might be because trip goes past
-			// midnight so should check for that special case.
-			if (!tripIsActive)
-				tripIsActive = 
-					addTripIfActive(vehicleId, 
-							secsInDayForAvlReport + Time.SEC_PER_DAY, trip, 
-							tripsThatMatchTime);
-		}
-
-		// Returns results
-		return tripsThatMatchTime;
-	}
-	
 
 	/***************************** Getter Methods ************************/
 
@@ -747,7 +640,7 @@ public class Block implements Serializable, BlockInterface {
 	 *            Specifies which trip looking for
 	 * @return Index into trips of the specified trip
 	 */
-	public int getTripIndex(Trip trip) {
+	public int getTripIndex(TripInterface trip) {
 		List<Trip> tripsList = getTrips();
 		for (int i=0; i<tripsList.size(); ++i) {
 			if (tripsList.get(i) == trip)

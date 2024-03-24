@@ -22,7 +22,7 @@ import org.transitclock.applications.Core;
 import org.transitclock.configData.CoreConfig;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.db.structs.Location;
-import org.transitclock.db.structs.Trip;
+import org.transitclock.db.structs.TripInterface;
 import org.transitclock.utils.Geo;
 import org.transitclock.utils.Time;
 
@@ -637,7 +637,7 @@ public class TemporalMatcher {
 	 * @return
 	 */
 	private static boolean canDeadheadToBeginningOfTripInTime(
-			AvlReport avlReport, Trip trip) {
+			AvlReport avlReport, TripInterface trip) {
 		long tripStartTimeMsecs = trip.getStartTime() * 1000;
 		long msecsIntoDay = 
 				Core.getInstance().getTime().getMsecsIntoDay(avlReport.getDate(), 
@@ -692,10 +692,10 @@ public class TemporalMatcher {
 	 *            specifies which trips to examine
 	 * @return
 	 */
-	public Trip matchToLayoverStopEvenIfOffRoute(
-			AvlReport avlReport, List<Trip> potentialTrips) {
+	public TripInterface matchToLayoverStopEvenIfOffRoute(
+			AvlReport avlReport, List<TripInterface> potentialTrips) {
 		// Determine upcoming wait stop
-		for (Trip trip : potentialTrips) {
+		for (TripInterface trip : potentialTrips) {
 			if (canDeadheadToBeginningOfTripInTime(avlReport, trip))
 				return trip;
 		}

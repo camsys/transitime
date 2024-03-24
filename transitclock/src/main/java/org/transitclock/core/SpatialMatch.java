@@ -120,7 +120,7 @@ public class SpatialMatch {
 	 *            The new trip to use for the copy. It is assumed to be for the
 	 *            same trip pattern. It can be for a separate block.
 	 */
-	public SpatialMatch(SpatialMatch toCopy, Trip newTrip) {
+	public SpatialMatch(SpatialMatch toCopy, TripInterface newTrip) {
 		if (toCopy.getTrip().getTripPattern() != newTrip.getTripPattern())
 			logger.error("Trying to create a copy of a SpatialMatch using a "
 					+ "new trip but they have different trip patterns. "

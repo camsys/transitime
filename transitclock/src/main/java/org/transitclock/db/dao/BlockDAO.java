@@ -12,12 +12,13 @@ import org.transitclock.applications.Core;
 import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.configData.AgencyConfig;
+import org.transitclock.configData.CoreConfig;
 import org.transitclock.db.hibernate.HibernateUtils;
-import org.transitclock.db.structs.Block;
-import org.transitclock.db.structs.Trip;
+import org.transitclock.db.structs.*;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.logging.Markers;
 import org.transitclock.utils.IntervalTimer;
+import org.transitclock.utils.Time;
 
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
@@ -377,5 +378,115 @@ public class BlockDAO {
     }
 
   }
+
+  /**
+   * For this block determines which trips are currently active. Should work
+   * even for trips that start before midnight or go till after midnight. Trip
+   * is considered active if it is within start time of trip minus
+   * CoreConfig.getAllowableEarlyForLayoverSeconds() and within the end time
+   * of the trip. No leniency is made for the end time since once a trip is
+   * over really don't want to assign vehicle to that trip.
+   *
+   * @param avlReport
+   * @return List of Trips that are active. If none are active an empty list
+   *         is returned.
+   */
+  public static List<TripInterface> getTripsCurrentlyActive(AvlReport avlReport, BlockInterface block) {
+    // Set for returning results
+    List<TripInterface> tripsThatMatchTime = new ArrayList<TripInterface>();
+
+    // Convenience variable
+    String vehicleId = avlReport.getVehicleId();
+
+    // Go through trips and find ones
+    List<Trip> trips = block.getTrips();
+    for (TripInterface trip : trips) {
+      // If time of avlReport is within reasonable time of the trip
+      // time then this trip should be returned.
+      int secsInDayForAvlReport =
+              Core.getInstance().getTime().getSecondsIntoDay(avlReport.getDate());
+
+      // If the trip is active then add it to the list of active trips
+      boolean tripIsActive =
+              addTripIfActive(vehicleId, secsInDayForAvlReport, trip, tripsThatMatchTime);
+
+      // if trip wasn't active might be because trip actually starts before
+      // midnight so should check for that special case.
+      if (!tripIsActive)
+        tripIsActive =
+                addTripIfActive(vehicleId,
+                        secsInDayForAvlReport - Time.SEC_PER_DAY,
+                        trip, tripsThatMatchTime);
+
+      // if trip still wasn't active might be because trip goes past
+      // midnight so should check for that special case.
+      if (!tripIsActive)
+        tripIsActive =
+                addTripIfActive(vehicleId,
+                        secsInDayForAvlReport + Time.SEC_PER_DAY, trip,
+                        tripsThatMatchTime);
+    }
+
+    // Returns results
+    return tripsThatMatchTime;
+  }
+
+  /**
+   * If the trip is active at the secsInDayForAvlReport then it is
+   * added to the tripsThatMatchTime list. Trip is considered active
+   * if it is within start time of trip minus
+   * CoreConfig.getAllowableEarlyForLayoverSeconds() and within the end
+   * time of the trip. No leniency is made for the end time since once
+   * a trip is over really don't want to assign vehicle to that trip.
+   * Yes, vehicles often run late, but that should only be taken account
+   * when matching to already predictable vehicle.
+   *
+   * @param vehicleId for logging messages
+   * @param secsInDayForAvlReport
+   * @param trip
+   * @param tripsThatMatchTime
+   * @return
+   */
+  private static boolean addTripIfActive(String vehicleId,
+                                         int secsInDayForAvlReport, TripInterface trip,
+                                         List<TripInterface> tripsThatMatchTime) {
+    int startTime = trip.getStartTime();
+    int endTime = trip.getEndTime();
+
+    int allowableEarlyTimeSecs =
+            CoreConfig.getAllowableEarlyForLayoverSeconds();
+    if (secsInDayForAvlReport > startTime - allowableEarlyTimeSecs
+            && secsInDayForAvlReport < endTime + CoreConfig.getAllowableLateSeconds()) {
+      tripsThatMatchTime.add(trip);
+
+      if (logger.isDebugEnabled()) {
+        logger.debug("Determined that for blockId={} that a trip is " +
+                        "considered to be active for AVL time. " +
+                        "TripId={}, tripIndex={} AVLTime={}, " +
+                        "startTime={}, endTime={}, " +
+                        "allowableEarlyForLayover={} secs, allowableLate={} secs, " +
+                        "vehicleId={}",
+                trip.getBlock().getId(),
+                trip.getId(),
+                trip.getBlock().getTripIndex(trip),
+                Time.timeOfDayStr(secsInDayForAvlReport),
+                Time.timeOfDayStr(trip.getStartTime()),
+                Time.timeOfDayStr(trip.getEndTime()),
+                CoreConfig.getAllowableEarlyForLayoverSeconds(),
+                CoreConfig.getAllowableLateSeconds(),
+                vehicleId);
+      }
+
+      return true;
+    }
+
+    if (logger.isDebugEnabled())
+      logger.debug("block {} is not active for vehicleId {}", trip.getBlock().getId(), vehicleId);
+
+    // Not a match so return false
+    return false;
+  }
+
+
 
 }

@@ -89,7 +89,7 @@ public class IpcPredictionsForRouteStopDest implements Serializable {
 				trip != null ? trip.getRoute().getRouteOrder() : -1;
 		this.stopId = stopId;
 		
-		Stop stop = Core.getInstance().getDbConfig().getStop(stopId);
+		StopInterface stop = Core.getInstance().getBackingStore().getStop(stopId);
 		this.stopName = stop != null ? stop.getName() : null;
 		this.stopCode = stop != null ? stop.getCode() : null;
 
@@ -123,7 +123,7 @@ public class IpcPredictionsForRouteStopDest implements Serializable {
 		this.routeName = route.getName();
 		this.routeOrder = route.getRouteOrder();
 		this.stopId = stopId;
-		Stop stop = Core.getInstance().getDbConfig().getStop(stopId);
+		StopInterface stop = Core.getInstance().getBackingStore().getStop(stopId);
 		this.stopName = stop != null ? stop.getName() : null;
 		this.stopCode = stop != null ? stop.getCode() : null;
 
@@ -233,7 +233,7 @@ public class IpcPredictionsForRouteStopDest implements Serializable {
 			throw new IllegalArgumentException("routeShortName="
 					+ routeShortName + " does not exist.");
 		}
-		Stop stop = Core.getInstance().getDbConfig().getStop(stopId);
+		StopInterface stop = Core.getInstance().getBackingStore().getStop(stopId);
 		if (stop == null) {
 			throw new IllegalArgumentException("stopId="
 					+ stopId + " does not exist.");

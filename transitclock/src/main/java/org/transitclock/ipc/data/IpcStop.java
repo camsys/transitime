@@ -21,7 +21,7 @@ import java.io.Serializable;
 
 import com.google.common.base.Objects;
 import org.transitclock.db.structs.Location;
-import org.transitclock.db.structs.Stop;
+import org.transitclock.db.structs.StopInterface;
 
 /**
  * Contains information for a single route. Since Stop objects do 
@@ -53,7 +53,7 @@ public class IpcStop implements Serializable {
 
 	/********************** Member Functions **************************/
 
-	public IpcStop(Stop dbStop, boolean aUiStop, String directionId, Double stopPathLength) {
+	public IpcStop(StopInterface dbStop, boolean aUiStop, String directionId, Double stopPathLength) {
 		this.id = dbStop.getId();
 		this.name = dbStop.getName();
 		this.code = dbStop.getCode();
@@ -68,7 +68,7 @@ public class IpcStop implements Serializable {
 	 * 
 	 * @param dbStop
 	 */
-	public IpcStop(Stop dbStop, String directionId) {
+	public IpcStop(StopInterface dbStop, String directionId) {
 		this.id = dbStop.getId();
 		this.name = dbStop.getName();
 		this.code = dbStop.getCode();

@@ -20,17 +20,11 @@ import org.transitclock.core.VehicleState;
 import org.transitclock.core.dataCache.PredictionDataCache;
 import org.transitclock.core.dataCache.StopArrivalDepartureCacheFactory;
 import org.transitclock.core.dataCache.StopArrivalDepartureCacheKey;
-import org.transitclock.core.dataCache.VehicleDataCache;
-import org.transitclock.core.dataCache.VehicleStateManager;
-import org.transitclock.core.dataCache.ehcache.StopArrivalDepartureCache;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.HoldingTime;
-import org.transitclock.db.structs.Prediction;
-import org.transitclock.db.structs.Stop;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
 import org.transitclock.ipc.data.IpcPrediction;
 import org.transitclock.ipc.data.IpcPredictionsForRouteStopDest;
-import org.transitclock.ipc.data.IpcVehicleComplete;
 
 /**
  * @author Sean Óg Crudden

@@ -60,7 +60,7 @@ import org.transitclock.utils.Time;
  *
  */
 @Entity @DynamicUpdate @Table(name="Trips")
-public class Trip implements Lifecycle, Serializable {
+public class Trip implements TripInterface, Lifecycle, Serializable {
 
 	@Column 
 	@Id	
@@ -528,6 +528,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * 
 	 * @return
 	 */
+	@Override
 	public String toLongString() {
 		return "Trip [" 
 				+ "configRev=" + configRev
@@ -558,6 +559,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * can be quite verbose since it often contains times for many stops.
 	 * @return
 	 */
+	@Override
 	public String toShortString() {
 		return "Trip ["
 				+ "tripId=" + tripId 
@@ -737,6 +739,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * @return departure time of first stop of trip. Time is seconds into the
 	 *         day. Can be null.
 	 */
+	@Override
 	public Integer getStartTime() {
 		return startTime;
 	}
@@ -750,6 +753,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * @return arrival time of last stop of trip. Time is seconds into the day.
 	 *         Can be null.
 	 */
+	@Override
 	public Integer getEndTime() {
 		return endTime;
 	}
@@ -764,6 +768,7 @@ public class Trip implements Lifecycle, Serializable {
 	/**
 	 * @return the tripId
 	 */
+	@Override
 	public String getId() {
 		return tripId;
 	}
@@ -771,6 +776,7 @@ public class Trip implements Lifecycle, Serializable {
 	/**
 	 * @return the tripShortName
 	 */
+	@Override
 	public String getShortName() {
 		return tripShortName;
 	}
@@ -778,6 +784,7 @@ public class Trip implements Lifecycle, Serializable {
 	/**
 	 * @return the routeId
 	 */
+	@Override
 	public String getRouteId() {
 		return routeId;
 	}
@@ -789,6 +796,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * 
 	 * @return the routeShortName
 	 */
+	@Override
 	public String getRouteShortName() {
 		return routeShortName != null ? routeShortName : getRouteName();
 	}
@@ -801,6 +809,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * 
 	 * @return The route or null if no Core object available
 	 */
+	@Override
 	public Route getRoute() {
 		if (route == null) {
 			if (Core.isCoreApplication()) {
@@ -832,6 +841,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * 
 	 * @return The route name or null if Core object not available
 	 */
+	@Override
 	public String getRouteName() {
 		Route route = getRoute();
 		if (route == null)
@@ -842,6 +852,7 @@ public class Trip implements Lifecycle, Serializable {
 	/**
 	 * @return the directionId
 	 */
+	@Override
 	public String getDirectionId() {
 		return directionId;
 	}
@@ -849,6 +860,7 @@ public class Trip implements Lifecycle, Serializable {
 	/**
 	 * @return noSchedule
 	 */
+	@Override
 	public boolean isNoSchedule() {
 		return noSchedule;
 	}
@@ -856,6 +868,7 @@ public class Trip implements Lifecycle, Serializable {
 	/**
 	 * @return exactTimesHeadway
 	 */
+	@Override
 	public boolean isExactTimesHeadway() {
 		return exactTimesHeadway;
 	}
@@ -863,6 +876,7 @@ public class Trip implements Lifecycle, Serializable {
 	/**
 	 * @return the serviceId
 	 */
+	@Override
 	public String getServiceId() {
 		return serviceId;
 	}
@@ -873,6 +887,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * capitalization and such.
 	 * @return the name
 	 */
+	@Override
 	public String getHeadsign() {
 		return headsign;
 	}
@@ -895,6 +910,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * the trip_id is used as next best thing.
 	 * @return blockId
 	 */
+	@Override
 	public String getBlockId() {
 		return blockId;
 	}
@@ -906,6 +922,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * 
 	 * @return
 	 */
+	@Override
 	public Block getBlock() {
 		// If not part of the core project where DbConfig is available
 		// then just return null.
@@ -928,6 +945,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * @return The index of the trip in the block or -1 if block info not
 	 *         available.
 	 */
+	@Override
 	public int getIndexInBlock() {
 		// If block info no available then simply return -1
 		Block block = getBlock();
@@ -941,6 +959,7 @@ public class Trip implements Lifecycle, Serializable {
 	/**
 	 * @return the shapeId
 	 */
+	@Override
 	public String getShapeId() {
 		return shapeId;		
 	}
@@ -948,6 +967,7 @@ public class Trip implements Lifecycle, Serializable {
 	/**
 	 * @return the tripPattern
 	 */
+	@Override
 	public TripPattern getTripPattern() {
 		return tripPattern;
 	}
@@ -960,6 +980,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * @param stopPathIndex
 	 * @return
 	 */
+	@Override
 	public ScheduleTime getScheduleTime(int stopPathIndex) {
 		try {
 			return scheduledTimesList.get(stopPathIndex);
@@ -974,6 +995,7 @@ public class Trip implements Lifecycle, Serializable {
 	/**
 	 * @return list of schedule times for the trip
 	 */
+	@Override
 	public List<ScheduleTime> getScheduleTimes() {
 		return scheduledTimesList;
 	}
@@ -981,6 +1003,7 @@ public class Trip implements Lifecycle, Serializable {
 	/**
 	 * @return the travelTimes
 	 */
+	@Override
 	public TravelTimesForTrip getTravelTimes() {
 		return travelTimes;
 	}
@@ -991,6 +1014,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * @param stopPathIndex
 	 * @return
 	 */
+	@Override
 	public TravelTimesForStopPath getTravelTimesForStopPath(int stopPathIndex) {
 		return travelTimes.getTravelTimesForStopPath(stopPathIndex);
 	}
@@ -1000,6 +1024,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * 
 	 * @return
 	 */
+	@Override
 	public double getLength() {
 		return getTripPattern().getLength();
 	}
@@ -1010,6 +1035,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * 
 	 * @return ID of last stop
 	 */
+	@Override
 	public String getLastStopId() {
 		return getTripPattern().getLastStopIdForTrip();
 	}
@@ -1019,6 +1045,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * 
 	 * @return
 	 */
+	@Override
 	public List<StopPath> getStopPaths() {
 		return tripPattern.getStopPaths();
 	}
@@ -1029,6 +1056,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * @param stopPathIndex
 	 * @return the path specified or null if index out of range
 	 */
+	@Override
 	public StopPath getStopPath(int stopPathIndex) {
 		return tripPattern.getStopPath(stopPathIndex);
 	}
@@ -1040,6 +1068,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * @return The specified StopPath, or null if the stop is not part of this
 	 *         trip pattern.
 	 */
+	@Override
 	public StopPath getStopPath(String stopId) {
 		return tripPattern.getStopPath(stopId);
 	}
@@ -1049,10 +1078,12 @@ public class Trip implements Lifecycle, Serializable {
 	 * 
 	 * @return Number of stop paths
 	 */
+	@Override
 	public int getNumberStopPaths() {
 		return getTripPattern().getStopPaths().size();
 	}
 
+	@Override
 	public String getTripPatternId(){
 		return tripPatternId;
 	}
@@ -1061,6 +1092,7 @@ public class Trip implements Lifecycle, Serializable {
 	 * GTFS extension representing information about boarding
 	 * @return
 	 */
+	@Override
 	public final Integer getBoardingType() {
 		return boardingType;
 	}

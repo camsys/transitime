@@ -31,7 +31,7 @@ import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.core.PredictionGeneratorDefaultImpl;
 import org.transitclock.core.VehicleState;
 import org.transitclock.db.structs.RouteInterface;
-import org.transitclock.db.structs.Stop;
+import org.transitclock.db.structs.StopInterface;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.ipc.data.IpcPrediction;
@@ -173,7 +173,7 @@ public class PredictionDataCache {
 		if (dbConfig.getStop(stopIdOrCode) == null) {
 			try {
 				Integer stopCode = Integer.parseInt(stopIdOrCode);
-				Stop stop = Core.getInstance().getDbConfig().getStop(stopCode);
+				StopInterface stop = Core.getInstance().getBackingStore().getStop(stopCode);
 				
 				// If no such stop then complain
 				if (stop == null)

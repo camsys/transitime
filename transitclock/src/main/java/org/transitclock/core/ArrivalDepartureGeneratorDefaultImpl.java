@@ -586,7 +586,7 @@ public class ArrivalDepartureGeneratorDefaultImpl
 		// If vehicle left too early then record an event
 		if (schAdh.isEarlierThan(CoreConfig.getAllowableEarlyDepartureTimeForLoggingEvent())) {
 			// Create description for VehicleEvent
-			Stop stop = Core.getInstance().getDbConfig().getStop(departure.getStopId());
+			StopInterface stop = Core.getInstance().getBackingStore().getStop(departure.getStopId());
 			RouteInterface route = Core.getInstance().getBackingStore().getRouteById(departure.getRouteId());
 			String description = "Vehicle " + departure.getVehicleId()
 					+ " left stop " + departure.getStopId()
@@ -606,7 +606,7 @@ public class ArrivalDepartureGeneratorDefaultImpl
 		// If vehicle left too late then record an event
 		if (schAdh.isLaterThan(CoreConfig.getAllowableLateDepartureTimeForLoggingEvent())) {
 			// Create description for VehicleEvent
-			Stop stop = Core.getInstance().getDbConfig().getStop(departure.getStopId());
+			StopInterface stop = Core.getInstance().getBackingStore().getStop(departure.getStopId());
 			RouteInterface route = Core.getInstance().getBackingStore().getRouteById(departure.getRouteId());
 			String description = "Vehicle " + departure.getVehicleId()
 					+ " left stop " + departure.getStopId()

@@ -1,6 +1,6 @@
 package org.transitclock.core.predictiongenerator.kalman;
 
-import org.transitclock.db.structs.Stop;
+import org.transitclock.db.structs.StopInterface;
 
 public class VehicleStopDetail {
  @Override
@@ -8,17 +8,17 @@ public class VehicleStopDetail {
 		return "VehicleStopDetail [stop=" + stop + ", time=" + time + ", vehicle=" + vehicle + "]";
 	}
 
-	protected Stop stop;
+	protected StopInterface stop;
   protected long time=-1L;
   protected Vehicle vehicle;
   protected Long trafficTime = null;
 
-  public VehicleStopDetail(Stop stop, long time, Vehicle vehicle) {
+  public VehicleStopDetail(StopInterface stop, long time, Vehicle vehicle) {
 		this.stop = stop;
 		this.time = time;
 		this.vehicle = vehicle;
  }
-	public VehicleStopDetail(Stop stop, long time, Long trafficTime, Vehicle vehicle) {
+	public VehicleStopDetail(StopInterface stop, long time, Long trafficTime, Vehicle vehicle) {
 		this.stop = stop;
 		this.time = time;
 		this.trafficTime = trafficTime;
@@ -28,13 +28,13 @@ public class VehicleStopDetail {
 	/**
  * @return the stop
  */
-public Stop getStop() {
+public StopInterface getStop() {
 	return stop;
 }
 /**
  * @param stop the stop to set
  */
-public void setStop(Stop stop) {
+public void setStop(StopInterface stop) {
 	this.stop = stop;
 }
 /* (non-Javadoc)

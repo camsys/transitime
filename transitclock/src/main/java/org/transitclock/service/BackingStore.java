@@ -106,4 +106,12 @@ public class BackingStore {
     }
     return list;
   }
+
+  public StopInterface getStop(String stopId) {
+    return config.getStop(stopId);
+  }
+
+  public StopInterface getStop(Integer stopCode) {
+    return config.getStop(stopCode);
+  }
 }
