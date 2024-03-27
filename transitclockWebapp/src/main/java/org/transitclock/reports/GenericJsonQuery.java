@@ -66,7 +66,8 @@ public class GenericJsonQuery extends GenericQuery {
 	private String sanitize(String value) {
 		if (value == null) return value;
 		// remove control characters.  Note this will grab newlines and tabs as well!
-		return value.replaceAll("\\p{Cntrl}", "");
+		String result = value.replace('\\', ' ').replaceAll("\\p{Cntrl}", "");
+		return result;
 	}
 
 	private void addRowElement(int i, Timestamp value) {
