@@ -60,9 +60,15 @@ public class GenericJsonQuery extends GenericQuery {
 	}
 	
 	private void addRowElement(int i, String value) {
-		strBuilder.append("\"").append(value).append("\"");
+		strBuilder.append("\"").append(sanitize(value)).append("\"");
 	}
-	
+
+	private String sanitize(String value) {
+		if (value == null) return value;
+		// remove control characters.  Note this will grab newlines and tabs as well!
+		return value.replaceAll("\\p{Cntrl}", "");
+	}
+
 	private void addRowElement(int i, Timestamp value) {
 		strBuilder.append("\"").append(value).append("\"");
 	}
