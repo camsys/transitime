@@ -77,7 +77,9 @@ public class BackingStore {
 
   public List<CalendarDateInterface> getCalendarDates(Date epochTime) {
     List<CalendarDateInterface> list = new ArrayList<>();
-    for (CalendarDate calendarDate : config.getCalendarDates(epochTime)) {
+    List<CalendarDate> calendarDates = config.getCalendarDates(epochTime);
+    if (calendarDates == null) return list;
+    for (CalendarDate calendarDate : calendarDates) {
       list.add(calendarDate);
     }
     return list;
