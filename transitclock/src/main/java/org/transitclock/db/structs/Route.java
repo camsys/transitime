@@ -67,7 +67,7 @@ public class Route implements Serializable {
 	@Column
 	private final boolean hidden;
 	
-	@Column(length=2)
+	@Column(length=3)
 	private final String type;
 	
 	@Column(length=1024)
