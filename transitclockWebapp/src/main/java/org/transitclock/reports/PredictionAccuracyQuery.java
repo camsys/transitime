@@ -17,6 +17,7 @@
 
 package org.transitclock.reports;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.db.GenericQuery;
@@ -274,13 +275,14 @@ abstract public class PredictionAccuracyQuery {
 		// Determine the source portion of the SQL. Default is to provide
 		// predictions for all sources
 		String sourceSql = "";
-		if (predSource != null && !predSource.isEmpty()) {
-			if (predSource.equals("TransitClock")) {
-				// Only "Transitime" predictions
-				sourceSql = " AND predictionSource='TransitClock'";
-			} else {
-				// Anything but "Transitime"
-				sourceSql = " AND predictionSource<>'TransitClock'";
+		if (StringUtils.isNotBlank(predSource) && !predSource.equalsIgnoreCase("All")) {
+			if(predSource.equalsIgnoreCase("Other")) {
+				// Anything but hard coded prediction source values "TransitClock, GTFS-RT (Arrival), GTFS-RT (Departure)"
+				sourceSql = " AND predictionSource NOT IN ('TransitClock','GTFS-RT (Arrival)','GTFS-RT (Departure)')";
+			}
+			else {
+				// Just match provided prediction source
+				sourceSql = " AND predictionSource = '" +  predSource + "'";
 			}
 		}
 

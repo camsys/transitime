@@ -75,6 +75,8 @@
 
         <jsp:include page="params/fromDateNumDaysTimeSidePanel.jsp" />
 
+        <jsp:include page="params/predictionSource.jsp" />
+
         <div class="row">
             <label class="col-sm-12 col-form-label">Prediction Type</label>
             <div class="col-sm-12">
@@ -362,7 +364,7 @@
         request.allowableLate1 = $("#allowableLate1").val();
 
         request.a = $("input[name=a]").val()
-        request.source = $("input[name=souce]").val() || 'TransitClock';
+        request.source = $("input[name=predictionSource]").val() || 'TransitClock';
         request.s = '';
         request.numDays = 1;
         var chartTitle = $("input[name=chartTitle]").val()
