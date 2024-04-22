@@ -15,8 +15,8 @@ if(!ReportsConfig.isShowPredictionSource()) {
 					If there is another prediction source then can select 'Other'. And selecting 'All'
 					displays data for all prediction sources.">
 			<option value="TransitClock">TransitClock</option>
-			<option value="TransitClock">GTFS-RT (Arrival)</option>
-			<option value="TransitClock">GTFS-RT (Departure)</option>
+			<option value="GTFS-RT (Arrival)">GTFS-RT (Arrival)</option>
+			<option value="GTFS-RT (Departure)">GTFS-RT (Departure)</option>
 			<option value="Other">Other</option>
 			<option value="">All</option>
 		</select>
