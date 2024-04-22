@@ -5,6 +5,7 @@
          pageEncoding="ISO-8859-1"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <%@page import="org.transitclock.web.WebConfigParams"%>
+<%@ page import="org.transitclock.reports.ReportsConfig" %>
 <%
     String agencyId = request.getParameter("a");
     if (agencyId == null || agencyId.isEmpty()) {
@@ -108,7 +109,7 @@
                         title="How early a vehicle can arrive compared to the prediction
             and still be acceptable. Must be a positive number to indicate
             early."
-                        value="1.0"
+                        value=<% out.print(ReportsConfig.getDefaultEarlyMinutesBucketOne()); %>
                         step="0.5"
                         placeholder="minute"
                         type="number">
@@ -120,7 +121,7 @@
             <div class="col-sm-5 pad-left-0">
                 <input   class="form-control"  id="allowableLate1" name="allowableLate1"
                          title="How late a vehicle can arrive compared to the prediction and still be acceptable. Must be a positive number to indicate late."
-                         value="1.0"
+                         value=<% out.print(ReportsConfig.getDefaultLateMinutesBucketOne()); %>
                          step="0.5"
                          placeholder="minute"
                          type="number">
@@ -140,7 +141,7 @@
                         title="How early a vehicle can arrive compared to the prediction
             and still be acceptable. Must be a positive number to indicate
             early."
-                        value="1.5"
+                        value=<% out.print(ReportsConfig.getDefaultEarlyMinutesBucketTwo()); %>
                         step="0.5"
                         placeholder="minute"
                         type="number">
@@ -152,7 +153,7 @@
             <div class="col-sm-5 pad-left-0">
                 <input   class="form-control"  id="allowableLate2" name="allowableLate2"
                          title="How late a vehicle can arrive compared to the prediction and still be acceptable. Must be a positive number to indicate late."
-                         value="2.0"
+                         value=<% out.print(ReportsConfig.getDefaultLateMinutesBucketTwo()); %>
                          step="0.5"
                          type="number"
                          placeholder="minute">
@@ -171,7 +172,7 @@
                         title="How early a vehicle can arrive compared to the prediction
             and still be acceptable. Must be a positive number to indicate
             early."
-                        value="2.5"
+                        value=<% out.print(ReportsConfig.getDefaultEarlyMinutesBucketThree()); %>
                         step="0.5"
                         placeholder="minute"
                         type="number">
@@ -183,7 +184,7 @@
             <div class="col-sm-5 pad-left-0">
                 <input   class="form-control"  id="allowableLate3" name="allowableLate3"
                          title="How late a vehicle can arrive compared to the prediction and still be acceptable. Must be a positive number to indicate late."
-                         value="3.5"
+                         value=<% out.print(ReportsConfig.getDefaultLateMinutesBucketThree()); %>
                          step="0.5"
                          type="number"
                          placeholder="minute">
@@ -201,7 +202,7 @@
                         title="How early a vehicle can arrive compared to the prediction
             and still be acceptable. Must be a positive number to indicate
             early."
-                        value="4.0"
+                        value=<% out.print(ReportsConfig.getDefaultEarlyMinutesBucketFour()); %>
                         step="0.5"
                         type="number"
                         placeholder="minute">
@@ -213,7 +214,7 @@
             <div class="col-sm-5 pad-left-0">
                 <input   class="form-control" id="allowableLate4" name="allowableLate4"
                          title="How late a vehicle can arrive compared to the prediction and still be acceptable. Must be a positive number to indicate late."
-                         value="6.0"
+                         value=<% out.print(ReportsConfig.getDefaultLateMinutesBucketFour()); %>
                          step="0.5"
                          type="number"
                          placeholder="minute">
@@ -231,7 +232,7 @@
                         title="How early a vehicle can arrive compared to the prediction
             and still be acceptable. Must be a positive number to indicate
             early."
-                        value="4.0"
+                        value=<% out.print(ReportsConfig.getDefaultEarlyMinutesBucketFive()); %>
                         step="0.5"
                         type="number"
                         placeholder="minute">
@@ -243,7 +244,7 @@
             <div class="col-sm-5 pad-left-0">
                 <input   class="form-control"  id="allowableLate5" name="allowableLate5"
                          title="How late a vehicle can arrive compared to the prediction and still be acceptable. Must be a positive number to indicate late."
-                         value="6.0"
+                         value=<% out.print(ReportsConfig.getDefaultLateMinutesBucketFive()); %>
                          step="0.5"
                          type="number"
                          placeholder="minute"
