@@ -25,11 +25,11 @@ import org.transitclock.db.webstructs.WebAgency;
 import org.transitclock.utils.Time;
 
 import java.sql.*;
+import java.text.DateFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Date;
 
 /**
  * For doing SQL query and generating JSON data for a prediction accuracy chart.
@@ -88,6 +88,8 @@ abstract public class PredictionAccuracyBucketQuery {
 						  ) throws SQLException,
 			ParseException {
 
+		boolean isMySQL = "mysql".equals(dbType);
+
 		// Make sure not trying to get data for too long of a time span since
 		// that could bog down the database.
 		int numDays = Integer.parseInt(numDaysStr);
@@ -97,27 +99,10 @@ abstract public class PredictionAccuracyBucketQuery {
 							+ " startDate=" + Time.parseDate(beginDateStr)
 							+ " Number of days of " + numDays + " spans more than a month", 0);
 		}
-		String timeSql = "";
-		String mySqlTimeSql = "";
-		if ((beginTimeStr != null && !beginTimeStr.isEmpty())
-				|| (endTimeStr != null && !endTimeStr.isEmpty())) {
-			// If only begin or only end time set then use default value
-			if (beginTimeStr == null || beginTimeStr.isEmpty())
-				beginTimeStr = "00:00:00";
-			else {
-				// beginTimeStr set so make sure it is valid, and prevent
-				// possible SQL injection
-				if (!beginTimeStr.matches("\\d+:\\d+"))
-					throw new ParseException("begin time \"" + beginTimeStr
-							+ "\" is not valid.", 0);
-			}
-			if (endTimeStr == null || endTimeStr.isEmpty())
-				endTimeStr = "23:59:59";
-			// time param is jdbc param -- no need to check for injection attacks
-			timeSql = " AND arrivalDepartureTime::time BETWEEN ? AND ? ";
-			mySqlTimeSql = "AND CAST(arrivalDepartureTime AS TIME) BETWEEN CAST(? AS TIME) AND CAST(? AS TIME) ";
 
-		}
+
+		String timeSql = getTimeSQL(beginDateStr, numDays, beginTimeStr, endTimeStr);
+
 
 		// Determine route portion of SQL
 		// Need to examine each route ID twice since doing a
@@ -178,11 +163,11 @@ abstract public class PredictionAccuracyBucketQuery {
 				+ "     predictionAccuracyMsecs/1000 as predAccuracy, "
 				+ "     predictionSource as source "
 				+ " FROM predictionAccuracy "
-				+ "WHERE arrivalDepartureTime BETWEEN ? "
-				+ "      AND TIMESTAMP '" + beginDateStr + "' + INTERVAL '" + numDays + " day' "
+				+ "WHERE "
 				+ timeSql
-				+ "  AND predictedTime-predictionReadTime < '00:15:00' "
+				+ "  AND predictedTime-predictionReadTime < '00:30:00' "
 				+ routeSql
+				+ stopSql
 				+ sourceSql
 				+ predTypeSql;
 
@@ -193,12 +178,8 @@ abstract public class PredictionAccuracyBucketQuery {
 				+ "     predictionSource as source "
 				+ "FROM PredictionAccuracy "
 				+ "WHERE "
-				+ "arrivalDepartureTime BETWEEN "
-				+ "CAST(? AS DATETIME) "
-				+ "AND DATE_ADD(CAST(? AS DATETIME), INTERVAL " + numDays + " day) "
-				+ mySqlTimeSql
-				+ " AND "
-				+ "(TIMESTAMPDIFF(MICROSECOND,predictionReadTime,arrivalDepartureTime)/1000000) <=1800 " // 30 min
+				+ timeSql
+				+ " AND (TIMESTAMPDIFF(MICROSECOND,predictionReadTime,arrivalDepartureTime)/1000000) <=1800 " // 30 min
 				+ routeSql
 				+ stopSql
 				+ sourceSql
@@ -206,7 +187,7 @@ abstract public class PredictionAccuracyBucketQuery {
 
 
 		String sql = postSql;
-		if ("mysql".equals(dbType)) {
+		if (isMySQL) {
 			sql = mySql;
 		}
 
@@ -307,6 +288,42 @@ abstract public class PredictionAccuracyBucketQuery {
 		} finally {
 			if (statement != null)
 				statement.close();
+		}
+	}
+
+	private String getTimeSQL(String startDateStr, int numDays, String beginTime, String endTime) throws ParseException {
+
+		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		try {
+			Date startDate = dateFormat.parse(startDateStr);
+			Calendar calendar = Calendar.getInstance();
+			calendar.setTime(startDate);
+
+			StringBuilder sql = new StringBuilder();
+
+			// Loop through each date based on the number of days
+			for (int i = 0; i < numDays; i++) {
+				String currentDate = dateFormat.format(calendar.getTime());
+
+				if(i > 0){
+					sql.append(" OR ");
+				}
+				sql.append(" arrivalDepartureTime BETWEEN ");
+				sql.append("'").append(currentDate).append(" ").append(beginTime).append("'");
+				sql.append(" AND ");
+				sql.append("'").append(currentDate).append(" ").append(endTime).append("' ");
+
+				// Move to the next date
+				calendar.add(Calendar.DATE, 1);
+			}
+
+			String timeSql = sql.toString();
+			logger.info(timeSql);
+			return timeSql;
+
+		} catch (ParseException e) {
+			logger.error("Error parsing date string {}", e.getMessage(), e);
+			throw e;
 		}
 	}
 
