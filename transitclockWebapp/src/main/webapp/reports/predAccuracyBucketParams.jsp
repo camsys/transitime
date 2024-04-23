@@ -290,9 +290,6 @@
 
     function drawChart() {
         var chartOptions = {
-            //title: 'chart title',
-            // titleTextStyle: {fontSize: 28},
-            //tooltip: {isHtml: true},
             isStacked: true,
             series: [{'color': '#E84D5F'}, {'color': '#6FD656'}, {'color': '#F0DB56'}],
             legend: 'bottom',
@@ -380,24 +377,14 @@
             success: function (data){
                 globalDataTable = new google.visualization.DataTable(data);
                 drawChart();
-            }
+            },
+            error: function(request, status, error) {
+                console.log(request.responseText)
+                $("#submit").removeAttr("disabled")
+                $("#submit").html("Submit");
+                alert("No prediction accuracy information available for selected parameters.");
+            },
         })
-
-/*        $.ajax({
-            url:  "data/summaryScheduleAdherence.jsp",
-            // Pass in query string parameters to page being requested
-            data: request,
-            // Needed so that parameters passed properly to page being requested
-            traditional: true,
-            dataType:"json",
-            success: function (data){
-                console.log(data);
-            }
-        })
-*/
-
-
-
     });
 
     // Start visualization after the body created so that the
