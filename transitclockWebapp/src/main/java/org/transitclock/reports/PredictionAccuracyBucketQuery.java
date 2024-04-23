@@ -23,11 +23,16 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.db.GenericQuery;
 import org.transitclock.db.webstructs.WebAgency;
 import org.transitclock.utils.Time;
+import org.transitclock.utils.TimeV2;
 
 import java.sql.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.Date;
 
@@ -196,66 +201,8 @@ abstract public class PredictionAccuracyBucketQuery {
 			logger.debug("SQL: {}", sql);
 			statement = connection.prepareStatement(sql);
 
-			// Determine the date parameters for the query
-			Timestamp beginDate = null;
-			java.util.Date date = Time.parse(beginDateStr);
-			beginDate = new Timestamp(date.getTime());
-
-			// Determine the time parameters for the query
-			// If begin time not set but end time is then use midnight as begin
-			// time
-			if ((beginTimeStr == null || beginTimeStr.isEmpty())
-					&& endTimeStr != null && !endTimeStr.isEmpty()) {
-				beginTimeStr = "00:00:00";
-			}
-			// If end time not set but begin time is then use midnight as end
-			// time
-			if ((endTimeStr == null || endTimeStr.isEmpty())
-					&& beginTimeStr != null && !beginTimeStr.isEmpty()) {
-				endTimeStr = "23:59:59";
-			}
-
-			java.sql.Time beginTime = null;
-			java.sql.Time endTime = null;
-			if (beginTimeStr != null && !beginTimeStr.isEmpty()) {
-				beginTime = new java.sql.Time(Time.parseTimeOfDay(beginTimeStr)
-						* Time.MS_PER_SEC);
-			}
-			if (endTimeStr != null && !endTimeStr.isEmpty()) {
-				endTime = new java.sql.Time(Time.parseTimeOfDay(endTimeStr)
-						* Time.MS_PER_SEC);
-			}
-
-			logger.debug("beginDate {} beginDateStr {} endDateStr {} beginTime {} beginTimeStr {} endTime {} endTimeStr {}",
-					beginDate,
-					beginDateStr,
-					beginTime,
-					beginTimeStr,
-					endTime,
-					endTimeStr);
-
 			// Set the parameters for the query
 			int i = 1;
-			statement.setTimestamp(i++, beginDate);
-			statement.setTimestamp(i++, beginDate);
-
-			if (beginTime != null) {
-				if ("mysql".equals(dbType)) {
-					// for mysql use the time str as is to avoid TZ issues
-					statement.setString(i++, beginTimeStr);
-				} else {
-					statement.setTime(i++, beginTime);
-				}
-			}
-			if (endTime != null) {
-				if ("mysql".equals(dbType)) {
-					// for mysql use the time str as is to avoid TZ issues
-					statement.setString(i++, endTimeStr);
-				} else {
-					statement.setTime(i++, endTime);
-				}
-			}
-
 			if (routeIds != null && routeIds.length > 0 && !routeIds[0].trim().isEmpty()) {
 				for (String routeId : routeIds)
 					if (!routeId.trim().isEmpty()) {
@@ -291,37 +238,41 @@ abstract public class PredictionAccuracyBucketQuery {
 		}
 	}
 
-	private String getTimeSQL(String startDateStr, int numDays, String beginTime, String endTime) throws ParseException {
+	private String getTimeSQL(String startDateStr, int numDays, String beginTimeStr, String endTimeStr) throws DateTimeParseException {
 
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 		try {
-			Date startDate = dateFormat.parse(startDateStr);
-			Calendar calendar = Calendar.getInstance();
-			calendar.setTime(startDate);
+			LocalDate currentDate = TimeV2.parseDate(startDateStr);
+			LocalTime beginTime = TimeV2.parseTime(beginTimeStr, "00:00:00");
+			LocalTime endTime = TimeV2.parseTime(endTimeStr, "23:59:59");
+
+			LocalDateTime currentBeginDateTime = currentDate.atTime(beginTime);
+			LocalDateTime currentEndDateTime = currentDate.atTime(endTime);
 
 			StringBuilder sql = new StringBuilder();
 
 			// Loop through each date based on the number of days
 			for (int i = 0; i < numDays; i++) {
-				String currentDate = dateFormat.format(calendar.getTime());
+				String currentDateBeginTimeStr = TimeV2.dateTimeStrSec(currentBeginDateTime);
+				String currentDateEndTimeStr = TimeV2.dateTimeStrSec(currentEndDateTime);
 
 				if(i > 0){
 					sql.append(" OR ");
 				}
 				sql.append(" arrivalDepartureTime BETWEEN ");
-				sql.append("'").append(currentDate).append(" ").append(beginTime).append("'");
+				sql.append("'").append(currentDateBeginTimeStr).append("'");
 				sql.append(" AND ");
-				sql.append("'").append(currentDate).append(" ").append(endTime).append("' ");
+				sql.append("'").append(currentDateEndTimeStr).append("' ");
 
 				// Move to the next date
-				calendar.add(Calendar.DATE, 1);
+				currentBeginDateTime.plusDays(1);
+				currentEndDateTime.plusDays(1);
 			}
 
 			String timeSql = sql.toString();
 			logger.info(timeSql);
 			return timeSql;
 
-		} catch (ParseException e) {
+		} catch (DateTimeParseException e) {
 			logger.error("Error parsing date string {}", e.getMessage(), e);
 			throw e;
 		}
