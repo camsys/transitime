@@ -365,7 +365,7 @@
         request.allowableLate1 = $("#allowableLate1").val();
 
         request.a = $("input[name=a]").val()
-        request.source = $("input[name=predictionSource]").val() || 'TransitClock';
+        request.source = $("#predictionSource").val();
         request.s = '';
         request.numDays = 1;
         var chartTitle = $("input[name=chartTitle]").val()

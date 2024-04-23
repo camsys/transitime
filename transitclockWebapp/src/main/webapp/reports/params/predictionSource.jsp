@@ -18,7 +18,7 @@ if(!ReportsConfig.isShowPredictionSource()) {
 			<option value="GTFS-RT (Arrival)">GTFS-RT (Arrival)</option>
 			<option value="GTFS-RT (Departure)">GTFS-RT (Departure)</option>
 			<option value="Other">Other</option>
-			<option value="">All</option>
+			<option value="All">All</option>
 		</select>
 
 		<span class="select2-selection__arrow"><b role="presentation"></b></span>
