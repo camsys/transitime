@@ -342,9 +342,9 @@ public class GTFSRealtimePredictionAccuracyModule extends PredictionAccuracyModu
 			logger.info(
 					"Storing external prediction routeId={}, "
 							+ "directionId={}, tripId={}, vehicleId={}, "
-							+ "stopId={}, prediction={}, isArrival={}, scheduledTime={}, readTime={}",
+							+ "stopId={}, prediction={}, isArrival={}, scheduledTime={}, readTime={}, predictionSource={}",
 					routeId, direction, tripId, vehicleId, stopId, eventTime, true, scheduledTime,
-					eventReadTime.toString());
+					eventReadTime.toString(), source);
 
 			logger.info("Prediction in milliseconds is {} and converted is {}",
 					eventTime.getTime(), eventTime);
