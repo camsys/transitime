@@ -120,7 +120,7 @@ public class NycQueueInferredLocationBeanReader implements ZmqQueueBeanReader {
 
     private AvlReport convertInferredLocationBeanToAvlReport(NycQueuedInferredLocationBean inferredLocationBean){
 
-        String vehicleId = inferredLocationBean.getVehicleId();
+        String vehicleId = cleanUpAssignment(inferredLocationBean.getVehicleId());
         long gpsTime = inferredLocationBean.getRecordTimestamp();
         Double lat = inferredLocationBean.getInferredLatitude();
         Double lon = inferredLocationBean.getInferredLongitude();
