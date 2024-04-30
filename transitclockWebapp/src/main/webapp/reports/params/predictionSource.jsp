@@ -17,6 +17,8 @@ if(!ReportsConfig.isShowPredictionSource()) {
 			<option value="TransitClock">TransitClock</option>
 			<option value="GTFS-RT (Arrival)">GTFS-RT (Arrival)</option>
 			<option value="GTFS-RT (Departure)">GTFS-RT (Departure)</option>
+			<option value="GTFS-RT 2nd (Arrival)">GTFS-RT (Arrival)</option>
+			<option value="GTFS-RT 2nd (Departure)">GTFS-RT (Departure)</option>
 			<option value="Other">Other</option>
 			<option value="All">All</option>
 		</select>

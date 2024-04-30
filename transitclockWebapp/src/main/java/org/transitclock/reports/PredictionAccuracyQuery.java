@@ -278,7 +278,7 @@ abstract public class PredictionAccuracyQuery {
 		if (StringUtils.isNotBlank(predSource) && !predSource.equalsIgnoreCase("All")) {
 			if(predSource.equalsIgnoreCase("Other")) {
 				// Anything but hard coded prediction source values "TransitClock, GTFS-RT (Arrival), GTFS-RT (Departure)"
-				sourceSql = " AND predictionSource NOT IN ('TransitClock','GTFS-RT (Arrival)','GTFS-RT (Departure)')";
+				sourceSql = " AND predictionSource NOT IN ('TransitClock','GTFS-RT (Arrival)','GTFS-RT (Departure)','GTFS-RT 2nd (Arrival)','GTFS-RT 2nd (Departure)')";
 			}
 			else {
 				// Just match provided prediction source

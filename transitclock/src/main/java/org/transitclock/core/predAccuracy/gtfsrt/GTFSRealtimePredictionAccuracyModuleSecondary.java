@@ -291,7 +291,7 @@ public class GTFSRealtimePredictionAccuracyModuleSecondary extends PredictionAcc
 				if (eventTime != null) {
 					processRecord(gtfsTrip.getRouteId(), direction, stopId, gtfsTrip.getId(),
 							update.getVehicle().getId(), eventTime, eventReadTime,
-							true, "GTFS-RT (Arrival)", scheduledTime.toString());
+							true, "GTFS-RT 2nd (Arrival)", scheduledTime.toString());
 				}
 			}
 			if (stopTimeUpdate.hasDeparture()) {
@@ -300,7 +300,7 @@ public class GTFSRealtimePredictionAccuracyModuleSecondary extends PredictionAcc
 				if (eventTime != null) {
 					processRecord(gtfsTrip.getRouteId(), direction, stopId, gtfsTrip.getId(),
 							update.getVehicle().getId(), eventTime, eventReadTime,
-							false, "GTFS-RT (Departure)", scheduledTime.toString());
+							false, "GTFS-RT 2nd (Departure)", scheduledTime.toString());
 				}
 			}
 
