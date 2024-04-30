@@ -170,7 +170,7 @@ public class StopArrivalDepartureCache extends StopArrivalDepartureCacheInterfac
 
 			for (ArrivalDeparture result : results) {
 				if (counter % 1000 == 0) {
-					logger.info("{} out of {} Stop Arrival Departure Records ({}%)", counter, results.size(), (int) ((counter * 100.0f) / results.size()));
+					logger.debug("{} out of {} Stop Arrival Departure Records ({}%)", counter, results.size(), (int) ((counter * 100.0f) / results.size()));
 				}
 
 				putArrivalDepartureInMemory(map, result);

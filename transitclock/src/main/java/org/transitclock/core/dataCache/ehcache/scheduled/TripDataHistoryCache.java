@@ -202,7 +202,7 @@ public class TripDataHistoryCache implements TripDataHistoryCacheInterface{
 			int counter = 0;
 			for (ArrivalDeparture result : results) {
 				if (counter % 1000 == 0) {
-					logger.info("{} out of {} scheduled Trip Data History Records ({}%)", counter, results.size(), (int) ((counter * 100.0f) / results.size()));
+					logger.debug("{} out of {} scheduled Trip Data History Records ({}%)", counter, results.size(), (int) ((counter * 100.0f) / results.size()));
 				}
 				// TODO this might be better done in the database.
 				if (GtfsData.routeNotFiltered(result.getRouteId())) {

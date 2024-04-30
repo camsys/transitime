@@ -2,7 +2,7 @@ package org.transitclock.avl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.transitclock.config.IntegerConfigValue;
+import org.transitclock.config.BooleanConfigValue;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.utils.DateUtils;
@@ -13,6 +13,9 @@ import java.util.List;
 
 public class ApcModule {
 
+  private static BooleanConfigValue skipApc = new BooleanConfigValue("transitclock.apc.skip",
+          false,
+          "skip Apc processing");
   private static final Logger logger = LoggerFactory.getLogger(ApcModule.class);
 
   private static ApcModule instance = null;
@@ -22,6 +25,8 @@ public class ApcModule {
   }
 
   public static ApcModule getInstance() {
+    if (skipApc.getValue().equals(Boolean.TRUE))
+      return null;
     if (instance == null) {
       synchronized (logger) {
         if (instance == null) {
