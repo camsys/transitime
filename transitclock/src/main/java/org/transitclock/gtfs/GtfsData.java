@@ -28,7 +28,7 @@ import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.StopPathDAO;
 import org.transitclock.db.dao.TripDAO;
 import org.transitclock.db.hibernate.HibernateUtils;
-import org.transitclock.db.model.AgencyInterface;
+import org.transitclock.db.structs.AgencyInterface;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.*;
 import org.transitclock.gtfs.gtfsStructs.*;

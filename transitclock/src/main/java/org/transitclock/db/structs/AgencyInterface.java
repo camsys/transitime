@@ -1,4 +1,4 @@
-package org.transitclock.db.model;
+package org.transitclock.db.structs;
 
 import org.transitclock.db.structs.Extent;
 import org.transitclock.utils.Time;

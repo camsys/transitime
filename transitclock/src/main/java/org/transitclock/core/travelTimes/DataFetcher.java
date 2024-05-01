@@ -33,7 +33,7 @@ import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.db.dao.ActiveRevisionDAO;
 import org.transitclock.db.dao.AgencyDAO;
 import org.transitclock.db.dao.MatchDAO;
-import org.transitclock.db.model.AgencyInterface;
+import org.transitclock.db.structs.AgencyInterface;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.db.structs.Match;
 import org.transitclock.utils.IntervalTimer;

@@ -29,7 +29,6 @@ import javax.persistence.Transient;
 
 import org.hibernate.annotations.DynamicUpdate;
 import org.transitclock.db.hibernate.HibernateUtils;
-import org.transitclock.db.model.AgencyInterface;
 import org.transitclock.gtfs.gtfsStructs.GtfsAgency;
 import org.transitclock.utils.Time;
 

@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 import org.transitclock.config.ConfigFileReader;
 import org.transitclock.configData.DbSetupConfig;
 import org.transitclock.db.hibernate.HibernateUtils;
-import org.transitclock.db.model.AgencyInterface;
+import org.transitclock.db.structs.AgencyInterface;
 import org.transitclock.ipc.clients.ConfigInterfaceFactory;
 import org.transitclock.ipc.interfaces.ConfigInterface;
 import org.transitclock.utils.Encryption;

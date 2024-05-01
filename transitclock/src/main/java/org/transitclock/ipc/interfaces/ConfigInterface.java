@@ -17,7 +17,7 @@
 
 package org.transitclock.ipc.interfaces;
 
-import org.transitclock.db.model.AgencyInterface;
+import org.transitclock.db.structs.AgencyInterface;
 import org.transitclock.ipc.data.*;
 
 import java.rmi.Remote;

@@ -4,7 +4,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.transitclock.db.hibernate.HibernateUtils;
-import org.transitclock.db.model.AgencyInterface;
+import org.transitclock.db.structs.AgencyInterface;
 
 import java.util.List;
 import java.util.TimeZone;

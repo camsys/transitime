@@ -29,7 +29,7 @@ import org.transitclock.core.ServiceUtilsImpl;
 
 import org.transitclock.db.dao.*;
 import org.transitclock.db.hibernate.HibernateUtils;
-import org.transitclock.db.model.AgencyInterface;
+import org.transitclock.db.structs.AgencyInterface;
 import org.transitclock.db.structs.Calendar;
 import org.transitclock.db.structs.*;
 import org.transitclock.utils.IntervalTimer;

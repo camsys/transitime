@@ -19,7 +19,7 @@ package org.transitclock.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.config.BooleanConfigValue;
-import org.transitclock.db.model.AgencyInterface;
+import org.transitclock.db.structs.AgencyInterface;
 import org.transitclock.gtfs.DbConfig;
 
 import java.text.DateFormat;
