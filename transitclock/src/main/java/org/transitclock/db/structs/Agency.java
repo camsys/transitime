@@ -129,15 +129,6 @@ public class Agency implements Serializable, AgencyInterface {
 	}
 
 
-
-
-
-
-
-
-
-
-
 	/**
 	 * Returns cached Time object which allows one to easly convert epoch time
 	 * to time of day and such.
