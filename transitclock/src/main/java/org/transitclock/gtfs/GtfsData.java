@@ -30,6 +30,7 @@ import org.transitclock.db.structs.*;
 import org.transitclock.gtfs.gtfsStructs.*;
 import org.transitclock.gtfs.readers.*;
 import org.transitclock.monitoring.MonitoringService;
+import org.transitclock.monitoring.MonitoringServiceFactory;
 import org.transitclock.utils.*;
 
 import java.text.DateFormat;
@@ -271,7 +272,7 @@ public class GtfsData {
 				HibernateUtils.getSessionFactory(getAgencyId());
 		session = sessionFactory.openSession();
 		
-		monitoringService = MonitoringService.getInstance();
+		monitoringService = MonitoringServiceFactory.getInstance();
 		// Deal with the ActiveRevisions. First, store the original travel times
 		// rev since need it to read in old travel time data. 		
 		ActiveRevisions originalRevs = ActiveRevisions.get(session); 

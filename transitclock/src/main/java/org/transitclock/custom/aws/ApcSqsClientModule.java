@@ -23,6 +23,7 @@ import org.transitclock.avl.ApcMessageUnmarshaller;
 import org.transitclock.avl.SimpleApcMessageUnmarshaller;
 import org.transitclock.modules.Module;
 import org.transitclock.monitoring.MonitoringService;
+import org.transitclock.monitoring.MonitoringServiceFactory;
 
 import java.util.List;
 
@@ -111,7 +112,7 @@ public class ApcSqsClientModule extends Module {
   public ApcSqsClientModule(String agencyId, SqsCallback callback) throws Exception {
     super(agencyId);
     this.callback = callback;
-    monitoring = MonitoringService.getInstance();
+    monitoring = MonitoringServiceFactory.getInstance();
     // if we've been configured via optionalModulesList then the following properties need to be set!
     // deliberately halt the application launch otherwise to make it obvious
     if (sqsKey.getValue() == null || sqsSecret.getValue() == null || apcUrl.getValue() == null) {

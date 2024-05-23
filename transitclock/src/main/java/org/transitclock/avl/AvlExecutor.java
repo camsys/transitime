@@ -22,7 +22,7 @@ import org.transitclock.config.IntegerConfigValue;
 import org.transitclock.configData.AgencyConfig;
 import org.transitclock.db.structs.AvlReport;
 import org.transitclock.logging.Markers;
-import org.transitclock.monitoring.MonitoringService;
+import org.transitclock.monitoring.MonitoringServiceFactory;
 import org.transitclock.utils.Time;
 import org.transitclock.utils.threading.NamedThreadFactory;
 
@@ -193,7 +193,7 @@ public class AvlExecutor {
 		// monitor queue capacity
 		int size = this.avlClientExecutor.getQueue().size();
 		int capacity = avlQueueSize.getValue();
-		MonitoringService.getInstance().averageMetric("PredictionAvlWorkQueuePercentageLevel", (double) size / capacity);
+		MonitoringServiceFactory.getInstance().averageMetric("PredictionAvlWorkQueuePercentageLevel", (double) size / capacity);
 
 
 		avlClientExecutor.execute(avlClient);

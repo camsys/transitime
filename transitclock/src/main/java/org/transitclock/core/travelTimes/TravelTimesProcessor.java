@@ -38,6 +38,7 @@ import org.transitclock.db.structs.Match;
 import org.transitclock.db.structs.StopPath;
 import org.transitclock.db.structs.Trip;
 import org.transitclock.monitoring.MonitoringService;
+import org.transitclock.monitoring.MonitoringServiceFactory;
 import org.transitclock.statistics.Statistics;
 import org.transitclock.utils.Geo;
 import org.transitclock.utils.IntervalTimer;
@@ -175,7 +176,7 @@ public class TravelTimesProcessor {
   }
   
 	public TravelTimesProcessor() {
-    monitoringService = MonitoringService.getInstance();
+    monitoringService = MonitoringServiceFactory.getInstance();
 	}
 	
 	/********************** Member Functions **************************/

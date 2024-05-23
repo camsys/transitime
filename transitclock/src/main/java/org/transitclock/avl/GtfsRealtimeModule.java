@@ -30,7 +30,7 @@ import org.transitclock.db.structs.Trip;
 import org.transitclock.feed.gtfsRt.GtfsRtVehiclePositionsReader;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.modules.Module;
-import org.transitclock.monitoring.MonitoringService;
+import org.transitclock.monitoring.MonitoringServiceFactory;
 
 import java.util.Collection;
 
@@ -107,8 +107,8 @@ public class GtfsRealtimeModule extends PollUrlAvlModule {
   	  }
   		
 	  }
-	  MonitoringService.getInstance().averageMetric("PredictionAvlInputRecords", records);
-		MonitoringService.getInstance().averageMetric("PredictionAvlInputAssignments", assignments);
+	  MonitoringServiceFactory.getInstance().averageMetric("PredictionAvlInputRecords", records);
+		MonitoringServiceFactory.getInstance().averageMetric("PredictionAvlInputAssignments", assignments);
 		
 	}
 

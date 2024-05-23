@@ -37,7 +37,7 @@ import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.*;
 import org.transitclock.db.structs.AvlReport.AssignmentType;
 import org.transitclock.logging.Markers;
-import org.transitclock.monitoring.MonitoringService;
+import org.transitclock.monitoring.MonitoringServiceFactory;
 import org.transitclock.utils.Geo;
 import org.transitclock.utils.IntervalTimer;
 import org.transitclock.utils.StringUtils;
@@ -1116,7 +1116,7 @@ public class AvlProcessor {
 			// given an assignment that didn't match that
 			// create an event for later forensics
 			logInvalidAssignment(vehicleState);
-			MonitoringService.getInstance().sumMetric("PredictionAvlInvalidMatch");
+			MonitoringServiceFactory.getInstance().sumMetric("PredictionAvlInvalidMatch");
 		}
 
 		// There was no valid block or route assignment from AVL feed so can't
@@ -1716,8 +1716,8 @@ public class AvlProcessor {
 		// Do the low level work of matching vehicle and then generating results
 		lowLevelProcessAvlReport(avlReport, false);
 		logger.debug("Processing AVL report took {}msec", timer);
-        MonitoringService.getInstance().averageMetric("PredictionProcessingTimeInMillis", Double.valueOf(timer.elapsedMsec()));
-        MonitoringService.getInstance().averageMetric("PredictionTotalLatencyInMillis", Double.valueOf((System.currentTimeMillis() - avlReport.getTime())));
+        MonitoringServiceFactory.getInstance().averageMetric("PredictionProcessingTimeInMillis", Double.valueOf(timer.elapsedMsec()));
+		MonitoringServiceFactory.getInstance().averageMetric("PredictionTotalLatencyInMillis", Double.valueOf((System.currentTimeMillis() - avlReport.getTime())));
 	}
 
 }
