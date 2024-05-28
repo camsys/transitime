@@ -106,7 +106,7 @@ public class PredictionBucketAccuracy implements Comparable<PredictionBucketAccu
         return earlyNewPredictionsCount.get() + ontimeNewPredictionsCount.get() + lateNewPredictionsCount.get();
     }
 
-    public synchronized String getOldOntimePercentage(){
+    public String getOldOntimePercentage(){
         if(ontimeOldPredictionsCount.get() == 0){
             return ZERO_PERCENT;
         }
@@ -116,7 +116,7 @@ public class PredictionBucketAccuracy implements Comparable<PredictionBucketAccu
         return ontimePercentage;
     }
 
-    public synchronized String getOldOntimeCount(){
+    public String getOldOntimeCount(){
         DecimalFormat df = new DecimalFormat("#.##");
         return df.format(ontimeOldPredictionsCount.get());
     }
@@ -131,12 +131,12 @@ public class PredictionBucketAccuracy implements Comparable<PredictionBucketAccu
         return earlyPercentage;
     }
 
-    public synchronized String getOldEarlyCount(){
+    public String getOldEarlyCount(){
         DecimalFormat df = new DecimalFormat("#.##");
         return df.format(earlyOldPredictionsCount.get());
     }
 
-    public synchronized String getOldLatePercentage(){
+    public String getOldLatePercentage(){
         if(lateOldPredictionsCount.get() == 0){
             return ZERO_PERCENT;
         }
@@ -146,13 +146,13 @@ public class PredictionBucketAccuracy implements Comparable<PredictionBucketAccu
         return latePercentage;
     }
 
-    public synchronized String getOldLateCount(){
+    public String getOldLateCount(){
         DecimalFormat df = new DecimalFormat("#.##");
         return df.format(lateOldPredictionsCount.get());
     }
 
 
-    public synchronized String getNewOntimePercentage(){
+    public String getNewOntimePercentage(){
         if(ontimeNewPredictionsCount.get() == 0){
             return ZERO_PERCENT;
         }
@@ -162,12 +162,12 @@ public class PredictionBucketAccuracy implements Comparable<PredictionBucketAccu
         return ontimePercentage;
     }
 
-    public synchronized String getNewOntimeCount(){
+    public String getNewOntimeCount(){
         DecimalFormat df = new DecimalFormat("#.##");
         return df.format(ontimeNewPredictionsCount.get());
     }
 
-    public synchronized String getNewEarlyPercentage(){
+    public String getNewEarlyPercentage(){
         if(earlyNewPredictionsCount.get() == 0){
             return ZERO_PERCENT;
         }
@@ -177,12 +177,12 @@ public class PredictionBucketAccuracy implements Comparable<PredictionBucketAccu
         return earlyPercentage;
     }
 
-    public synchronized String getNewEarlyCount(){
+    public String getNewEarlyCount(){
         DecimalFormat df = new DecimalFormat("#.##");
         return df.format(earlyNewPredictionsCount.get());
     }
 
-    public synchronized String getNewLatePercentage(){
+    public String getNewLatePercentage(){
         if(lateNewPredictionsCount.get() == 0){
             return ZERO_PERCENT;
         }
@@ -192,7 +192,7 @@ public class PredictionBucketAccuracy implements Comparable<PredictionBucketAccu
         return latePercentage;
     }
 
-    public synchronized String getNewLateCount(){
+    public String getNewLateCount(){
         DecimalFormat df = new DecimalFormat("#.##");
         return df.format(lateNewPredictionsCount.get());
     }
