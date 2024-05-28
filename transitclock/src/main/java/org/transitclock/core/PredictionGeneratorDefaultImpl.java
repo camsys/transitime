@@ -147,7 +147,7 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 
 	private static LongConfigValue defaultAdditionalStopTimeForWaitStopsMsecs =
 			new LongConfigValue("transitclock.core.defaultAdditionalStopTimeForWaitStopsMsecs",
-					60000l,
+					0l,
 					"Default amount of time to stop at a wait stop when NOT adhering to the scheduled" +
 							"departure time. Value in msecs.");
 
