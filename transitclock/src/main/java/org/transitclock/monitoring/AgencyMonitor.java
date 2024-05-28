@@ -65,7 +65,7 @@ public class AgencyMonitor {
 	 */
 	private AgencyMonitor(String agencyId) {
 		emailSender = new EmailSender();
-        monitoringService = MonitoringService.getInstance();
+        monitoringService = MonitoringServiceFactory.getInstance();
 
 		// Create all the monitors and add them to the monitors list
 		monitors = new ArrayList<MonitorBase>();

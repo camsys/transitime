@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.integration_tests.prediction.TraceConfig;
-import org.transitclock.monitoring.MonitoringService;
+import org.transitclock.monitoring.MonitoringServiceFactory;
 import org.transitclock.utils.DateRange;
 
 import java.util.*;
@@ -36,9 +36,8 @@ public class ReplayService {
         // Run trace
         logger.info(config.getDescription());
         System.out.println(config.getDescription());
-        MonitoringService.getInstance().flush();
         DateRange range = PlaybackModule.runTrace(config, null);
-        MonitoringService.getInstance().flush();
+        MonitoringServiceFactory.getInstance().flush();
         return loader.queryArrivalDepartures(range, config.getArrivalDepartureCsv());
 
     }

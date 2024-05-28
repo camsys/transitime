@@ -16,6 +16,7 @@ import org.transitclock.db.structs.Agency;
 import org.transitclock.db.structs.ApcReport;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.monitoring.MonitoringService;
+import org.transitclock.monitoring.MonitoringServiceFactory;
 import org.transitclock.utils.IntervalTimer;
 import org.transitclock.utils.Time;
 
@@ -59,7 +60,7 @@ public class ApcDataProcessor {
   private boolean enabled = false;
 
   protected ApcDataProcessor(String tz) {
-    monitoring = MonitoringService.getInstance();
+    monitoring = MonitoringServiceFactory.getInstance();
     singleton = this;
     this.tz = tz;
     apcAggregator = new ApcCache(tz);

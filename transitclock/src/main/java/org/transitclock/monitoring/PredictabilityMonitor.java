@@ -120,7 +120,7 @@ public class PredictabilityMonitor extends MonitorBase {
 		monitoringService.averageMetric("PredictionActiveBlockCount", (double)Math.max(predictableVehicleCount,
 		    minimumPredictableVehicles.getValue()));
 		monitoringService.averageMetric("PredictionTotalBlockCount", (double)activeBlocks.size());
-    monitoringService.averageMetric("PredictablePercentageOfBlocks", fraction);
+		monitoringService.averageMetric("PredictablePercentageOfBlocks", fraction);
 
 		// Provide simple message explaining the situation
 		String message = "Predictable blocks fraction=" 

@@ -82,7 +82,7 @@ public class DatabaseQueueMonitor extends MonitorBase {
 				+ ".",
 				dbLogger.queueLevel());
 
-        monitoringService.averageMetric("PredictionDatabaseQueuePercentageLevel", dbLogger.queueLevel());
+		monitoringService.averageMetric("PredictionDatabaseQueuePercentageLevel", dbLogger.queueLevel());
 		
 		// Determine the threshold for triggering. If already triggered
 		// then lower the threshold by maxQueueFractionGap in order

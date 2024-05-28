@@ -34,6 +34,7 @@ import org.transitclock.db.structs.Trip;
 import org.transitclock.gtfs.DbConfig;
 import org.transitclock.ipc.data.IpcArrivalDeparture;
 import org.transitclock.monitoring.MonitoringService;
+import org.transitclock.monitoring.MonitoringServiceFactory;
 import org.transitclock.utils.DateUtils;
 
 import java.util.*;
@@ -369,7 +370,7 @@ public class HistoricalPredictionLibrary {
 	 */
 	protected static MonitoringService getMonitoring() {
 		if (monitoring == null)
-			monitoring = MonitoringService.getInstance();
+			monitoring = MonitoringServiceFactory.getInstance();
 		return monitoring;
 	}
 

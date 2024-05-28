@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.transitclock.configData.DbSetupConfig;
 import org.transitclock.logging.Markers;
-import org.transitclock.monitoring.MonitoringService;
+import org.transitclock.monitoring.MonitoringServiceFactory;
 import org.transitclock.utils.IntervalTimer;
 import org.transitclock.utils.Time;
 import org.transitclock.utils.threading.NamedThreadFactory;
@@ -511,7 +511,7 @@ public class DbQueue<T> {
 
     private void monitorQueue() {
       // report the queue level as a percentage of full
-      MonitoringService.getInstance().averageMetric(
+      MonitoringServiceFactory.getInstance().averageMetric(
               "PredictionDatabase" + shortType + "QueuePercentageLevel",
               queueLevel());
     }

@@ -33,6 +33,7 @@ import org.transitclock.db.structs.*;
 import org.transitclock.ipc.data.IpcPrediction;
 import org.transitclock.ipc.data.IpcPrediction.ArrivalOrDeparture;
 import org.transitclock.monitoring.MonitoringService;
+import org.transitclock.monitoring.MonitoringServiceFactory;
 import org.transitclock.utils.Geo;
 import org.transitclock.utils.Time;
 
@@ -750,7 +751,7 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 	 */
 	protected MonitoringService getMonitoring() {
 		if (monitoring == null)
-			monitoring = MonitoringService.getInstance();
+			monitoring = MonitoringServiceFactory.getInstance();
 		return monitoring;
 	}
 

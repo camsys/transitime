@@ -21,6 +21,7 @@ import org.transitclock.config.StringConfigValue;
 import org.transitclock.core.AvlProcessor;
 import org.transitclock.modules.Module;
 import org.transitclock.monitoring.MonitoringService;
+import org.transitclock.monitoring.MonitoringServiceFactory;
 import org.transitclock.utils.threading.BoundedExecutor;
 import org.transitclock.utils.threading.NamedThreadFactory;
 
@@ -114,7 +115,7 @@ public class AvlSqsClientModule extends Module {
   
     public AvlSqsClientModule(String agencyId) throws Exception {
       super(agencyId);
-      monitoring = MonitoringService.getInstance();
+      monitoring = MonitoringServiceFactory.getInstance();
       logger.info("loading AWS SQS credentials from environment");
       _sqsCredentials = new BasicAWSCredentials(sqsKey.getValue(), sqsSecret.getValue());
       connect();
