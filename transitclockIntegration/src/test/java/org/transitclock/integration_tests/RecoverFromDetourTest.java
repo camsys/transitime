@@ -8,6 +8,8 @@ import org.transitclock.utils.Time;
 
 import junit.framework.TestCase;
 
+import java.io.IOException;
+
 /*
  * This tests Transitime successfully recovering from detours. In this AVL trace the
  * bus goes off-route and returns to the route. We test that after the bus returns
@@ -21,7 +23,7 @@ public class RecoverFromDetourTest extends TestCase {
 	private static final String VEHICLE = "3757";
 	
 	@Test
-	public void test() {
+	public void test() throws IOException {
 		PlaybackModule.runTrace(GTFS, AVL, null, "America/New_York");
 		IpcVehicleComplete v = VehicleDataCache.getInstance().getVehicle(VEHICLE);
 		assertFalse(v.isLayover());

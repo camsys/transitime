@@ -1,7 +1,10 @@
 package org.transitclock.integration_tests.playback;
 
-import java.io.File;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -24,7 +27,6 @@ import org.transitclock.db.hibernate.HibernateUtils;
 import org.transitclock.db.structs.ApcReport;
 import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.gtfs.GtfsData;
-import org.transitclock.gtfs.HttpGetGtfsFile;
 import org.transitclock.gtfs.TitleFormatter;
 import org.transitclock.ipc.data.IpcPredictionsForRouteStopDest;
 import org.transitclock.utils.DateRange;
@@ -58,7 +60,7 @@ public class PlaybackModule {
 
 	private static Session session;
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		
 		String gtfsDirectoryName = defaultGtfsDirectoryName;
 		String avlReportsCsv = defaultAvlReportsCsv;
@@ -86,7 +88,7 @@ public class PlaybackModule {
 		
 	}
 	
-	public static DateRange runTrace(PlaybackConfig state, AvlPostProcessor processor) {
+	public static DateRange runTrace(PlaybackConfig state, AvlPostProcessor processor) throws IOException {
 		DateRange avlRange = null;
 		int configRev = 1;
 		if (state.getTz() != null) {
@@ -205,7 +207,7 @@ public class PlaybackModule {
 	}
 
 	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName,
-									 boolean addPredictionAccuracy, boolean log, String tz) {
+									 boolean addPredictionAccuracy, boolean log, String tz) throws IOException {
 		PlaybackConfig config = new PlaybackConfig();
 		config.setGtfsDirectoryName(gtfsDirectoryName);
 		config.setAvlReportsCsv(avlReportsCsv);
@@ -219,13 +221,13 @@ public class PlaybackModule {
 	}
 	
 	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName,
-									 String tz) {
+									 String tz) throws IOException {
 		return runTrace(gtfsDirectoryName, avlReportsCsv, arrivalDepartureFileName, false, true,
 				tz);
 	}
 	
 	public static DateRange runTrace(String gtfsDirectoryName, String avlReportsCsv, String arrivalDepartureFileName,
-									 AvlPostProcessor processor, String tz) {
+									 AvlPostProcessor processor, String tz) throws IOException {
 		PlaybackConfig config = new PlaybackConfig();
 		config.setGtfsDirectoryName(gtfsDirectoryName);
 		config.setAvlReportsCsv(avlReportsCsv);
@@ -312,7 +314,7 @@ public class PlaybackModule {
 
 	// Adapted from GtfsFileProcessor. May need to add setTimezone in the future,
 	// but actually maybe it doesn't matter for playback.
-	private static void setupGtfs(String gtfsDirectoryName) {
+	private static void setupGtfs(String gtfsDirectoryName) throws IOException {
 		TitleFormatter titleFormatter = new TitleFormatter(null, true);
 		boolean shouldStoreNewRevs = true, shouldDeleteRevs = false;
 		GtfsData gtfsData = new GtfsData(1,
@@ -321,7 +323,7 @@ public class PlaybackModule {
 				shouldStoreNewRevs,
 				shouldDeleteRevs,
 				AgencyConfig.getAgencyId(),
-				unzipGtfsFiles(gtfsDirectoryName),
+				copyOrUnzipGtfsFiles(gtfsDirectoryName),
 				null,
 				pathOffsetDistance,
 				maxStopToPathDistance,
@@ -336,10 +338,29 @@ public class PlaybackModule {
 		gtfsData.processData();
 	}
 
-	private static String unzipGtfsFiles(String gtfsDirectoryName) throws IllegalArgumentException {
+	private static String copyOrUnzipGtfsFiles(String gtfsDirectoryName) throws IllegalArgumentException, IOException {
 		// Uncompress the GTFS zip file if need to
 		if (gtfsDirectoryName != null) {
-			return Zip.unzip(gtfsDirectoryName + ".zip", "gtfs");
+			Path sourcePath = Paths.get(gtfsDirectoryName);
+			if(Files.isDirectory(sourcePath)){
+				Path destPath = Files.createDirectories(sourcePath.getParent().resolve("gtfs"));
+				Files.walk(sourcePath)
+				.filter(Files::isRegularFile)
+				.forEach(file -> {
+					try {
+						Path destFile = destPath.resolve(sourcePath.relativize(file));
+						Files.createDirectories(destFile.getParent());
+						Files.copy(file, destFile, StandardCopyOption.REPLACE_EXISTING);
+						logger.debug("Copied GTFS file: {} to {}", file, destFile);
+					} catch (IOException e) {
+						logger.error("Failed to copy GTFS file {}", e.getMessage(), e);
+					}
+				});
+				return destPath.toString();
+			} else {
+				return Zip.unzip(gtfsDirectoryName + ".zip", "gtfs");
+			}
+
 		}
 		return null;
 	}
