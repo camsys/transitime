@@ -15,6 +15,8 @@ import org.transitclock.integration_tests.playback.PlaybackModule;
 
 import junit.framework.TestCase;
 
+import java.io.IOException;
+
 // When we're using schedule times, effective schedule difference should be equal to schedule deviation.
 public class GenerateEffectiveScheduleDifferenceTest extends TestCase {
 	
@@ -26,7 +28,7 @@ public class GenerateEffectiveScheduleDifferenceTest extends TestCase {
 	private static final Logger logger = LoggerFactory.getLogger(GenerateEffectiveScheduleDifferenceTest.class);
 	
 	@Test
-	public void test() {
+	public void test() throws IOException {
 		
 		AvlPostProcessor processor = new AvlPostProcessor() {
 

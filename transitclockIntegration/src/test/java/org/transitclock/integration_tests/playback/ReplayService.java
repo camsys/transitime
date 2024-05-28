@@ -7,6 +7,7 @@ import org.transitclock.integration_tests.prediction.TraceConfig;
 import org.transitclock.monitoring.MonitoringService;
 import org.transitclock.utils.DateRange;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -32,7 +33,7 @@ public class ReplayService {
          System.setProperty("transitclock.integration_test.enabled", "true");
     }
 
-    public List<ArrivalDeparture> run(TraceConfig config) {
+    public List<ArrivalDeparture> run(TraceConfig config) throws IOException {
         // Run trace
         logger.info(config.getDescription());
         System.out.println(config.getDescription());

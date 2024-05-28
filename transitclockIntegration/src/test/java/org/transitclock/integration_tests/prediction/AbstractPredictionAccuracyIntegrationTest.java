@@ -7,6 +7,7 @@ import org.transitclock.db.structs.ArrivalDeparture;
 import org.transitclock.integration_tests.playback.ReplayResults;
 import org.transitclock.integration_tests.playback.ReplayService;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -111,7 +112,7 @@ public abstract class AbstractPredictionAccuracyIntegrationTest extends TestCase
 	}
 
 	@Override
-    public void setUp() {
+    public void setUp() throws IOException {
 		rs = new ReplayService(config.getId(), config.getOutputDirectory());
 
 		List<ArrivalDeparture> arrivalDepartures = rs.run(config);

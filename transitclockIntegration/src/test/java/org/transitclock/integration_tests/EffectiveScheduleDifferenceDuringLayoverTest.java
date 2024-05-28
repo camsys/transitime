@@ -14,6 +14,8 @@ import org.transitclock.integration_tests.playback.PlaybackModule;
 
 import junit.framework.TestCase;
 
+import java.io.IOException;
+
 // When we're using schedule times, effective schedule difference should be equal to schedule deviation.
 public class EffectiveScheduleDifferenceDuringLayoverTest extends TestCase {
 	
@@ -31,7 +33,7 @@ public class EffectiveScheduleDifferenceDuringLayoverTest extends TestCase {
 	 * GenerateEffectiveScheduleDifferneceTest, ends its first trip a few minutes early.
 	 */
 	@Test
-	public void test() {
+	public void test() throws IOException {
 		
 		AvlPostProcessor processor = new AvlPostProcessor() {
 

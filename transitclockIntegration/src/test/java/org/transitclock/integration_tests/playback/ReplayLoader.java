@@ -13,6 +13,8 @@ import org.transitclock.db.structs.Prediction;
 import org.transitclock.utils.DateRange;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.transitclock.utils.Time.sleep;
 
@@ -24,10 +26,10 @@ public class ReplayLoader {
     private static final Logger logger = LoggerFactory.getLogger(ReplayLoader.class);
     private Session session;
 
-
     private ReplayCsv csv;
 
     private Collection<CombinedPredictionAccuracy> combinedPredictionAccuracies;
+
     public Collection<CombinedPredictionAccuracy> getCombinedPredictionAccuracies() {
         return combinedPredictionAccuracies;
     }
@@ -35,9 +37,32 @@ public class ReplayLoader {
     private Map<PredictionKey, CombinedPredictionAccuracy> predsByStopAndAvlTime
             = new HashMap<PredictionKey, CombinedPredictionAccuracy>();
 
+    private TreeMap<Long, PredictionBucketAccuracy> predictionBucketAccuracies;
+
+    private static final long PREDICTION_BUCKET_MAX_HORIZON = 1800000;
 
     public ReplayLoader(String outputDirectory) {
         this.csv = new ReplayCsv(outputDirectory);
+        setup();
+    }
+
+    private void setup() {
+        setupPredictionBucketAccuracies();
+    }
+
+    private void setupPredictionBucketAccuracies(){
+        predictionBucketAccuracies = new TreeMap<>();
+        PredictionBucketAccuracy bucket01 = new PredictionBucketAccuracy("0-3 minutes", 0, 180000, -1 * TimeUnit.SECONDS.toMillis(30), TimeUnit.SECONDS.toMillis(60));
+        PredictionBucketAccuracy bucket02 = new PredictionBucketAccuracy("3-6 minutes", 180001, 360000, -1 * TimeUnit.SECONDS.toMillis(60), TimeUnit.SECONDS.toMillis(180));
+        PredictionBucketAccuracy bucket03 = new PredictionBucketAccuracy("6-12 minutes", 360001, 720000, -1 * TimeUnit.SECONDS.toMillis(60), TimeUnit.SECONDS.toMillis(240));
+        PredictionBucketAccuracy bucket04 = new PredictionBucketAccuracy("12-20 minutes", 720001, 1200000, -1 * TimeUnit.SECONDS.toMillis(60), TimeUnit.SECONDS.toMillis(360));
+        PredictionBucketAccuracy bucket05 = new PredictionBucketAccuracy("20-30 minutes",1200001, 1800000, -1 * TimeUnit.SECONDS.toMillis(60), TimeUnit.SECONDS.toMillis(360));
+
+        predictionBucketAccuracies.put(bucket01.getHorizonStart(), bucket01);
+        predictionBucketAccuracies.put(bucket02.getHorizonStart(), bucket02);
+        predictionBucketAccuracies.put(bucket03.getHorizonStart(), bucket03);
+        predictionBucketAccuracies.put(bucket04.getHorizonStart(), bucket04);
+        predictionBucketAccuracies.put(bucket05.getHorizonStart(), bucket05);
     }
 
 
@@ -108,7 +133,6 @@ public class ReplayLoader {
         List<Prediction> newPreds = getSession().createCriteria(Prediction.class).list();
         ouptputfilenames.add(csv.write(newPreds,"prediction", id));
 
-
         for (Prediction p : newPreds) {
             PredictionKey key = createKeyFromPrediction(p);
             CombinedPredictionAccuracy pred = getOrCreatePred(predsByStopAndAvlTime, key);
@@ -124,12 +148,19 @@ public class ReplayLoader {
                 if (match(combined, ad)) {
                     combined.actualADTime = ad.getTime();
                     combined.predLength = combined.actualADTime - combined.avlTime;
+
+                    // Prediction Bucket Accuracy Report
+                    if(combined.predLength >= 0 && combined.predLength <= PREDICTION_BUCKET_MAX_HORIZON){
+                        Long horizonKey = predictionBucketAccuracies.floorKey(combined.predLength);
+                        PredictionBucketAccuracy bucket = predictionBucketAccuracies.get(horizonKey);
+                        bucket.processPrediction(combined);
+                    }
                 }
             }
         }
 
-
         ArrayList<CombinedPredictionAccuracy> sortedList = filter(combinedPredictionAccuracies);
+
         ComparatorChain chain = new ComparatorChain();
 
         chain.addComparator(new CombinedPredictionAccuracyTripIdComparator());
@@ -139,6 +170,12 @@ public class ReplayLoader {
         Collections.sort(sortedList, chain);
         logger.info("writing {} preds to combined_prediction.csv", sortedList.size());
         ouptputfilenames.add(csv.write(sortedList, "combined_prediction", id));
+
+
+        List<PredictionBucketAccuracy> sortedPredictionBucketAccuracy =
+                predictionBucketAccuracies.values().stream().sorted().collect(Collectors.toList());
+        logger.info("writing {} bucket predictions to bucket_prediction.csv", sortedPredictionBucketAccuracy.size());
+        ouptputfilenames.add(csv.writeBucket(sortedPredictionBucketAccuracy, "bucket_prediction", id));
 
         getSession().close();
         return ouptputfilenames;
