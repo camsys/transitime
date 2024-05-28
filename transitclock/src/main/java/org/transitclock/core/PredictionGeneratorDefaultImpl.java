@@ -140,6 +140,18 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 					"When holding on to historical predictions for future stops, how long " +
 							"to keep message before expiring. Value in minutes.");
 
+	private static BooleanConfigValue adhereToScheduledDepartureAtWaitStops =
+			new BooleanConfigValue("transitclock.core.adhereToScheduledDepartureAtWaitStops",
+					true,
+					"When arriving early to a wait stop, wait until the scheduled departure time" +
+							"before leaving the stop.");
+
+	private static LongConfigValue defaultAdditionalStopTimeForWaitStopsMsecs =
+			new LongConfigValue("transitclock.core.defaultAdditionalStopTimeForWaitStopsMsecs",
+					0l,
+					"Default amount of time to stop at a wait stop when NOT adhering to the scheduled" +
+							"departure time. Value in msecs.");
+
 	private static final Logger logger = 
 			LoggerFactory.getLogger(PredictionGeneratorDefaultImpl.class);
 
@@ -217,8 +229,8 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 			// Generate a departure time
 			PredictionResult expectedStopTime = getStopTimeForPath(indices, avlReport, vehicleState);
 			lastDwell = expectedStopTime.getAlgorithm();
-						int expectedStopTimeMsec = 
-								(int) expectedStopTime.getPrediction();
+
+			int expectedStopTimeMsec = (int) expectedStopTime.getPrediction();
 			// If at a wait stop then need to handle specially...
 			if (indices.isWaitStop()) {
 				
@@ -260,26 +272,32 @@ public class PredictionGeneratorDefaultImpl implements PredictionGenerator, Pred
 				// the schedule time. But if after the scheduled time then use
 				// the prediction time, which indicates when it is going to arrive
 				// at the stop, but also adjust for stop wait time.
-				long scheduledDepartureTime = TravelTimes
-								.scheduledDepartureTime(indices, arrivalTime);
-				long expectedDepartureTime =
-						Math.max(arrivalTime + expectedStopTimeMsec,
-								scheduledDepartureTime);
-				if (expectedDepartureTime > scheduledDepartureTime) {
-					logger.info("For vehicleId={} adjusted departure time "
-							+ "for wait stop stopId={} tripId={} blockId={} to "
-							+ "expectedDepartureTimeWithStopWaitTime={} "
-							+ "because arrivalTime={} but "
-							+ "scheduledDepartureTime={} and "
-							+ "expectedStopTimeMsec={}", 
-							avlReport.getVehicleId(), path.getStopId(), 
-							trip.getId(), trip.getBlockId(),
-							Time.dateTimeStrMsec(expectedDepartureTime),
-							Time.dateTimeStrMsec(arrivalTime),
-							Time.dateTimeStrMsec(scheduledDepartureTime),
-							expectedStopTimeMsec);
+				long scheduledDepartureTime = TravelTimes.scheduledDepartureTime(indices, arrivalTime);
+				long expectedDepartureTime = arrivalTime + expectedStopTimeMsec;
+
+
+				if(adhereToScheduledDepartureAtWaitStops.getValue()){
+					expectedDepartureTime = Math.max(expectedDepartureTime, scheduledDepartureTime);
+					if (expectedDepartureTime > scheduledDepartureTime) {
+						logger.info("For vehicleId={} adjusted departure time "
+										+ "for wait stop stopId={} tripId={} blockId={} to "
+										+ "expectedDepartureTimeWithStopWaitTime={} "
+										+ "because arrivalTime={} but "
+										+ "scheduledDepartureTime={} and "
+										+ "expectedStopTimeMsec={}",
+								avlReport.getVehicleId(), path.getStopId(),
+								trip.getId(), trip.getBlockId(),
+								Time.dateTimeStrMsec(expectedDepartureTime),
+								Time.dateTimeStrMsec(arrivalTime),
+								Time.dateTimeStrMsec(scheduledDepartureTime),
+								expectedStopTimeMsec);
+					}
+				} else if(scheduledDepartureTime > expectedDepartureTime){
+					long predictedScheduleDeviationMsec = scheduledDepartureTime - expectedDepartureTime;
+					expectedDepartureTime  = expectedDepartureTime + Math.min(predictedScheduleDeviationMsec,
+							defaultAdditionalStopTimeForWaitStopsMsecs.getValue());
 				}
-				
+
 				// Make sure there is enough break time for the driver to get
 				// their break. But only giving drivers a break if vehicle not
 				// limited by deadheading time. Thought is that if deadheading
