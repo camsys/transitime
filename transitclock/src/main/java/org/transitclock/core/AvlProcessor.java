@@ -44,6 +44,7 @@ import org.transitclock.utils.StringUtils;
 import org.transitclock.utils.Time;
 
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * This is a very important high-level class. It takes the AVL data and
@@ -1404,6 +1405,8 @@ public class AvlProcessor {
 	private void lowLevelProcessAvlReport(AvlReport avlReport,
 			boolean recursiveCall) {
 		// Determine previous state of vehicle
+		ReentrantLock l = new ReentrantLock();
+		l.lock();
 		String vehicleId = avlReport.getVehicleId();
 		VehicleState vehicleState = VehicleStateManager.getInstance()
 				.getVehicleState(vehicleId);
@@ -1411,7 +1414,7 @@ public class AvlProcessor {
 		// Since modifying the VehicleState should synchronize in case another
 		// thread simultaneously processes data for the same vehicle. This
 		// would be extremely rare but need to be safe.
-		synchronized (vehicleState) {
+
 			// Keep track of last AvlReport even if vehicle not predictable.
 			vehicleState.setAvlReport(avlReport);
 
@@ -1526,7 +1529,7 @@ public class AvlProcessor {
 			org.transitclock.db.structs.VehicleState dbVehicleState =
 					new org.transitclock.db.structs.VehicleState(vehicleState);
 			Core.getInstance().getDbLogger().add(dbVehicleState);
-		} // End of synchronizing on vehicleState }
+		l.unlock(); // End of synchronizing on vehicleState }
 	}
 
 	/**
@@ -1588,22 +1591,23 @@ public class AvlProcessor {
 	 * @param avlReport
 	 */
 	public void cacheAvlReportWithoutProcessing(AvlReport avlReport) {
+		ReentrantLock l = new ReentrantLock();
+		l.lock();
 		VehicleState vehicleState =
 				VehicleStateManager.getInstance().getVehicleState(
 						avlReport.getVehicleId());
-		
+
 		// Since modifying the VehicleState should synchronize in case another
 		// thread simultaneously processes data for the same vehicle. This
 		// would be extremely rare but need to be safe.
-		synchronized (vehicleState) {
-			// Update AVL report for cached VehicleState
-			vehicleState.setAvlReport(avlReport);
+		// Update AVL report for cached VehicleState
+		vehicleState.setAvlReport(avlReport);
 
-			// Let vehicle data cache know that the vehicle state was updated
-			// so that new IPC vehicle data will be created and cached and
-			// made available to the API.
-			VehicleDataCache.getInstance().updateVehicle(vehicleState);
-		}
+		// Let vehicle data cache know that the vehicle state was updated
+		// so that new IPC vehicle data will be created and cached and
+		// made available to the API.
+		VehicleDataCache.getInstance().updateVehicle(vehicleState);
+		l.unlock();
 	}
 
 	private boolean isCanceled(VehicleState vehicleState) {
@@ -1656,7 +1660,8 @@ public class AvlProcessor {
 	 *            The new AVL report to be processed
 	 */
 	public void processAvlReport(AvlReport avlReport) {
-		IntervalTimer timer = new IntervalTimer(); 
+		IntervalTimer timer = new IntervalTimer();
+		logger.error("rjasmin processing starting {}msec", System.currentTimeMillis());
 
 		// Handle special case where want to not use assignment from AVL
 		// report, most likely because want to test automatic assignment

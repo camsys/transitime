@@ -18,6 +18,7 @@ package org.transitclock.core;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,9 +125,10 @@ public class TimeoutHandlerModule extends Module {
 	public void storeAvlReport(AvlReport avlReport) {
 		// Synchronize map modifications since elsewhere the elements can be removed
 		// from the map.
-		synchronized (avlReportsMap) {
+		ReentrantLock l = new ReentrantLock();
+		l.lock();
 			avlReportsMap.put(avlReport.getVehicleId(), avlReport);
-		}
+		l.unlock();
 	}
 
 	/**
@@ -332,7 +334,8 @@ public class TimeoutHandlerModule extends Module {
 
 		// Sync access to avlReportsMap since it can be simultaneously 
 		// modified elsewhere
-		synchronized (avlReportsMap) {				
+		ReentrantLock l = new ReentrantLock();
+		l.lock();
 			// Using an Iterator instead of for(AvlReport a : map.values()) 
 			// because removing elements while iterating. Way to do this without
 			// getting concurrent access exception is to use an Iterator.
@@ -367,7 +370,7 @@ public class TimeoutHandlerModule extends Module {
 					}
 				}
 			}
-		}
+		l.unlock();
 	}
 
 	/*
